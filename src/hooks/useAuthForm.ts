@@ -58,7 +58,7 @@ export interface UseAuthFormReturn {
   switchMode: () => void;
 }
 
-export function useAuthForm(): UseAuthFormReturn {
+export function useAuthForm(isLogin: boolean = false): UseAuthFormReturn {
   const [name,            setName]            = useState("");
   const [phone,           setPhone]           = useState("");
   const [email,           setEmail]           = useState("");
@@ -76,7 +76,7 @@ export function useAuthForm(): UseAuthFormReturn {
 
   const { login, register, loading } = useAuth();
   const { t } = useTranslation();
-  const socialAuth = useSocialAuth();
+  const socialAuth = useSocialAuth(isLogin ? "login" : "register");
 
   // ─── Validation ────────────────────────────────────────────────────────────
 

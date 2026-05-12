@@ -30,6 +30,8 @@ const errors = {
     invalidAppleTokenFormat: "Invalid Apple token format.",
     invalidAppleToken: "Invalid Apple sign-in token.",
     appleAuthFailed: "Apple sign-in failed. Please try again.",
+    googleAccountNotFound: "No account linked to this Google account. Please sign up first.",
+    appleAccountNotFound: "No account linked to this Apple account. Please sign up first.",
     notFound: "Resource not found.",
     accessDenied: "Access denied.",
     tripNotFound: "Trip not found.",

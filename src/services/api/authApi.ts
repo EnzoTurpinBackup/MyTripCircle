@@ -23,8 +23,8 @@ export const authApi = {
       requiresOtp?: boolean;
     }>("/users/register", "POST", data),
 
-  loginWithGoogle: (data: { accessToken: string }) =>
-    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string }>(
+  loginWithGoogle: (data: { accessToken: string; mode: "login" | "register" }) =>
+    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string; isNewUser?: boolean }>(
       "/users/google", "POST", data
     ),
 
@@ -32,8 +32,9 @@ export const authApi = {
     identityToken: string;
     email?: string;
     fullName?: { givenName?: string | null; familyName?: string | null } | null;
+    mode: "login" | "register";
   }) =>
-    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string }>(
+    request<{ success: boolean; token?: string; refreshToken?: string; user?: any; error?: string; isNewUser?: boolean }>(
       "/users/apple", "POST", data
     ),
 

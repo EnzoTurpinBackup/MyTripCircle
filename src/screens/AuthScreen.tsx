@@ -23,7 +23,7 @@ const AuthScreen: React.FC<{ route?: { params?: { initialMode?: "login" | "regis
   const [isLogin, setIsLogin] = useState(route?.params?.initialMode !== "register");
   const { colors } = useTheme();
 
-  const form = useAuthForm();
+  const form = useAuthForm(isLogin);
 
   const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_CLIENT_ID,

@@ -30,6 +30,8 @@ const errors = {
     invalidAppleTokenFormat: "Format du jeton Apple invalide.",
     invalidAppleToken: "Jeton de connexion Apple invalide.",
     appleAuthFailed: "Échec de la connexion Apple. Réessaie.",
+    googleAccountNotFound: "Aucun compte associé à ce compte Google. Inscris-toi d'abord.",
+    appleAccountNotFound: "Aucun compte associé à ce compte Apple. Inscris-toi d'abord.",
     notFound: "Ressource introuvable.",
     accessDenied: "Accès refusé.",
     tripNotFound: "Voyage introuvable.",

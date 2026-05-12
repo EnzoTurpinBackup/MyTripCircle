@@ -11,7 +11,7 @@ interface UseSocialAuthReturn {
   handleAppleSignIn: () => Promise<void>;
 }
 
-const useSocialAuth = (): UseSocialAuthReturn => {
+const useSocialAuth = (mode: "login" | "register" = "register"): UseSocialAuthReturn => {
   const [isSocialSubmitting, setIsSocialSubmitting] = useState(false);
   const { loginWithGoogle, loginWithApple } = useAuth();
   const { t } = useTranslation();
@@ -19,7 +19,7 @@ const useSocialAuth = (): UseSocialAuthReturn => {
   const handleGoogleToken = async (accessToken: string) => {
     setIsSocialSubmitting(true);
     try {
-      const result = await loginWithGoogle(accessToken);
+      const result = await loginWithGoogle(accessToken, mode);
       if (!result.success) {
         Alert.alert(
           t("common.error"),
@@ -48,6 +48,7 @@ const useSocialAuth = (): UseSocialAuthReturn => {
           credential.identityToken,
           credential.email ?? undefined,
           credential.fullName ?? undefined,
+          mode,
         );
         if (!result.success) {
           Alert.alert(

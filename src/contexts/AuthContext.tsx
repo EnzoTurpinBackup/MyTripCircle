@@ -28,11 +28,12 @@ interface AuthContextType {
     password: string,
     phone?: string,
   ) => Promise<AuthResult & { userId?: string }>;
-  loginWithGoogle: (accessToken: string) => Promise<AuthResult>;
+  loginWithGoogle: (accessToken: string, mode: "login" | "register") => Promise<AuthResult>;
   loginWithApple: (
     identityToken: string,
     email?: string,
     fullName?: { givenName?: string | null; familyName?: string | null } | null,
+    mode?: "login" | "register",
   ) => Promise<AuthResult>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; scheduledAt?: Date }>;
@@ -208,9 +209,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (accessToken: string): Promise<AuthResult> => {
+  const loginWithGoogle = async (accessToken: string, mode: "login" | "register" = "register"): Promise<AuthResult> => {
     try {
-      const res = await ApiService.loginWithGoogle({ accessToken });
+      const res = await ApiService.loginWithGoogle({ accessToken, mode });
       if (!res?.success || !res?.token || !res?.user) {
         return {
           success: false,
@@ -233,9 +234,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     identityToken: string,
     email?: string,
     fullName?: { givenName?: string | null; familyName?: string | null } | null,
+    mode: "login" | "register" = "register",
   ): Promise<AuthResult> => {
     try {
-      const res = await ApiService.loginWithApple({ identityToken, email, fullName });
+      const res = await ApiService.loginWithApple({ identityToken, email, fullName, mode });
       if (!res?.success || !res?.token || !res?.user) {
         return {
           success: false,

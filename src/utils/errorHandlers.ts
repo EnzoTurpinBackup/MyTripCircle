@@ -46,6 +46,8 @@ const API_ERROR_KEY_BY_MESSAGE: Record<string, string> = {
   "Invalid Apple token format": "apiErrors.invalidAppleTokenFormat",
   "Invalid Apple token": "apiErrors.invalidAppleToken",
   "Apple authentication failed": "apiErrors.appleAuthFailed",
+  "No Google account found. Please sign up first.": "apiErrors.googleAccountNotFound",
+  "No Apple account found. Please sign up first.": "apiErrors.appleAccountNotFound",
   "Not found": "apiErrors.notFound",
   "Access denied": "apiErrors.accessDenied",
   "End date must be after start date": "createTrip.invalidDates",
