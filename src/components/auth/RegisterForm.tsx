@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../ui/BackButton";
@@ -96,6 +96,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   colors,
 }) => {
   const { t } = useTranslation();
+
+  const guardTerms = (handler: () => void) => () => {
+    if (!termsAccepted) {
+      Alert.alert(t("common.error"), t("auth.termsRequired"));
+      return;
+    }
+    handler();
+  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
@@ -224,8 +232,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             </TouchableOpacity>
 
             <SocialAuthButtons
-              onGooglePress={onGooglePress}
-              onApplePress={onApplePress}
+              onGooglePress={guardTerms(onGooglePress)}
+              onApplePress={guardTerms(onApplePress)}
               googleDisabled={googleDisabled}
               busy={busy}
               colors={colors}
