@@ -22,7 +22,7 @@ type WelcomeNavProp = StackNavigationProp<RootStackParamList, "Welcome">;
 
 // Remplace cette image par ta photo de fond quand elle est prête
 // Place le fichier dans assets/welcome-bg.jpg et décommente la ligne ImageBackground
-const BG_IMAGE = require("../../assets/icon.png");
+const BG_IMAGE = require("../../assets/background.jpg");
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<WelcomeNavProp>();
