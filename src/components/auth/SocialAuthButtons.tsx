@@ -75,12 +75,12 @@ const SocialAuthButtons: React.FC<SocialAuthButtonsProps> = ({
 
       {Platform.OS === "ios" && (
         <TouchableOpacity
-          style={[styles.appleBtn, { backgroundColor: colors.text }, busy && styles.disabled]}
+          style={[styles.appleBtn, busy && styles.disabled]}
           activeOpacity={0.85}
           onPress={onApplePress}
           disabled={busy}
         >
-          <Ionicons name="logo-apple" size={18} color={colors.white} style={{ marginRight: 8 }} />
+          <Ionicons name="logo-apple" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
           <Text style={styles.appleBtnText}>{t("auth.appleButton")}</Text>
         </TouchableOpacity>
       )}
@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
+    backgroundColor: "#000000",
   },
   appleBtnText: {
     fontFamily: F.sans600,
