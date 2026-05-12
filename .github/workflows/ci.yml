@@ -1,0 +1,69 @@
+name: CI
+
+# Intégration continue : à chaque push sur main et à chaque pull request,
+# installation propre des dépendances, vérification de types, exécution de la
+# suite de tests (client + serveur) avec couverture, et audit des dépendances.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Annule un run en cours si un nouveau commit est poussé sur la même réf.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, tests & audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Historique complet : requis pour l'analyse SonarCloud (git blame).
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérification de types (TypeScript)
+        run: npm run typecheck
+
+      - name: Tests + couverture (client + serveur)
+        run: npm run test:coverage -- --ci
+
+      - name: Publier le rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: Audit des dépendances
+        run: npm audit --audit-level=high
+        # Non bloquant : informatif tant que les vulnérabilités connues ne sont
+        # pas toutes traitées. Durcir (audit-level=moderate, ou retirer
+        # continue-on-error) une fois le backlog de sécurité résorbé.
+        continue-on-error: true
+
+      # ──────────────────────────────────────────────────────────────────────
+      # SonarCloud — décommenter une fois le secret `SONAR_TOKEN` ajouté dans
+      # Settings → Secrets and variables → Actions du dépôt GitHub.
+      # (Le projet `EnzoTurpin_MyTripCircle` / org `enzoturpin` est déjà
+      #  configuré dans sonar-project.properties, et la couverture est lue
+      #  depuis coverage/lcov.info généré à l'étape précédente.)
+      # ──────────────────────────────────────────────────────────────────────
+      # - name: Analyse SonarCloud
+      #   uses: SonarSource/sonarqube-scan-action@v5   # vérifier la dernière version sur le Marketplace
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
