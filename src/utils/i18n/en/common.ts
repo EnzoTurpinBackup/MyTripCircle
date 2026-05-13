@@ -61,6 +61,11 @@ const common = {
     phoneOptional: "Phone (optional)",
     phonePlaceholderExample: "+1 555 000 0000",
     passwordMaskedPlaceholder: "••••••••",
+    a11y: {
+      back: "Back",
+      showPassword: "Show password",
+      hidePassword: "Hide password",
+    },
   },
   welcome: {
     subtitle: "All your trips in one place",

@@ -1,9 +1,12 @@
 import React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { AppColors } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
+
+const EYE_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
 
 export interface LabelledInputProps {
   label: string;
@@ -41,40 +44,55 @@ const LabelledInput: React.FC<LabelledInputProps> = ({
   autoFocus = false,
   textContentType = "none",
   colors,
-}) => (
-  <View style={styles.wrapper}>
-    <View style={[styles.box, { backgroundColor: colors.surface, borderColor: hasError ? colors.danger : colors.border }]}>
-      <Text style={[styles.label, { color: colors.textLight }]}>{label}</Text>
-      <View style={styles.row}>
-        <TextInput
-          style={[styles.value, { color: colors.text }]}
-          value={value}
-          onChangeText={onChangeText}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textLight}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          secureTextEntry={secureTextEntry && !showValue}
-          autoFocus={autoFocus}
-          textContentType={textContentType}
-        />
-        {showToggle && onToggleShow && (
-          <TouchableOpacity onPress={onToggleShow} style={styles.eye}>
-            <Ionicons
-              name={showValue ? "eye-outline" : "eye-off-outline"}
-              size={16}
-              color={colors.textLight}
-            />
-          </TouchableOpacity>
-        )}
+}) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.wrapper}>
+      <View style={[styles.box, { backgroundColor: colors.surface, borderColor: hasError ? colors.danger : colors.border }]}>
+        <Text style={[styles.label, { color: colors.textMid }]}>{label}</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.value, { color: colors.text }]}
+            value={value}
+            onChangeText={onChangeText}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            placeholderTextColor={colors.textLight}
+            keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
+            secureTextEntry={secureTextEntry && !showValue}
+            autoFocus={autoFocus}
+            textContentType={textContentType}
+            accessibilityLabel={label}
+          />
+          {showToggle && onToggleShow && (
+            <TouchableOpacity
+              onPress={onToggleShow}
+              style={styles.eye}
+              hitSlop={EYE_HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel={showValue ? t("common.a11y.hidePassword") : t("common.a11y.showPassword")}
+            >
+              <Ionicons
+                name={showValue ? "eye-outline" : "eye-off-outline"}
+                size={16}
+                color={colors.textMid}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+      {hasError && errorText ? (
+        <Text
+          style={[styles.error, { color: colors.danger }]}
+          accessibilityLiveRegion="polite"
+        >
+          {errorText}
+        </Text>
+      ) : null}
     </View>
-    {hasError && errorText ? (
-      <Text style={[styles.error, { color: colors.danger }]}>{errorText}</Text>
-    ) : null}
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: 12 },

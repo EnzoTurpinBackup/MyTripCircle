@@ -1,8 +1,11 @@
 import React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+
+const EYE_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
 
 export interface LabelledInputProps {
   label: string;
@@ -34,6 +37,7 @@ const LabelledInput: React.FC<LabelledInputProps> = ({
   errorText,
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={styles.wrapper}>
       <View
@@ -43,7 +47,7 @@ const LabelledInput: React.FC<LabelledInputProps> = ({
           hasError && styles.boxError,
         ]}
       >
-        <Text style={[styles.label, { color: colors.textLight }]}>{label}</Text>
+        <Text style={[styles.label, { color: colors.textMid }]}>{label}</Text>
         <View style={styles.row}>
           <TextInput
             style={[styles.value, { color: colors.text }]}
@@ -55,20 +59,29 @@ const LabelledInput: React.FC<LabelledInputProps> = ({
             keyboardType={keyboardType}
             autoCapitalize="none"
             secureTextEntry={secureTextEntry && !showValue}
+            accessibilityLabel={label}
           />
           {showToggle && onToggleShow && (
-            <TouchableOpacity onPress={onToggleShow} style={styles.eye}>
+            <TouchableOpacity
+              onPress={onToggleShow}
+              style={styles.eye}
+              hitSlop={EYE_HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel={showValue ? t("common.a11y.hidePassword") : t("common.a11y.showPassword")}
+            >
               <Ionicons
                 name={showValue ? "eye-outline" : "eye-off-outline"}
                 size={16}
-                color={colors.textLight}
+                color={colors.textMid}
               />
             </TouchableOpacity>
           )}
         </View>
       </View>
       {hasError && errorText ? (
-        <Text style={styles.error}>{errorText}</Text>
+        <Text style={styles.error} accessibilityLiveRegion="polite">
+          {errorText}
+        </Text>
       ) : null}
     </View>
   );

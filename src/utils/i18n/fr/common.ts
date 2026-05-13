@@ -62,6 +62,11 @@ const common = {
     phoneOptional: "Téléphone (optionnel)",
     phonePlaceholderExample: "06 00 00 00 00",
     passwordMaskedPlaceholder: "••••••••",
+    a11y: {
+      back: "Retour",
+      showPassword: "Afficher le mot de passe",
+      hidePassword: "Masquer le mot de passe",
+    },
   },
   welcome: {
     subtitle: "Centralisez tous vos voyages",

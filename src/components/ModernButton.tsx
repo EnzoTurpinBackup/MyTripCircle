@@ -11,9 +11,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, RADIUS, DISABLED_OPACITY } from "../theme";
 import { F } from "../theme/fonts";
+import { useTheme } from "../contexts/ThemeContext";
 
 // Design-system tokens (invariants entre thèmes)
-const TERRA        = COLORS.terra;
+const TERRA        = COLORS.terra;       // bordure du bouton outline (contraste >= 3:1, OK clair & sombre)
+const TERRA_DARK   = COLORS.terraDark;   // fond du bouton primaire — blanc dessus >= 4.5:1 (WCAG AA), clair & sombre
 const TERRA_SHADOW = "rgba(196,113,74,0.30)";
 const INK_MID      = COLORS.inkMid;
 const SAND_MID     = COLORS.sandMid;
@@ -45,6 +47,11 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
   disabled,
   ...props
 }) => {
+  // Accent terracotta adapté au thème : foncé sur fond clair, clair sur fond
+  // sombre — garde un contraste >= 4.5:1 pour le texte des boutons outline/ghost.
+  const { colors } = useTheme();
+  const accent = colors.terraDark;
+
   const iconSizeMedLarge = size === "medium" ? 18 : 24;
   const iconSize = size === "small" ? 16 : iconSizeMedLarge;
 
@@ -57,7 +64,7 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
       case "danger":
         return DANGER;
       default:
-        return TERRA; // outline / ghost
+        return accent; // outline / ghost
     }
   })();
 
@@ -80,6 +87,7 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
               styles.text,
               styles[`${size}Text` as keyof typeof styles] as TextStyle,
               styles[`${variant}Text` as keyof typeof styles] as TextStyle,
+              (variant === "outline" || variant === "ghost") && { color: accent },
             ]}
             numberOfLines={1}
           >
@@ -112,6 +120,9 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
       style={buttonStyle}
       activeOpacity={0.8}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!disabled || loading, busy: loading }}
       {...props}
     >
       {renderContent()}
@@ -137,7 +148,7 @@ const styles = StyleSheet.create({
 
   // ── Variants ──────────────────────────────────────────────────────────────
   primary: {
-    backgroundColor: TERRA,
+    backgroundColor: TERRA_DARK,
     shadowColor: TERRA_SHADOW,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1, // opacity is already baked into TERRA_SHADOW rgba
@@ -200,10 +211,10 @@ const styles = StyleSheet.create({
     color: INK_MID,
   },
   outlineText: {
-    color: TERRA,
+    color: TERRA_DARK,
   },
   ghostText: {
-    color: TERRA,
+    color: TERRA_DARK,
   },
   dangerText: {
     color: DANGER,
