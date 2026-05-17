@@ -78,7 +78,6 @@ const SearchForm: React.FC<SearchFormProps> = ({
         value={daysInput}
         onChangeText={onDaysChange}
         keyboardType="number-pad"
-        returnKeyType="done"
       />
       <TouchableOpacity
         style={[styles.primaryBtn, { backgroundColor: colors.terra, opacity: loading || !cityInput.trim() ? 0.6 : 1 }]}
