@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { AppColors } from "../../contexts/ThemeContext";
@@ -46,12 +46,17 @@ const LabelledInput: React.FC<LabelledInputProps> = ({
   colors,
 }) => {
   const { t } = useTranslation();
+  const inputRef = useRef<TextInput>(null);
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.box, { backgroundColor: colors.surface, borderColor: hasError ? colors.danger : colors.border }]}>
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
+        style={[styles.box, { backgroundColor: colors.surface, borderColor: hasError ? colors.danger : colors.border }]}
+      >
         <Text style={[styles.label, { color: colors.textMid }]}>{label}</Text>
         <View style={styles.row}>
           <TextInput
+            ref={inputRef}
             style={[styles.value, { color: colors.text }]}
             value={value}
             onChangeText={onChangeText}
@@ -81,7 +86,7 @@ const LabelledInput: React.FC<LabelledInputProps> = ({
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </Pressable>
       {hasError && errorText ? (
         <Text
           style={[styles.error, { color: colors.danger }]}
