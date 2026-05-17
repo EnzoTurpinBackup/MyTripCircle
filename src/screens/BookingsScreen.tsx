@@ -9,7 +9,7 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { Booking } from "../types";
@@ -32,6 +32,8 @@ const BookingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
+  const insets = useSafeAreaInsets();
+  const listPaddingBottom = 100 + Math.max(insets.bottom, 12);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [actionBooking, setActionBooking] = useState<Booking | null>(null);
@@ -119,16 +121,16 @@ const BookingsScreen: React.FC = () => {
 
           <View style={[styles.header, { backgroundColor: colors.bg }]}>
             <View>
-              <Text style={[styles.headerEyebrow, { color: colors.textLight }]}>{t("bookings.myBookingsHeader")}</Text>
+              <Text style={[styles.headerEyebrow, { color: colors.textLight }]}>{t("bookings.count", { count: filteredBookings.length })}</Text>
               <Text style={[styles.headerTitle, { color: colors.text }]}>{t("bookings.header")}</Text>
             </View>
             <TouchableOpacity
-              style={[styles.filterIconBtn, { backgroundColor: colors.terraLight }, offlineStyle]}
+              style={[styles.filterIconBtn, { backgroundColor: colors.terra }, offlineStyle]}
               onPress={() => setShowBookingForm(true)}
               disabled={offlineDisabled}
               activeOpacity={0.75}
             >
-              <Ionicons name="add" size={24} color={colors.terra} />
+              <Ionicons name="add" size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
@@ -170,17 +172,9 @@ const BookingsScreen: React.FC = () => {
                   />
                 )}
                 keyExtractor={(item, index) => item.id || `booking-${index}`}
-                contentContainerStyle={styles.bookingsList}
+                contentContainerStyle={[styles.bookingsList, { paddingBottom: listPaddingBottom }]}
                 showsVerticalScrollIndicator={false}
               />
-            </View>
-          )}
-
-          {filteredBookings.length > 0 && (
-            <View style={[styles.totalBar, { backgroundColor: colors.bgMid, borderTopColor: colors.border }]}>
-              <Text style={[styles.totalBarLabel, { color: colors.textMid }]}>
-                {t("bookings.totalCount", { count: filteredBookings.length })}
-              </Text>
             </View>
           )}
 
@@ -223,22 +217,24 @@ const styles = StyleSheet.create({
   },
   headerEyebrow: { fontFamily: F.sans400, fontSize: 14, marginBottom: 4 },
   headerTitle: { fontFamily: F.sans700, fontSize: 28 },
-  filterIconBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
+  filterIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#A35830",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
   filtersWrapper: { paddingBottom: 14 },
   filtersScroll: { paddingHorizontal: 24, gap: 10, flexDirection: "row", alignItems: "center" },
   filterPill: { paddingHorizontal: 20, paddingVertical: 9, borderRadius: 20 },
   filterPillText: { fontFamily: F.sans600, fontSize: 15 },
   listWrapper: { flex: 1 },
   bookingsList: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 },
-  totalBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderTopWidth: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  totalBarLabel: { fontSize: 17, fontFamily: F.sans500 },
   emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 48 },
   emptyIconCircle: { width: 96, height: 96, borderRadius: 48, justifyContent: "center", alignItems: "center", marginBottom: 24 },
   emptyTitle: { fontSize: 22, fontFamily: F.sans700, marginBottom: 8, textAlign: "center" },

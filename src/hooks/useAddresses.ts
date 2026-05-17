@@ -44,7 +44,7 @@ type AddressesNavigationProp = StackNavigationProp<RootStackParamList, "Main">;
 
 export function useAddresses() {
   const navigation = useNavigation<AddressesNavigationProp>();
-  const { addresses, trips, loading, deleteAddress, refreshData } = useTrips();
+  const { addresses, loading, deleteAddress, refreshData } = useTrips();
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
 
@@ -150,7 +150,7 @@ export function useAddresses() {
     (a) => mapCoords[a.id] != null
   );
 
-  const eyebrow = trips && trips.length > 0 ? trips[0].title : undefined;
+  const eyebrow = t("addresses.count", { count: filteredAddresses.length });
 
   const handleAddressPress = (address: Address) => {
     setActionAddress(address);

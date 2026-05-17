@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../contexts/ThemeContext";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
@@ -22,6 +22,8 @@ import { F } from "../theme/fonts";
 const IdeasScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const scrollPaddingBottom = 100 + Math.max(insets.bottom, 12);
   const {
     search,
     setSearch,
@@ -120,7 +122,7 @@ const IdeasScreen: React.FC = () => {
           numColumns={2}
           style={{ flex: 1 }}
           renderItem={({ item, index }) => <IdeaCard item={item} index={index} />}
-          contentContainerStyle={styles.grid}
+          contentContainerStyle={[styles.grid, { paddingBottom: scrollPaddingBottom }]}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>

@@ -8,7 +8,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { useAddresses } from "../hooks/useAddresses";
@@ -61,13 +61,16 @@ const AddressesScreen: React.FC = () => {
     );
   };
   const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
+  const insets = useSafeAreaInsets();
+  const tabBarClearance = 78 + Math.max(insets.bottom, 12);
+  const listPaddingBottom = tabBarClearance + 24;
 
   if (loading) {
     return (
       <SwipeToNavigate currentIndex={3} totalTabs={5}>
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
           <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
-          <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: 100 }}>
+          <ScrollView scrollEnabled={false} contentContainerStyle={{ paddingBottom: listPaddingBottom }}>
             {/* Header */}
             <View style={[styles.header]}>
               <View style={styles.headerLeft}>
@@ -123,7 +126,7 @@ const AddressesScreen: React.FC = () => {
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               {eyebrow ? (
-                <Text style={[styles.headerEyebrow, { color: colors.terra }]} numberOfLines={1}>
+                <Text style={[styles.headerEyebrow, { color: colors.textLight }]} numberOfLines={1}>
                   {eyebrow}
                 </Text>
               ) : null}
@@ -201,7 +204,7 @@ const AddressesScreen: React.FC = () => {
                 />
               )}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={[styles.listContent, { paddingBottom: listPaddingBottom }]}
               showsVerticalScrollIndicator={false}
             />
           )}

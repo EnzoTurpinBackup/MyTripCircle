@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { F } from "../theme/fonts";
+import { SHADOW } from "../theme/colors";
 import { useTheme } from "../contexts/ThemeContext";
 
 export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
@@ -62,10 +62,23 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
     return focused ? icons.focused : icons.unfocused;
   };
 
-  const paddingBottom = Platform.OS === 'ios' ? insets.bottom : 8;
+  const bottomGap = Math.max(insets.bottom, 12);
 
   return (
-    <View style={[styles.container, { paddingBottom, backgroundColor: colors.bgLight, borderTopColor: colors.bgDark }]}>
+    <View
+      pointerEvents="box-none"
+      style={[styles.outer, { paddingBottom: bottomGap }]}
+    >
+      <View
+        style={[
+          styles.island,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.borderLight,
+            shadowColor: SHADOW.medium.shadowColor,
+          },
+        ]}
+      >
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
@@ -125,21 +138,43 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
               color={isFocused ? colors.terra : colors.textLight}
             />
 
-            <Text style={[styles.label, { color: isFocused ? colors.terra : colors.textLight }, isFocused && styles.labelActive]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              style={[styles.label, { color: isFocused ? colors.terra : colors.textLight }, isFocused && styles.labelActive]}
+            >
               {getTabLabel(route.name)}
             </Text>
           </TouchableOpacity>
         );
       })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  outer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    backgroundColor: 'transparent',
+  },
+  island: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    paddingTop: 10,
+    borderRadius: 28,
+    paddingTop: 14,
+    paddingBottom: 10,
+    paddingHorizontal: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
   },
   tabButton: {
     flex: 1,
@@ -150,7 +185,7 @@ const styles = StyleSheet.create({
   },
   pip: {
     position: 'absolute',
-    top: -10,
+    top: -6,
     width: 16,
     height: 2.5,
     borderRadius: 999,

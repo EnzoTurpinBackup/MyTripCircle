@@ -21,6 +21,7 @@ import { useTrips } from "../contexts/TripsContext";
 import { useFriends } from "../contexts/FriendsContext";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
@@ -38,6 +39,8 @@ const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const { isPremium } = useSubscription();
+  const insets = useSafeAreaInsets();
+  const scrollPaddingBottom = 100 + Math.max(insets.bottom, 12);
 
   const handleLogout = () => {
     Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
@@ -54,7 +57,7 @@ const ProfileScreen: React.FC = () => {
       <SwipeToNavigate currentIndex={4} totalTabs={5}>
         <View style={[styles.root, { backgroundColor: colors.bg }]}>
           <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-          <ScrollView scrollEnabled={false} contentContainerStyle={styles.scrollContent}>
+          <ScrollView scrollEnabled={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}>
             {/* Cover */}
             <SkeletonBox width="100%" height={COVER_H} borderRadius={0} />
 
@@ -96,7 +99,7 @@ const ProfileScreen: React.FC = () => {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
         >
           {/* ── Cover ── */}
           <View style={styles.cover}>

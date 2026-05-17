@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 16,
     paddingBottom: 20,
   },
   headerLeft: {
@@ -56,15 +56,15 @@ export const styles = StyleSheet.create({
   },
   filtersScroll: {
     paddingHorizontal: 24,
-    gap: 8,
+    gap: 10,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
     borderRadius: 9999,
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
   },
   chipDot: {
     width: 6,
@@ -72,7 +72,7 @@ export const styles = StyleSheet.create({
     borderRadius: 3,
   },
   chipText: {
-    fontSize: 13,
+    fontSize: 15,
     fontFamily: F.sans600,
   },
   mapWidget: {

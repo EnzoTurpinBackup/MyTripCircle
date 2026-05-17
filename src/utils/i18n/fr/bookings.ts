@@ -1,6 +1,8 @@
 const bookings = {
   bookings: {
     header: "Réservations",
+    count_one: "{{count}} Réservation",
+    count_other: "{{count}} Réservations",
     loading: "Chargement de vos réservations...",
     addBooking: "Ajouter une réservation",
     selectOrCreate: "Sélectionner ou créer une réservation",
@@ -147,8 +149,6 @@ const bookings = {
     documentPickerError: "Erreur lors de la sélection du document",
     endDateBeforeStart: "La date de fin doit être après la date de début",
     myBookingsHeader: "Mes réservations",
-    totalCount_one: "Total · {{count}} réservation",
-    totalCount_other: "Total · {{count}} réservations",
     createBookingError: "Erreur lors de la création de la réservation",
     details: {
       loading: "Chargement des détails de la réservation...",

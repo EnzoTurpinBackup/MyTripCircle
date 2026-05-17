@@ -93,7 +93,7 @@ const common = {
   tabs: {
     myTrips: "Mes voyages",
     trips: "Voyages",
-    bookings: "Réservations",
+    bookings: "Résas",
     addresses: "Adresses",
     ideas: "Idées",
     profile: "Profil",

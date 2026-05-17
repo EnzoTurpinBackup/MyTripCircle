@@ -102,6 +102,7 @@ const TripsScreen: React.FC = () => {
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          scrollEnabled={showAllTrips}
         >
           {/* Header */}
           <View style={styles.header}>

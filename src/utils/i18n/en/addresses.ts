@@ -1,6 +1,8 @@
 const addresses = {
   addresses: {
     header: "Addresses",
+    count_one: "{{count}} Address",
+    count_other: "{{count}} Addresses",
     loading: "Loading your addresses...",
     addAddress: "Add Address",
     emptyTitle: "No addresses found",
