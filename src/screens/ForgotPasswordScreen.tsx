@@ -226,6 +226,7 @@ const ForgotPasswordScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={false}
       >
         <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
 
