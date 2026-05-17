@@ -145,6 +145,7 @@ const OtpScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={false}
       >
         {/* Back button */}
         <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
