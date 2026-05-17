@@ -53,3 +53,9 @@ yarn-error.*
 
 # notes locales
 TODO.md
+
+# scripts
+scripts/grant-premium.js
+
+# documentation
+docs/
