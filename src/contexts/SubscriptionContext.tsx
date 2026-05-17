@@ -10,6 +10,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Subscription, SubscriptionFeatures } from "../types";
 import ApiService from "../services/ApiService";
+import { useAuth } from "./AuthContext";
 
 interface SubscriptionContextType {
   subscription: Subscription | null;
@@ -46,13 +47,22 @@ interface SubscriptionProviderProps {
 const SUBSCRIPTION_STORAGE_KEY = "subscription";
 
 export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
+  const { user, loading: authLoading } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setSubscription(null);
+      setError(null);
+      setLoading(false);
+      AsyncStorage.removeItem(SUBSCRIPTION_STORAGE_KEY).catch(() => {});
+      return;
+    }
     loadSubscription();
-  }, []);
+  }, [user, authLoading]);
 
   const loadSubscription = async () => {
     try {
