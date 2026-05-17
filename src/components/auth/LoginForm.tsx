@@ -64,6 +64,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 24 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          scrollEnabled={false}
         >
           {/* Section haute */}
           <View>
