@@ -32,7 +32,6 @@ interface Props {
   tripId: string;
   isOwner: boolean;
   canEdit?: boolean;
-  totalBudget: number;
   bookingsCount: number;
   addressesCount: number;
 }
@@ -42,7 +41,6 @@ const TripHero: React.FC<Props> = ({
   tripId,
   isOwner,
   canEdit,
-  totalBudget,
   bookingsCount,
   addressesCount,
 }) => {
@@ -99,9 +97,8 @@ const TripHero: React.FC<Props> = ({
               startDate: trip.startDate instanceof Date ? trip.startDate.toISOString() : String(trip.startDate),
               endDate: trip.endDate instanceof Date ? trip.endDate.toISOString() : String(trip.endDate),
               coverImage: trip.coverImage,
-              totalBookings: trip.stats?.totalBookings ?? bookingsCount,
-              totalAddresses: trip.stats?.totalAddresses ?? addressesCount,
-              budget: totalBudget,
+              totalBookings: bookingsCount,
+              totalAddresses: addressesCount,
               isOwner,
             })
           }

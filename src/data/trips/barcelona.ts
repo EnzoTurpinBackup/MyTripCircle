@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const barcelona: TripIdea = {
   id: "15",
   duration: 5,
-  budgetMin: 700,
-  budgetMax: 1500,
-  currency: "€",
   difficulty: "easy",
   destinationCity: "Barcelona",
   destinationCountry: "Spain",

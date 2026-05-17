@@ -209,7 +209,6 @@ export type RootStackParamList = {
     coverImage?: string;
     totalBookings: number;
     totalAddresses: number;
-    budget: number;
     isOwner: boolean;
   };
   Profile: undefined;

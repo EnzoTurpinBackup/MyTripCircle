@@ -8,14 +8,12 @@ import { RADIUS } from "../../theme";
 interface Props {
   bookingsCount: number;
   addressesCount: number;
-  totalBudget: number;
   totalMembers: number;
 }
 
 const TripStatsRow: React.FC<Props> = ({
   bookingsCount,
   addressesCount,
-  totalBudget,
   totalMembers,
 }) => {
   const { t } = useTranslation();
@@ -24,7 +22,6 @@ const TripStatsRow: React.FC<Props> = ({
   const stats = [
     { value: String(bookingsCount), label: t("tripDetails.statsBookings") },
     { value: String(addressesCount), label: t("tripDetails.statsAddresses") },
-    { value: totalBudget > 0 ? `${totalBudget}€` : "—", label: t("tripDetails.statsBudget") },
     { value: String(totalMembers), label: t("tripDetails.statsMembers") },
   ];
 

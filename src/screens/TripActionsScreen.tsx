@@ -39,7 +39,6 @@ const TripActionsScreen: React.FC = () => {
     coverImage,
     totalBookings,
     totalAddresses,
-    budget,
     isOwner,
   } = route.params;
   const { deleteTrip } = useTrips();
@@ -122,7 +121,6 @@ const TripActionsScreen: React.FC = () => {
         {[
           { value: String(totalBookings), label: t("tripActions.statsBookings") },
           { value: String(totalAddresses), label: t("tripActions.statsAddresses") },
-          { value: budget > 0 ? `${budget}€` : "—", label: t("tripActions.statsBudget") },
         ].map((stat) => (
           <View key={stat.label} style={[s.statPill, { backgroundColor: colors.bgMid }]}>
             <Text style={[s.statValue, { color: colors.terra }]}>{stat.value}</Text>

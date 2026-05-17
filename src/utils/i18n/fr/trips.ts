@@ -61,7 +61,6 @@ const trips = {
     tabMembers: "Membres",
     statsBookings: "Réservations",
     statsAddresses: "Adresses",
-    statsBudget: "Budget",
     statsMembers: "Membres",
     progress: "Progression",
     progressDays: "{{passed}}/{{total}} jours",

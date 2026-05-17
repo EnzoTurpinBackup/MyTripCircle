@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const tokyo: TripIdea = {
   id: "12",
   duration: 7,
-  budgetMin: 1800,
-  budgetMax: 3000,
-  currency: "€",
   difficulty: "moderate",
   destinationCity: "Tokyo",
   destinationCountry: "Japan",

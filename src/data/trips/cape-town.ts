@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const capeTown: TripIdea = {
   id: "18",
   duration: 7,
-  budgetMin: 1000,
-  budgetMax: 2000,
-  currency: "€",
   difficulty: "moderate",
   destinationCity: "Cape Town",
   destinationCountry: "South Africa",

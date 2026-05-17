@@ -22,7 +22,7 @@ export function useTripDetails(tripId: string, showToastParam?: boolean) {
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
   const data = useTripData(tripId);
-  const permissions = useTripPermissions(data.trip, data.bookings, user?.id);
+  const permissions = useTripPermissions(data.trip, user?.id);
   const countdown = useTripCountdown(data.trip);
 
   useFocusEffect(
@@ -70,7 +70,6 @@ export function useTripDetails(tripId: string, showToastParam?: boolean) {
     userCollaborator: permissions.userCollaborator,
     canInvite: permissions.canInvite,
     totalMembers: permissions.totalMembers,
-    totalBudget: permissions.totalBudget,
     collaboratorUsers: permissions.collaboratorUsers,
     // useTripCountdown
     countdown: countdown.countdown,

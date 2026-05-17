@@ -62,7 +62,6 @@ const TripDetailsScreen: React.FC = () => {
     isOwner,
     userCollaborator,
     totalMembers,
-    totalBudget,
     progressPercent,
     durationDays,
     daysPassed,
@@ -173,15 +172,13 @@ const TripDetailsScreen: React.FC = () => {
           tripId={tripId}
           isOwner={isOwner}
           canEdit={userCollaborator?.permissions?.canEdit}
-          totalBudget={totalBudget}
           bookingsCount={bookings.length}
           addressesCount={addresses.length}
         />
 
         <TripStatsRow
-          bookingsCount={trip.stats?.totalBookings ?? bookings.length}
-          addressesCount={trip.stats?.totalAddresses ?? addresses.length}
-          totalBudget={totalBudget}
+          bookingsCount={bookings.length}
+          addressesCount={addresses.length}
           totalMembers={totalMembers}
         />
 

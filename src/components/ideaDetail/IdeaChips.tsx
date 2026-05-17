@@ -21,9 +21,6 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { icon: string; colorKey: string }> 
 
 interface Props {
   customDays: number;
-  budgetMin: number;
-  budgetMax: number;
-  currency: string;
   difficulty: Difficulty;
   colors: ThemeColors;
   onDecrement: () => void;
@@ -32,9 +29,6 @@ interface Props {
 
 const IdeaChips: React.FC<Props> = ({
   customDays,
-  budgetMin,
-  budgetMax,
-  currency,
   difficulty,
   colors,
   onDecrement,
@@ -68,13 +62,6 @@ const IdeaChips: React.FC<Props> = ({
         <TouchableOpacity onPress={onIncrement} activeOpacity={0.7} style={s.stepperBtn}>
           <Ionicons name="add" size={14} color={colors.textMid} />
         </TouchableOpacity>
-      </View>
-
-      <View style={[s.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Ionicons name="card-outline" size={14} color={colors.terra} />
-        <Text style={[s.chipText, { color: colors.text }]}>
-          {`${budgetMin}–${budgetMax} ${currency}`}
-        </Text>
       </View>
 
       <View style={[s.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>

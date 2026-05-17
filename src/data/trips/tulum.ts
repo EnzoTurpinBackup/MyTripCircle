@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const tulum: TripIdea = {
   id: "1",
   duration: 7,
-  budgetMin: 1500,
-  budgetMax: 2500,
-  currency: "€",
   difficulty: "moderate",
   destinationCity: "Tulum",
   destinationCountry: "Mexico",

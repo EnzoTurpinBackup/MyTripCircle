@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { useTripPermissions } from '../useTripPermissions';
-import type { Trip, Booking } from '../../types';
+import type { Trip } from '../../types';
 import ApiService from '../../services/ApiService';
 
 jest.mock('../../services/ApiService', () => ({
@@ -26,18 +26,6 @@ const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
-});
-
-const makeBooking = (price: number): Booking => ({
-  id: 'b1',
-  tripId: 'trip1',
-  type: 'flight',
-  title: 'Flight',
-  date: new Date(),
-  status: 'confirmed',
-  price,
-  createdAt: new Date(),
-  updatedAt: new Date(),
 });
 
 describe('useTripPermissions', () => {
@@ -66,26 +54,26 @@ describe('useTripPermissions', () => {
 
   it('should set isOwner to true when userId matches ownerId', () => {
     const { result } = renderHook(() =>
-      useTripPermissions(makeTrip({ ownerId: 'user1' }), [], 'user1')
+      useTripPermissions(makeTrip({ ownerId: 'user1' }), 'user1')
     );
     expect(result.current.isOwner).toBe(true);
   });
 
   it('should set isOwner to false when userId differs from ownerId', () => {
     const { result } = renderHook(() =>
-      useTripPermissions(makeTrip({ ownerId: 'owner1' }), [], 'user2')
+      useTripPermissions(makeTrip({ ownerId: 'owner1' }), 'user2')
     );
     expect(result.current.isOwner).toBe(false);
   });
 
   it('should set isOwner to false when trip is null', () => {
-    const { result } = renderHook(() => useTripPermissions(null, [], 'user1'));
+    const { result } = renderHook(() => useTripPermissions(null, 'user1'));
     expect(result.current.isOwner).toBe(false);
   });
 
   it('should grant canInvite to the owner', () => {
     const { result } = renderHook(() =>
-      useTripPermissions(makeTrip({ ownerId: 'user1' }), [], 'user1')
+      useTripPermissions(makeTrip({ ownerId: 'user1' }), 'user1')
     );
     expect(result.current.canInvite).toBeTruthy();
   });
@@ -101,7 +89,7 @@ describe('useTripPermissions', () => {
         },
       ],
     });
-    const { result } = renderHook(() => useTripPermissions(trip, [], 'collab1'));
+    const { result } = renderHook(() => useTripPermissions(trip, 'collab1'));
     expect(result.current.canInvite).toBeTruthy();
   });
 
@@ -116,7 +104,7 @@ describe('useTripPermissions', () => {
         },
       ],
     });
-    const { result } = renderHook(() => useTripPermissions(trip, [], 'collab2'));
+    const { result } = renderHook(() => useTripPermissions(trip, 'collab2'));
     expect(result.current.canInvite).toBeFalsy();
   });
 
@@ -127,25 +115,13 @@ describe('useTripPermissions', () => {
         { userId: 'c2', role: 'viewer', joinedAt: new Date(), permissions: { canEdit: false, canInvite: false, canDelete: false } },
       ],
     });
-    const { result } = renderHook(() => useTripPermissions(trip, [], 'owner1'));
+    const { result } = renderHook(() => useTripPermissions(trip, 'owner1'));
     expect(result.current.totalMembers).toBe(3);
   });
 
   it('should return 0 totalMembers when trip is null', () => {
-    const { result } = renderHook(() => useTripPermissions(null, [], 'user1'));
+    const { result } = renderHook(() => useTripPermissions(null, 'user1'));
     expect(result.current.totalMembers).toBe(0);
-  });
-
-  it('should compute totalBudget as sum of booking prices', () => {
-    const bookings = [makeBooking(200), makeBooking(350), makeBooking(50)];
-    const { result } = renderHook(() => useTripPermissions(makeTrip(), bookings, 'owner1'));
-    expect(result.current.totalBudget).toBe(600);
-  });
-
-  it('should return 0 totalBudget for bookings without price', () => {
-    const bookings = [makeBooking(0), { ...makeBooking(0), price: undefined }];
-    const { result } = renderHook(() => useTripPermissions(makeTrip(), bookings, 'owner1'));
-    expect(result.current.totalBudget).toBe(0);
   });
 
   it('should map collaborator users using _id.toString or id', async () => {
@@ -172,7 +148,7 @@ describe('useTripPermissions', () => {
       ],
     });
 
-    const { result } = renderHook(() => useTripPermissions(trip, [], 'viewer-self'));
+    const { result } = renderHook(() => useTripPermissions(trip, 'viewer-self'));
 
     await waitFor(() => {
       expect(result.current.collaboratorUsers.size).toBe(2);
@@ -200,7 +176,7 @@ describe('useTripPermissions', () => {
       ],
     });
 
-    const { result } = renderHook(() => useTripPermissions(trip, [], 'c1'));
+    const { result } = renderHook(() => useTripPermissions(trip, 'c1'));
 
     await waitFor(() => {
       expect(result.current.collaboratorUsers.get('inviter1')).toMatchObject({ name: 'Inviter' });
@@ -214,7 +190,7 @@ describe('useTripPermissions', () => {
     const trip = { ...makeTrip({ ownerId: 'solo-owner' }), collaborators: undefined as unknown as Trip['collaborators'] };
     (ApiService.getUsersByIds as jest.Mock).mockResolvedValueOnce([{ id: 'solo-owner', name: 'Owner' }]);
 
-    const { result } = renderHook(() => useTripPermissions(trip, [], 'viewer'));
+    const { result } = renderHook(() => useTripPermissions(trip, 'viewer'));
 
     expect(result.current.totalMembers).toBe(1);
 
@@ -241,7 +217,7 @@ describe('useTripPermissions', () => {
       ],
     });
 
-    renderHook(() => useTripPermissions(trip, [], 'viewer-self'));
+    renderHook(() => useTripPermissions(trip, 'viewer-self'));
 
     await waitFor(() => {
       expect(ApiService.getUsersByIds).toHaveBeenCalled();

@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const islande: TripIdea = {
   id: "9",
   duration: 8,
-  budgetMin: 2000,
-  budgetMax: 3500,
-  currency: "€",
   difficulty: "adventurous",
   destinationCity: "Reykjavik",
   destinationCountry: "Iceland",

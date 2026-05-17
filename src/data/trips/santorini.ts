@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const santorini: TripIdea = {
   id: "3",
   duration: 7,
-  budgetMin: 2000,
-  budgetMax: 3500,
-  currency: "€",
   difficulty: "easy",
   destinationCity: "Fira",
   destinationCountry: "Greece",

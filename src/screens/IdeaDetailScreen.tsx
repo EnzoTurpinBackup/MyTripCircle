@@ -78,9 +78,6 @@ const IdeaDetailScreen: React.FC = () => {
 
         <IdeaChips
           customDays={customDays}
-          budgetMin={idea.budgetMin}
-          budgetMax={idea.budgetMax}
-          currency={idea.currency}
           difficulty={idea.difficulty}
           colors={colors}
           onDecrement={() => changeCustomDays((d) => Math.max(1, d - 1))}

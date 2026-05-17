@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const bali: TripIdea = {
   id: "2",
   duration: 10,
-  budgetMin: 1200,
-  budgetMax: 2000,
-  currency: "€",
   difficulty: "moderate",
   destinationCity: "Ubud",
   destinationCountry: "Indonesia",

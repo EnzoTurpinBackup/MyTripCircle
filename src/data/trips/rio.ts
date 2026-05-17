@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const rio: TripIdea = {
   id: "16",
   duration: 7,
-  budgetMin: 1200,
-  budgetMax: 2500,
-  currency: "€",
   difficulty: "moderate",
   destinationCity: "Rio de Janeiro",
   destinationCountry: "Brazil",

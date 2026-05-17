@@ -21,9 +21,6 @@ export interface ItineraryDay {
 export interface TripIdea {
   id: string; // corresponds to destination id in IdeasScreen
   duration: number;
-  budgetMin: number;
-  budgetMax: number;
-  currency: string;
   difficulty: Difficulty;
   /** Ville principale de la destination (en anglais, pour les adresses) */
   destinationCity: string;

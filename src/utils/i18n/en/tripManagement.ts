@@ -14,7 +14,6 @@ const tripManagement = {
     shareMessage:    "Join my trip \"{{title}}\" on MyTripCircle! 🌍\n\nOpen this link to join us:\n{{link}}",
     statsBookings:   "Bookings",
     statsAddresses:  "Addresses",
-    statsBudget:     "Budget",
   },
   tripMembers: {
     title:              "Manage members",

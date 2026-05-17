@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const maldives: TripIdea = {
   id: "6",
   duration: 7,
-  budgetMin: 3000,
-  budgetMax: 6000,
-  currency: "€",
   difficulty: "easy",
   destinationCity: "Malé",
   destinationCountry: "Maldives",

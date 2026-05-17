@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Trip, Booking, Collaborator } from "../types";
+import { Trip, Collaborator } from "../types";
 import ApiService from "../services/ApiService";
 
 export function useTripPermissions(
   trip: Trip | null,
-  bookings: Booking[],
   userId: string | undefined,
 ) {
   const [collaboratorUsers, setCollaboratorUsers] = useState<Map<string, any>>(new Map());
@@ -13,7 +12,6 @@ export function useTripPermissions(
   const userCollaborator = trip?.collaborators?.find((c: Collaborator) => c.userId === userId);
   const canInvite = isOwner || userCollaborator?.permissions?.canInvite;
   const totalMembers = trip ? (trip.collaborators?.length ?? 0) + 1 : 0;
-  const totalBudget = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
 
   useEffect(() => {
     if (!trip) return;
@@ -41,5 +39,5 @@ export function useTripPermissions(
     loadCollaboratorInfo();
   }, [trip, userId]);
 
-  return { isOwner, userCollaborator, canInvite, totalMembers, totalBudget, collaboratorUsers };
+  return { isOwner, userCollaborator, canInvite, totalMembers, collaboratorUsers };
 }

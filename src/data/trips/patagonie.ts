@@ -3,9 +3,6 @@ import { TripIdea } from "../tripIdeas";
 export const patagonie: TripIdea = {
   id: "5",
   duration: 12,
-  budgetMin: 2500,
-  budgetMax: 4000,
-  currency: "€",
   difficulty: "adventurous",
   destinationCity: "El Calafate",
   destinationCountry: "Argentina",
