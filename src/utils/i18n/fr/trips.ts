@@ -17,6 +17,7 @@ const trips = {
     newButton: "Nouveau",
     statusDraft: "● Brouillon",
     statusActive: "● En cours",
+    statusUpcoming: "● À venir",
     bookingsLabel: "Réservations",
     coTravelers: "Co-voyageurs",
     beforeDeparture: "avant départ",
@@ -139,8 +140,6 @@ const trips = {
     cancelMessage:
       "Êtes-vous sûr de vouloir annuler ? Toutes les modifications seront perdues.",
     screenTitle: "Nouveau voyage",
-    addCoverPhoto: "📸 Ajouter une photo de couverture",
-    changeCoverPhoto: "📸 Changer la photo",
     tripNameLabel: "Nom du voyage",
     tripNamePlaceholder: "Road Trip Côte Atlantique",
     mainDestination: "Destination principale",

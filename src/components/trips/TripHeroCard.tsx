@@ -26,6 +26,17 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
   const { colors } = useTheme();
   const monthsShort = t("trips.months").split(",");
 
+  const now = new Date();
+  const hasStarted = now >= new Date(trip.startDate);
+  let statusLabel: string;
+  if (trip.status === "draft") {
+    statusLabel = t("trips.statusDraft");
+  } else if (hasStarted) {
+    statusLabel = t("trips.statusActive");
+  } else {
+    statusLabel = t("trips.statusUpcoming");
+  }
+
   return (
     <>
       <TouchableOpacity style={styles.heroCard} onPress={onPress} activeOpacity={0.88}>
@@ -37,9 +48,7 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.heroStatusBadge}>
-          <Text style={styles.heroStatusText}>
-            {trip.status === "draft" ? t("trips.statusDraft") : t("trips.statusActive")}
-          </Text>
+          <Text style={styles.heroStatusText}>{statusLabel}</Text>
         </View>
         <View style={styles.heroArrowBtn}>
           <Ionicons name="arrow-forward-outline" size={16} color={colors.terraDark} />

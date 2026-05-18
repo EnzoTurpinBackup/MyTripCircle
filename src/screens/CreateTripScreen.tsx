@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Pressable,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,7 +19,6 @@ import { formatDate } from "../utils/i18n";
 import { useTheme } from "../contexts/ThemeContext";
 
 import { useCreateTrip } from "../hooks/useCreateTrip";
-import TripCoverPhoto from "../components/createTrip/TripCoverPhoto";
 import {
   TripDatePickerModal,
   AndroidDatePicker,
@@ -46,9 +47,11 @@ const CreateTripScreen: React.FC = () => {
     setShowStartDatePicker,
     setShowEndDatePicker,
     setShowVisibilityPicker,
-    coverImage,
-    handlePickCoverPhoto,
   } = useCreateTrip();
+
+  const titleInputRef = useRef<TextInput>(null);
+  const destinationInputRef = useRef<TextInput>(null);
+  const descriptionInputRef = useRef<TextInput>(null);
 
   const VISIBILITY_LABELS: Record<string, string> = {
     private: t("createTrip.visibilityPrivate"),
@@ -63,6 +66,7 @@ const CreateTripScreen: React.FC = () => {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
+       <Pressable style={styles.flex} onPress={Keyboard.dismiss}>
         {/* ── Header ── */}
         <View style={styles.header}>
           <BackButton onPress={handleCancel} />
@@ -72,18 +76,17 @@ const CreateTripScreen: React.FC = () => {
           <View style={{ width: 44 }} />
         </View>
 
-        {/* ── Cover Photo ── */}
-        <TripCoverPhoto coverImage={coverImage} onPickPhoto={handlePickCoverPhoto} />
-
         {/* ── Formulaire ── */}
         <ScrollView
           style={styles.flex}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
+          scrollEnabled={false}
         >
           {/* 1. Nom du voyage */}
-          <View
+          <Pressable
+            onPress={() => titleInputRef.current?.focus()}
             style={[
               styles.fieldBox,
               { backgroundColor: colors.surface, borderColor: colors.border },
@@ -93,6 +96,7 @@ const CreateTripScreen: React.FC = () => {
               {t("createTrip.tripNameLabel")}
             </Text>
             <TextInput
+              ref={titleInputRef}
               style={[styles.fieldInput, { color: colors.text }]}
               value={formData.title}
               onChangeText={(v) => handleInputChange("title", v)}
@@ -100,10 +104,11 @@ const CreateTripScreen: React.FC = () => {
               placeholderTextColor={colors.textLight}
               maxLength={100}
             />
-          </View>
+          </Pressable>
 
           {/* 2. Destination principale */}
-          <View
+          <Pressable
+            onPress={() => destinationInputRef.current?.focus()}
             style={[
               styles.fieldBox,
               { backgroundColor: colors.surface, borderColor: colors.border },
@@ -115,6 +120,7 @@ const CreateTripScreen: React.FC = () => {
             <View style={styles.destRow}>
               <Text style={styles.destPin}>📍</Text>
               <TextInput
+                ref={destinationInputRef}
                 style={[styles.destInput, { color: colors.text }]}
                 value={formData.destination}
                 onChangeText={(v) => handleInputChange("destination", v)}
@@ -123,7 +129,7 @@ const CreateTripScreen: React.FC = () => {
                 maxLength={100}
               />
             </View>
-          </View>
+          </Pressable>
 
           {/* 3. Dates — côte à côte */}
           <View style={styles.dateRow}>
@@ -194,7 +200,8 @@ const CreateTripScreen: React.FC = () => {
           )}
 
           {/* 4. Description (optionnelle) */}
-          <View
+          <Pressable
+            onPress={() => descriptionInputRef.current?.focus()}
             style={[
               styles.fieldBox,
               { backgroundColor: colors.surface, borderColor: colors.border },
@@ -204,6 +211,7 @@ const CreateTripScreen: React.FC = () => {
               {t("createTrip.descriptionLabel")}
             </Text>
             <TextInput
+              ref={descriptionInputRef}
               style={[styles.fieldInput, styles.descInput, { color: colors.text }]}
               value={formData.description}
               onChangeText={(v) => handleInputChange("description", v)}
@@ -213,7 +221,7 @@ const CreateTripScreen: React.FC = () => {
               maxLength={500}
               textAlignVertical="top"
             />
-          </View>
+          </Pressable>
 
           {/* 5. Visibilité */}
           <View
@@ -272,6 +280,7 @@ const CreateTripScreen: React.FC = () => {
             onChange={(event, date) => handleDateChange(event, date, "end")}
           />
         )}
+       </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

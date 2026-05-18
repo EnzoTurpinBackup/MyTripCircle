@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Alert, Platform } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useTranslation } from "react-i18next";
@@ -53,48 +52,26 @@ export const useCreateTrip = () => {
   const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string>("");
-  // true dès que l'utilisateur choisit manuellement sa propre photo
-  const isManualCover = useRef(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Auto-fetch photo de couverture à partir de la destination ───────────────
   useEffect(() => {
-    if (isManualCover.current) return;
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     if (formData.destination.trim().length < 3) {
-      if (!isManualCover.current) setCoverImage("");
+      setCoverImage("");
       return;
     }
 
     debounceTimer.current = setTimeout(async () => {
       const url = await fetchDestinationPhotoUrl(formData.destination);
-      if (url && !isManualCover.current) setCoverImage(url);
+      if (url) setCoverImage(url);
     }, 600);
 
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
   }, [formData.destination]);
-
-  const handlePickCoverPhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(t("common.error"), t("editTrip.coverPermissionDenied"));
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images", allowsEditing: true, aspect: [16, 9], quality: 0.8,
-      });
-      if (!result.canceled && result.assets[0]?.uri) {
-        isManualCover.current = true;
-        setCoverImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error("[useCreateTrip] Erreur lors de la sélection de la photo:", error);
-    }
-  };
 
   const handleInputChange = (field: keyof TripFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -236,11 +213,9 @@ export const useCreateTrip = () => {
     showVisibilityPicker,
     loading,
     dateError,
-    coverImage,
     handleInputChange,
     handleDateChange,
     handleVisibilityChange,
-    handlePickCoverPhoto,
     handleCreate,
     handleCancel,
     setShowStartDatePicker,

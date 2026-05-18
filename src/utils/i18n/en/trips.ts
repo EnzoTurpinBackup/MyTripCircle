@@ -18,6 +18,7 @@ const trips = {
     newButton: "New",
     statusDraft: "● Draft",
     statusActive: "● Active",
+    statusUpcoming: "● Upcoming",
     bookingsLabel: "Bookings",
     coTravelers: "Co-travelers",
     beforeDeparture: "Before departure",
@@ -138,8 +139,6 @@ const trips = {
     cancelMessage:
       "Are you sure you want to cancel? All changes will be lost.",
     screenTitle: "New Trip",
-    addCoverPhoto: "📸 Add cover photo",
-    changeCoverPhoto: "📸 Change photo",
     tripNameLabel: "Trip name",
     tripNamePlaceholder: "Atlantic Coast Road Trip",
     mainDestination: "Main destination",
