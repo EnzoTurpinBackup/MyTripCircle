@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,7 @@ const SettingsScreen: React.FC = () => {
   const { user, updateSettings, deleteAccount } = useAuth();
   const { t, i18n } = useTranslation();
   const { isDark, colors, toggleTheme, satelliteMap, toggleSatelliteMap } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const NOTIF_KEYS = {
     push: "@mytripcircle_notif_push",
@@ -92,7 +93,7 @@ const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
 
       {/* ── Header ── */}
@@ -104,7 +105,7 @@ const SettingsScreen: React.FC = () => {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 24 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Section: NOTIFICATIONS ── */}
@@ -277,9 +278,7 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
   },
-  scrollContent: {
-    paddingBottom: 64,
-  },
+  scrollContent: {},
 
   // Header
   headerBar: {
