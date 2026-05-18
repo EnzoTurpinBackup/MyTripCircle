@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import BackButton from "../ui/BackButton";
 import { useTranslation } from "react-i18next";
 import { AppColors } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
@@ -23,6 +24,7 @@ interface LoginFormProps {
   onSubmit: () => void;
   onSwitchToRegister: () => void;
   onForgotPassword: () => void;
+  onBackToWelcome: () => void;
   onGooglePress: () => void;
   onApplePress: () => void;
   googleDisabled: boolean;
@@ -46,6 +48,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onSwitchToRegister,
   onForgotPassword,
+  onBackToWelcome,
   onGooglePress,
   onApplePress,
   googleDisabled,
@@ -68,9 +71,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
         >
           {/* Section haute */}
           <View>
-            <Text style={[styles.logo, { color: colors.terra }]}>MTC</Text>
+            <BackButton
+              onPress={onBackToWelcome}
+              style={styles.backButton}
+            />
             <View style={styles.titleBlock}>
-              <Text style={[styles.welcomeTitle, { color: colors.text }]}>{t("auth.welcomeBackTitle")}</Text>
+              <Text
+                style={[styles.welcomeTitle, { color: colors.text }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {t("auth.welcomeBackTitle")}
+              </Text>
               <Text style={[styles.welcomeSub, { color: colors.textLight }]}>{t("auth.loginSubtitle")}</Text>
             </View>
             <View style={styles.inputsArea}>
@@ -148,16 +160,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   flex: { flex: 1 },
+  backButton: {
+    marginLeft: 24,
+    marginTop: 12,
+    marginBottom: 8,
+  },
   scrollContent: {
     flexGrow: 1,
-  },
-  logo: {
-    fontFamily: F.sans700,
-    fontSize: 32,
-    letterSpacing: 2,
-    paddingTop: 16,
-    paddingHorizontal: 24,
-    paddingBottom: 0,
   },
   titleBlock: {
     paddingHorizontal: 24,

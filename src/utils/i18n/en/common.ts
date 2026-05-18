@@ -73,7 +73,7 @@ const common = {
     ctaHaveAccount: "I already have an account",
   },
   auth: {
-    welcomeBackTitle: "Welcome\nback 👋",
+    welcomeBackTitle: "Welcome back 👋",
     loginSubtitle: "Sign in to your account",
     registerTitle: "Create account ✨",
     registerSubtitle: "Join MyTripCircle for free",

@@ -75,6 +75,7 @@ const AuthScreen: React.FC<{ route?: { params?: { initialMode?: "login" | "regis
         onSubmit={() => form.handleSubmit(true, handleOtpRedirect)}
         onSwitchToRegister={handleSwitchMode}
         onForgotPassword={() => navigation.navigate("ForgotPassword", {})}
+        onBackToWelcome={() => navigation.navigate("Welcome")}
         onGooglePress={() => googlePromptAsync()}
         onApplePress={form.handleAppleSignIn}
         googleDisabled={!googleRequest}

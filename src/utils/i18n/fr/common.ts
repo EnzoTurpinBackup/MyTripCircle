@@ -74,9 +74,9 @@ const common = {
     ctaHaveAccount: "J'ai déjà un compte",
   },
   auth: {
-    welcomeBackTitle: "Bienvenue\nde retour 👋",
+    welcomeBackTitle: "Te revoilà 👋",
     loginSubtitle: "Connecte-toi à ton compte",
-    registerTitle: "Créer un compte ✨",
+    registerTitle: "Créer ton compte ✨",
     registerSubtitle: "Rejoins MyTripCircle gratuitement",
     googleButton: "Continuer avec Google",
     appleButton: "Continuer avec Apple",
