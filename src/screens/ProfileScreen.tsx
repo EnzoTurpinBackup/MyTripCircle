@@ -175,7 +175,7 @@ const ProfileScreen: React.FC = () => {
                 icon="people-outline"
                 label={t("profile.myFriends")}
                 badge={friends.length > 0 ? friends.length : undefined}
-                onPress={() => navigation.navigate("Friends" as never)}
+                onPress={() => navigation.navigate("Friends")}
               />
               <Divider />
               <Row

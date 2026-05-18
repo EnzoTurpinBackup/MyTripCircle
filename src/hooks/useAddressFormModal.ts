@@ -156,7 +156,7 @@ export const useAddressFormModal = ({
     };
     try {
       setSubmitting(true);
-      await onSave(payload as Omit<Address, "id" | "createdAt" | "updatedAt">);
+      await onSave(payload);
       onClose();
     } catch (error) {
       console.error("Address save error:", error);

@@ -239,7 +239,7 @@ const FriendsScreen: React.FC = () => {
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("friends.title")}</Text>
         </View>
-        <TouchableOpacity style={[styles.addCircleBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, offlineStyle]} onPress={() => navigation.navigate("AddFriend" as never)} disabled={offlineDisabled} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.addCircleBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }, offlineStyle]} onPress={() => navigation.navigate("AddFriend")} disabled={offlineDisabled} activeOpacity={0.8}>
           <Text style={styles.addCirclePlus}>+</Text>
         </TouchableOpacity>
       </View>

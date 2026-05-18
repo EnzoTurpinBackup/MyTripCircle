@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { GestureHandlerRootView, PanGestureHandler, State } from "react-native-gesture-handler";
-import { useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { MainTabParamList } from "../types";
 
 interface SwipeToNavigateProps {
   children: React.ReactNode;
@@ -8,15 +9,14 @@ interface SwipeToNavigateProps {
   totalTabs: number;
 }
 
+const TABS: (keyof MainTabParamList)[] = ["Trips", "Bookings", "Ideas", "Addresses", "Profile"];
+
 export const SwipeToNavigate: React.FC<SwipeToNavigateProps> = ({
   children,
   currentIndex,
   totalTabs,
 }) => {
-  const navigation = useNavigation();
-
-  // Ordre des onglets
-  const tabs = ["Trips", "Bookings", "Ideas", "Addresses", "Profile"];
+  const navigation = useNavigation<NavigationProp<MainTabParamList>>();
 
   const handleSwipe = (translationX: number) => {
     const threshold = 50; // Distance minimale pour un swipe
@@ -24,10 +24,10 @@ export const SwipeToNavigate: React.FC<SwipeToNavigateProps> = ({
     if (Math.abs(translationX) > threshold) {
       if (translationX > 0 && currentIndex > 0) {
         // Swipe vers la droite = onglet précédent
-        navigation.navigate(tabs[currentIndex - 1] as never);
+        navigation.navigate(TABS[currentIndex - 1]);
       } else if (translationX < 0 && currentIndex < totalTabs - 1) {
         // Swipe vers la gauche = onglet suivant
-        navigation.navigate(tabs[currentIndex + 1] as never);
+        navigation.navigate(TABS[currentIndex + 1]);
       }
     }
   };

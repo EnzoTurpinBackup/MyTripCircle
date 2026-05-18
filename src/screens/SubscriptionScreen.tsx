@@ -48,6 +48,71 @@ const SubscriptionScreen: React.FC = () => {
     return t("subscription.activeBannerActive");
   })();
 
+  const renderSubscriptionBlock = () => {
+    if (premium) {
+      return (
+        <View style={[styles.activeCard, { backgroundColor: colors.terraLight, borderColor: colors.terra }]}>
+          <View style={styles.activeHeader}>
+            <Ionicons name="checkmark-circle" size={22} color={colors.terra} />
+            <Text style={[styles.activeTitle, { color: colors.terraDark }]}>
+              {t("subscription.activeBannerTitle")}
+            </Text>
+          </View>
+          <Text style={[styles.activeRenewal, { color: colors.textMid }]}>
+            {renewalLine}
+          </Text>
+          <TouchableOpacity
+            style={[styles.manageBtn, { backgroundColor: colors.terra }]}
+            onPress={() => Linking.openURL(MANAGE_SUBSCRIPTION_URL).catch(() => {})}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.manageBtnText}>{t("subscription.manageButton")}</Text>
+            <Ionicons name="open-outline" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (products.length === 0) {
+      return (
+        <View style={[styles.loadingContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="hourglass-outline" size={32} color={colors.terra} />
+          <Text style={[styles.loadingText, { color: colors.textMid }]}>
+            {t("subscription.loadingOffers")}
+          </Text>
+        </View>
+      );
+    }
+
+    return products.map((product, index) => (
+      <PlanCard
+        key={product.productId}
+        id={product.productId}
+        title={product.title || product.productId}
+        price={product.localizedPrice}
+        advantages={
+          index === 0
+            ? [
+                t("subscription.monthlyAdvantage1"),
+                t("subscription.monthlyAdvantage2"),
+                t("subscription.monthlyAdvantage3"),
+                t("subscription.monthlyAdvantage4"),
+              ]
+            : [
+                t("subscription.annualAdvantage1"),
+                t("subscription.annualAdvantage2"),
+                t("subscription.annualAdvantage3"),
+                t("subscription.annualAdvantage4"),
+                t("subscription.annualAdvantage5"),
+              ]
+        }
+        onSubscribe={onSubscribe}
+        loading={loadingId === product.productId}
+        recommended={index === 1}
+      />
+    ));
+  };
+
   return (
     <SafeAreaView style={[styles.wrapper, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
@@ -83,62 +148,7 @@ const SubscriptionScreen: React.FC = () => {
             </View>
           )}
 
-          {premium ? (
-            <View style={[styles.activeCard, { backgroundColor: colors.terraLight, borderColor: colors.terra }]}>
-              <View style={styles.activeHeader}>
-                <Ionicons name="checkmark-circle" size={22} color={colors.terra} />
-                <Text style={[styles.activeTitle, { color: colors.terraDark }]}>
-                  {t("subscription.activeBannerTitle")}
-                </Text>
-              </View>
-              <Text style={[styles.activeRenewal, { color: colors.textMid }]}>
-                {renewalLine}
-              </Text>
-              <TouchableOpacity
-                style={[styles.manageBtn, { backgroundColor: colors.terra }]}
-                onPress={() => Linking.openURL(MANAGE_SUBSCRIPTION_URL).catch(() => {})}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.manageBtnText}>{t("subscription.manageButton")}</Text>
-                <Ionicons name="open-outline" size={16} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          ) : products.length === 0 ? (
-            <View style={[styles.loadingContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="hourglass-outline" size={32} color={colors.terra} />
-              <Text style={[styles.loadingText, { color: colors.textMid }]}>
-                {t("subscription.loadingOffers")}
-              </Text>
-            </View>
-          ) : (
-            products.map((product, index) => (
-              <PlanCard
-                key={product.productId}
-                id={product.productId}
-                title={product.title || product.productId}
-                price={product.localizedPrice}
-                advantages={
-                  index === 0
-                    ? [
-                        t("subscription.monthlyAdvantage1"),
-                        t("subscription.monthlyAdvantage2"),
-                        t("subscription.monthlyAdvantage3"),
-                        t("subscription.monthlyAdvantage4"),
-                      ]
-                    : [
-                        t("subscription.annualAdvantage1"),
-                        t("subscription.annualAdvantage2"),
-                        t("subscription.annualAdvantage3"),
-                        t("subscription.annualAdvantage4"),
-                        t("subscription.annualAdvantage5"),
-                      ]
-                }
-                onSubscribe={onSubscribe}
-                loading={loadingId === product.productId}
-                recommended={index === 1}
-              />
-            ))
-          )}
+          {renderSubscriptionBlock()}
 
           <SubscriptionFeaturesCard variant={premium ? "premium" : "default"} />
         </View>

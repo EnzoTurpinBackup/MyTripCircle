@@ -175,9 +175,7 @@ export const useAddressForm = () => {
       if (addressId) {
         await updateAddress(addressId, payload);
       } else {
-        await createAddress(
-          { ...payload, tripId } as Omit<Address, "id" | "createdAt" | "updatedAt">
-        );
+        await createAddress({ ...payload, tripId });
       }
       navigation.goBack();
     } catch (error) {

@@ -8,15 +8,16 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { F } from "../theme/fonts";
+import { RootStackParamList } from "../types";
 
 const NotFoundScreen: React.FC = () => {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
@@ -37,7 +38,7 @@ const NotFoundScreen: React.FC = () => {
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.terra }]}
-          onPress={() => navigation.navigate("Main" as never)}
+          onPress={() => navigation.navigate("Main")}
           activeOpacity={0.8}
         >
           <Ionicons name="home-outline" size={18} color="#FFFFFF" style={styles.buttonIcon} />

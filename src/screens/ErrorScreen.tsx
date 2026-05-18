@@ -8,10 +8,11 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { NavigationProp, useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { F } from "../theme/fonts";
+import { RootStackParamList } from "../types";
 
 interface ErrorScreenParams {
   message?: string;
@@ -21,7 +22,7 @@ interface ErrorScreenParams {
 const ErrorScreen: React.FC = () => {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute();
   const params = (route.params ?? {}) as ErrorScreenParams;
   const { message, canGoBack = true } = params;
@@ -44,7 +45,7 @@ const ErrorScreen: React.FC = () => {
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.terra }]}
-          onPress={() => navigation.navigate("Main" as never)}
+          onPress={() => navigation.navigate("Main")}
           activeOpacity={0.8}
         >
           <Ionicons name="home-outline" size={18} color="#FFFFFF" style={styles.buttonIcon} />
