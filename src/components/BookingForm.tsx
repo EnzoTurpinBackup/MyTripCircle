@@ -12,6 +12,7 @@ import {
   FlatList,
   Animated,
   Dimensions,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -236,6 +237,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
 
   return (
     <Modal visible={internalVisible} animationType="none" transparent={true}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
       <Animated.View style={{ flex: 1, backgroundColor: colors.bg, transform: [{ translateX: slideAnim }] }}>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["bottom", "left", "right"]}>
 
