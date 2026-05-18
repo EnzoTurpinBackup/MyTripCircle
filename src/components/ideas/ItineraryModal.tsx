@@ -10,6 +10,8 @@ import {
   StyleSheet,
   Platform,
   Animated,
+  Pressable,
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -385,6 +387,7 @@ const ItineraryModal: React.FC<Props> = ({
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
       </Animated.View>
       <Animated.View style={[styles.container, { backgroundColor: colors.bg, transform: [{ translateY: sheetY }] }]}>
+        <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t("ideas.itinerary.title")}</Text>
             <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
@@ -417,6 +420,7 @@ const ItineraryModal: React.FC<Props> = ({
               onCreateTrip={onCreateTrip} onBackFromCreate={onBackFromCreate} colors={colors}
             />
           )}
+        </Pressable>
       </Animated.View>
     </Modal>
   );
