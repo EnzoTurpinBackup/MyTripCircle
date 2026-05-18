@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Alert, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import Constants from "expo-constants";
 import { parseApiError } from "../utils/i18n";
@@ -26,6 +27,8 @@ const productIds = Platform.select({
   android: ["com.myapp.monthly", "com.myapp.yearly"],
 }) || [];
 
+const PRODUCTS_CACHE_KEY = "subscription_products_cache";
+
 interface MockProduct {
   productId: string;
   title: string;
@@ -34,27 +37,47 @@ interface MockProduct {
 
 export function useSubscriptionIap() {
   const { t } = useTranslation();
-  const [products, setProducts]   = useState<MockProduct[]>([]);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
   const isExpoGo = !isIapAvailable;
 
-  const mockProducts: MockProduct[] = [
-    { productId: "com.myapp.monthly", title: t("subscription.monthly"), localizedPrice: t("subscription.monthlyPrice") },
-    { productId: "com.myapp.yearly",  title: t("subscription.annual"),  localizedPrice: t("subscription.annualPrice")  },
-  ];
+  const mockProducts = useMemo<MockProduct[]>(
+    () => [
+      { productId: "com.myapp.monthly", title: t("subscription.monthly"), localizedPrice: t("subscription.monthlyPrice") },
+      { productId: "com.myapp.yearly",  title: t("subscription.annual"),  localizedPrice: t("subscription.annualPrice")  },
+    ],
+    [t],
+  );
+
+  // Affichage immédiat des mock products pour éviter le flash de chargement.
+  // Les vrais produits IAP (ou le cache) viennent remplacer cette valeur dès qu'ils sont prêts.
+  const [products, setProducts]   = useState<MockProduct[]>(() => mockProducts);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isIapAvailable || !RNIap) {
-      setProducts(mockProducts);
       return;
     }
 
+    let cancelled = false;
+
     async function init() {
+      // Hydrate immédiatement avec le dernier cache disque, si présent
+      try {
+        const cached = await AsyncStorage.getItem(PRODUCTS_CACHE_KEY);
+        if (!cancelled && cached) {
+          const parsed = JSON.parse(cached) as MockProduct[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProducts(parsed);
+          }
+        }
+      } catch (err) {
+        logger.warn("IAP cache read error", err);
+      }
+
       try {
         await RNIap.initConnection();
         const subs = await RNIap.fetchProducts({ skus: productIds, type: "subs" });
+        if (cancelled) return;
         if (!subs || subs.length === 0) {
-          setProducts(mockProducts);
           return;
         }
         const normalized: MockProduct[] = subs.map((p: any) => ({
@@ -63,9 +86,9 @@ export function useSubscriptionIap() {
           localizedPrice: p.localizedPrice ?? p.displayPrice,
         }));
         setProducts(normalized);
+        AsyncStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(normalized)).catch(() => {});
       } catch (err) {
         logger.warn("IAP init error", err);
-        setProducts(mockProducts);
       }
     }
     init();
@@ -113,6 +136,7 @@ export function useSubscriptionIap() {
     });
 
     return () => {
+      cancelled = true;
       purchaseUpdate.remove();
       purchaseError.remove();
       RNIap.endConnection();

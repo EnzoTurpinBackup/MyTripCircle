@@ -73,17 +73,6 @@ const SubscriptionScreen: React.FC = () => {
       );
     }
 
-    if (products.length === 0) {
-      return (
-        <View style={[styles.loadingContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="hourglass-outline" size={32} color={colors.terra} />
-          <Text style={[styles.loadingText, { color: colors.textMid }]}>
-            {t("subscription.loadingOffers")}
-          </Text>
-        </View>
-      );
-    }
-
     return products.map((product, index) => (
       <PlanCard
         key={product.productId}
@@ -213,15 +202,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   manageBtnText: { fontSize: 15, fontFamily: F.sans600, color: "#FFFFFF" },
-
-  loadingContainer: {
-    alignItems: "center",
-    paddingVertical: SPACING.xxl + SPACING.xl,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    gap: SPACING.md,
-  },
-  loadingText: { fontSize: 15, fontFamily: F.sans400 },
 });
 
 export default SubscriptionScreen;
