@@ -56,6 +56,9 @@ TODO.md
 
 # scripts
 scripts/grant-premium.js
+scripts/revoke-premium.js
+scripts/add-user.js
+scripts/add-friend.js
 
 # documentation
 docs/

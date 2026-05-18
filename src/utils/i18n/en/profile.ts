@@ -180,6 +180,12 @@ const profile = {
     tripLimitBody: "You have reached the 3-trip limit on the free plan. Upgrade to Premium to create unlimited trips.",
     collaboratorLimitTitle: "Limit reached",
     collaboratorLimitBody: "You have reached the 2-collaborator limit on the free plan. Upgrade to Premium to invite as many people as you want.",
+    activeBannerTitle: "You're Premium",
+    activeBannerNextBilling: "Next renewal on {{date}}",
+    activeBannerCancelledUntil: "Cancelled — active until {{date}}",
+    activeBannerActive: "Active subscription",
+    manageButton: "Manage subscription",
+    premiumAdvantagesTitle: "Your Premium benefits",
   },
 };
 

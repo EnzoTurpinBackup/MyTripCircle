@@ -223,7 +223,7 @@ const ProfileScreen: React.FC = () => {
               <Divider />
               <Row
                 icon="card-outline"
-                label={t("profile.subscribe")}
+                label={isPremium() ? t("subscription.manageButton") : t("profile.subscribe")}
                 tinted
                 onPress={() => navigation.navigate("Subscription")}
               />

@@ -6,9 +6,47 @@ import { F } from "../../theme/fonts";
 import { RADIUS, SPACING, SHADOW } from "../../theme";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const SubscriptionFeaturesCard: React.FC = () => {
+interface Props {
+  variant?: "default" | "premium";
+}
+
+const SubscriptionFeaturesCard: React.FC<Props> = ({ variant = "default" }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
+
+  if (variant === "premium") {
+    const advantages: string[] = [
+      t("subscription.monthlyAdvantage1"),
+      t("subscription.monthlyAdvantage2"),
+      t("subscription.monthlyAdvantage3"),
+      t("subscription.monthlyAdvantage4"),
+      t("subscription.annualAdvantage3"),
+      t("subscription.annualAdvantage5"),
+    ];
+    return (
+      <View
+        style={[
+          styles.card,
+          SHADOW.light,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.text }]}>
+          {t("subscription.premiumAdvantagesTitle")}
+        </Text>
+        <View style={styles.list}>
+          {advantages.map((text, index) => (
+            <View key={text} style={styles.listItem}>
+              <View style={[styles.numberBadge, { backgroundColor: colors.terra }]}>
+                <Text style={styles.numberBadgeText}>{index + 1}</Text>
+              </View>
+              <Text style={[styles.listText, { color: colors.text }]}>{text}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   const features: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
     { icon: "cloud-upload-outline",     text: t("subscription.featureCloud") },
@@ -78,6 +116,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: F.sans400,
     lineHeight: 18,
+  },
+  list: {
+    gap: SPACING.md,
+  },
+  listItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: SPACING.sm,
+  },
+  listText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: F.sans400,
+    lineHeight: 20,
+  },
+  numberBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 1,
+  },
+  numberBadgeText: {
+    fontSize: 12,
+    fontFamily: F.sans700,
+    color: "#FFFFFF",
   },
 });
 

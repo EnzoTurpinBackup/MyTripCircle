@@ -182,6 +182,12 @@ const profile = {
     tripLimitBody: "Vous avez atteint la limite de 3 voyages du plan gratuit. Passez à Premium pour créer des voyages illimités.",
     collaboratorLimitTitle: "Limite atteinte",
     collaboratorLimitBody: "Vous avez atteint la limite de 2 collaborateurs du plan gratuit. Passez à Premium pour inviter autant de personnes que vous voulez.",
+    activeBannerTitle: "Tu es Premium",
+    activeBannerNextBilling: "Prochain renouvellement le {{date}}",
+    activeBannerCancelledUntil: "Annulé — actif jusqu'au {{date}}",
+    activeBannerActive: "Abonnement actif",
+    manageButton: "Gérer mon abonnement",
+    premiumAdvantagesTitle: "Tes avantages Premium",
   },
 };
 
