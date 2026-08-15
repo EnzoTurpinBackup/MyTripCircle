@@ -6,7 +6,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # `develop` est la branche d'intégration : sans elle, aucune analyse de
+    # branche n'a lieu entre deux passages sur main, et SonarCloud n'a alors
+    # jamais de mesure d'ensemble (couverture, dette) à jour.
+    branches: [main, develop]
   pull_request:
 
 # Annule un run en cours si un nouveau commit est poussé sur la même réf.
