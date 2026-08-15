@@ -10,7 +10,7 @@
  */
 
 const SEVERITY_ORDER = ["critical", "high", "moderate", "low", "info"];
-const REPORTED_SEVERITIES = ["critical", "high"];
+const REPORTED_SEVERITIES = new Set(["critical", "high"]);
 
 /** Le flux est passé en paramètre pour rester testable hors d'un vrai stdin. */
 function readStream(stream) {
@@ -59,7 +59,7 @@ function buildReport(audit) {
   const lines = ["## Audit des dépendances", "", formatSummary(audit.metadata.vulnerabilities)];
 
   const packages = Object.values(audit.vulnerabilities)
-    .filter((vulnerability) => REPORTED_SEVERITIES.includes(vulnerability.severity))
+    .filter((vulnerability) => REPORTED_SEVERITIES.has(vulnerability.severity))
     .sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
 
   if (packages.length === 0) return lines.join("\n");
@@ -99,7 +99,9 @@ async function render(input, output) {
   output.write(`${buildReport(parseAudit(raw))}\n`);
 }
 
-if (require.main === module) {
+// Comparaison sur le chemin plutôt que sur le module lui-même : `require.main
+// === module` porte sur deux types que l'analyse statique juge disjoints.
+if (require.main?.filename === __filename) {
   render(process.stdin, process.stdout).catch((err) => {
     console.error(`[audit-report] ${err.message}`);
     process.exitCode = 1;
