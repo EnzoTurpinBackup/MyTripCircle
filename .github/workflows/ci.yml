@@ -18,6 +18,11 @@ jobs:
   quality:
     name: Lint, tests & audit
     runs-on: ubuntu-latest
+    env:
+      # Booléen dérivé du secret : permet de conditionner l'étape SonarCloud
+      # sans exposer le jeton aux autres étapes du job (`secrets` n'est pas
+      # utilisable dans un `if`).
+      HAS_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -63,15 +68,13 @@ jobs:
           npm audit --json > audit.json || true
           node scripts/audit-report.js < audit.json >> "$GITHUB_STEP_SUMMARY"
 
-      # ──────────────────────────────────────────────────────────────────────
-      # SonarCloud — décommenter une fois le secret `SONAR_TOKEN` ajouté dans
-      # Settings → Secrets and variables → Actions du dépôt GitHub.
-      # (Le projet `EnzoTurpin_MyTripCircle` / org `enzoturpin` est déjà
-      #  configuré dans sonar-project.properties, et la couverture est lue
-      #  depuis coverage/lcov.info généré à l'étape précédente.)
-      # ──────────────────────────────────────────────────────────────────────
-      # - name: Analyse SonarCloud
-      #   uses: SonarSource/sonarqube-scan-action@v5   # vérifier la dernière version sur le Marketplace
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Analyse depuis la CI et non par l'analyse automatique SonarCloud : le
+      # scanner a ici besoin de `node_modules` pour résoudre le tsconfig hérité
+      # d'`expo/tsconfig.base`, et de coverage/lcov.info produit par les tests.
+      # L'étape reste inerte tant que le secret `SONAR_TOKEN` n'est pas ajouté
+      # dans Settings → Secrets and variables → Actions du dépôt.
+      - name: Analyse SonarCloud
+        if: env.HAS_SONAR_TOKEN == 'true'
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
