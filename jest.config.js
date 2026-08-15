@@ -19,6 +19,12 @@ module.exports = {
       setupFiles: ["<rootDir>/server/__tests__/setupEnv.js"],
       modulePathIgnorePatterns: ["<rootDir>/.claude/"],
     },
+    {
+      displayName: "scripts",
+      testEnvironment: "node",
+      testMatch: ["<rootDir>/scripts/**/*.test.js"],
+      modulePathIgnorePatterns: ["<rootDir>/.claude/"],
+    },
   ],
   // Périmètre de couverture restreint à la couche réellement testable unitairement
   // (logique métier client + backend). Écrans, composants UI, contextes,
@@ -30,7 +36,12 @@ module.exports = {
     "src/hooks/**/*.{ts,tsx}",
     "src/components/**/*Helpers.ts",
     "server/**/*.js",
+    "scripts/**/*.js",
     "!**/__tests__/**",
+    // Outils de développement interactifs (QR code Expo, détection d'IP locale) :
+    // pilotés par la console et l'environnement, hors périmètre unitaire.
+    "!scripts/start-with-qr.js",
+    "!scripts/update-ip.js",
     "!**/*.d.ts",
     "!src/services/api/index.ts",
     "!src/utils/i18n/**",

@@ -10,14 +10,16 @@
  */
 
 const SEVERITY_ORDER = ["critical", "high", "moderate", "low", "info"];
+const REPORTED_SEVERITIES = ["critical", "high"];
 
-function readStdin() {
+/** Le flux est passé en paramètre pour rester testable hors d'un vrai stdin. */
+function readStream(stream) {
   return new Promise((resolve, reject) => {
     let raw = "";
-    process.stdin.setEncoding("utf8");
-    process.stdin.on("data", (chunk) => (raw += chunk));
-    process.stdin.on("end", () => resolve(raw));
-    process.stdin.on("error", reject);
+    stream.setEncoding("utf8");
+    stream.on("data", (chunk) => (raw += chunk));
+    stream.on("end", () => resolve(raw));
+    stream.on("error", reject);
   });
 }
 
@@ -28,40 +30,58 @@ function directAdvisories(vulnerability) {
     .map((via) => via.title);
 }
 
-function buildReport(audit) {
-  const counts = audit.metadata.vulnerabilities;
-  const lines = ["## Audit des dépendances", ""];
+/** Correctif proposé par npm, tel qu'affiché dans la colonne du rapport. */
+function formatFix(fixAvailable) {
+  if (fixAvailable === true) return "`npm audit fix`";
+  if (!fixAvailable) return "aucun";
 
-  const summary = SEVERITY_ORDER.filter((severity) => counts[severity] > 0)
+  const major = fixAvailable.isSemVerMajor ? " (majeure)" : "";
+  return `${fixAvailable.name}@${fixAvailable.version}${major}`;
+}
+
+/** Sans advisory direct, le paquet n'est signalé que par transitivité. */
+function formatOrigin(vulnerability) {
+  const advisories = directAdvisories(vulnerability);
+  return advisories.length > 0 ? advisories.join("<br>") : "transitif";
+}
+
+function formatSummary(counts) {
+  const detail = SEVERITY_ORDER.filter((severity) => counts[severity] > 0)
     .map((severity) => `${counts[severity]} ${severity}`)
     .join(" · ");
-  lines.push(summary ? `**${counts.total} vulnérabilité(s)** — ${summary}` : "Aucune vulnérabilité connue ✅");
+
+  return detail
+    ? `**${counts.total} vulnérabilité(s)** — ${detail}`
+    : "Aucune vulnérabilité connue ✅";
+}
+
+function buildReport(audit) {
+  const lines = ["## Audit des dépendances", "", formatSummary(audit.metadata.vulnerabilities)];
 
   const packages = Object.values(audit.vulnerabilities)
-    .filter((vulnerability) => ["critical", "high"].includes(vulnerability.severity))
+    .filter((vulnerability) => REPORTED_SEVERITIES.includes(vulnerability.severity))
     .sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
 
   if (packages.length === 0) return lines.join("\n");
 
-  lines.push("", "### Vulnérabilités high / critical", "", "| Paquet | Sévérité | Origine | Correctif amont |", "| --- | --- | --- | --- |");
+  lines.push(
+    "",
+    "### Vulnérabilités high / critical",
+    "",
+    "| Paquet | Sévérité | Origine | Correctif amont |",
+    "| --- | --- | --- | --- |"
+  );
 
   for (const vulnerability of packages) {
-    const advisories = directAdvisories(vulnerability);
-    // Sans advisory direct, le paquet n'est signalé que par transitivité.
-    const origin = advisories.length > 0 ? advisories.join("<br>") : "transitif";
-    const fix = vulnerability.fixAvailable === true
-      ? "`npm audit fix`"
-      : vulnerability.fixAvailable
-        ? `${vulnerability.fixAvailable.name}@${vulnerability.fixAvailable.version}${vulnerability.fixAvailable.isSemVerMajor ? " (majeure)" : ""}`
-        : "aucun";
-    lines.push(`| \`${vulnerability.name}\` | ${vulnerability.severity} | ${origin} | ${fix} |`);
+    lines.push(
+      `| \`${vulnerability.name}\` | ${vulnerability.severity} | ${formatOrigin(vulnerability)} | ${formatFix(vulnerability.fixAvailable)} |`
+    );
   }
 
   return lines.join("\n");
 }
 
-async function main() {
-  const raw = await readStdin();
+function parseAudit(raw) {
   if (!raw.trim()) {
     throw new Error("Aucune entrée reçue : attend la sortie de `npm audit --json` sur stdin");
   }
@@ -71,10 +91,19 @@ async function main() {
     throw new Error(`npm audit a échoué : ${audit.error.summary ?? "erreur inconnue"}`);
   }
 
-  process.stdout.write(`${buildReport(audit)}\n`);
+  return audit;
 }
 
-main().catch((err) => {
-  console.error(`[audit-report] ${err.message}`);
-  process.exitCode = 1;
-});
+async function render(input, output) {
+  const raw = await readStream(input);
+  output.write(`${buildReport(parseAudit(raw))}\n`);
+}
+
+if (require.main === module) {
+  render(process.stdin, process.stdout).catch((err) => {
+    console.error(`[audit-report] ${err.message}`);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { render, readStream, buildReport, parseAudit, formatFix, formatOrigin, formatSummary };
