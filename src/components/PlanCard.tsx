@@ -15,6 +15,7 @@ type Props = {
   onSubscribe: (productId: string) => void;
   loading?: boolean;
   recommended?: boolean;
+  priceUnit?: string;
 };
 
 const PlanCard: React.FC<Props> = ({
@@ -25,6 +26,7 @@ const PlanCard: React.FC<Props> = ({
   onSubscribe,
   loading,
   recommended = false,
+  priceUnit,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -53,7 +55,7 @@ const PlanCard: React.FC<Props> = ({
           <View style={styles.priceRow}>
             <Text style={[styles.price, { color: colors.terra }]}>{price}</Text>
             <Text style={[styles.priceUnit, { color: colors.textMid }]}>
-              {t("subscription.perMonth")}
+              {priceUnit ?? t("subscription.perMonth")}
             </Text>
           </View>
         )}

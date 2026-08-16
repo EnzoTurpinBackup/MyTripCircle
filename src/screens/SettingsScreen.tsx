@@ -116,7 +116,7 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.rowEmoji}>🔔</Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.pushNotifications")}</Text>
             </View>
-            <Toggle value={pushNotifications} onToggle={handlePushToggle} trackColor={colors.terra} />
+            <Toggle value={pushNotifications} onToggle={handlePushToggle} trackColor={colors.terra} accessibilityLabel={t("settings.pushNotifications")} />
           </View>
 
           <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
@@ -126,7 +126,7 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.rowEmoji}>✉️</Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.emailReminders")}</Text>
             </View>
-            <Toggle value={emailReminders} onToggle={handleEmailToggle} trackColor={colors.terra} />
+            <Toggle value={emailReminders} onToggle={handleEmailToggle} trackColor={colors.terra} accessibilityLabel={t("settings.emailReminders")} />
           </View>
 
           <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
@@ -136,7 +136,7 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.rowEmoji}>👥</Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.friendInvitations")}</Text>
             </View>
-            <Toggle value={friendInvitations} onToggle={handleFriendsToggle} trackColor={colors.terra} />
+            <Toggle value={friendInvitations} onToggle={handleFriendsToggle} trackColor={colors.terra} accessibilityLabel={t("settings.friendInvitations")} />
           </View>
         </View>
 
@@ -148,7 +148,7 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.rowEmoji}>🔒</Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.publicProfile")}</Text>
             </View>
-            <Toggle value={publicProfile} onToggle={handlePublicProfileToggle} trackColor={colors.terra} />
+            <Toggle value={publicProfile} onToggle={handlePublicProfileToggle} trackColor={colors.terra} accessibilityLabel={t("settings.publicProfile")} />
           </View>
 
           <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
@@ -202,7 +202,7 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.rowEmoji}>{isDark ? "🌙" : "☀️"}</Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.darkMode")}</Text>
             </View>
-            <Toggle value={isDark} onToggle={() => toggleTheme()} trackColor={colors.terra} />
+            <Toggle value={isDark} onToggle={() => toggleTheme()} trackColor={colors.terra} accessibilityLabel={t("settings.darkMode")} />
           </View>
 
           <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />
@@ -212,7 +212,7 @@ const SettingsScreen: React.FC = () => {
               <Text style={styles.rowEmoji}>🛰️</Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>{t("settings.satelliteMap")}</Text>
             </View>
-            <Toggle value={satelliteMap} onToggle={() => toggleSatelliteMap()} trackColor={colors.terra} />
+            <Toggle value={satelliteMap} onToggle={() => toggleSatelliteMap()} trackColor={colors.terra} accessibilityLabel={t("settings.satelliteMap")} />
           </View>
 
           <View style={[styles.rowDivider, { backgroundColor: colors.borderLight }]} />

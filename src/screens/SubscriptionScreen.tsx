@@ -98,6 +98,7 @@ const SubscriptionScreen: React.FC = () => {
         onSubscribe={onSubscribe}
         loading={loadingId === product.productId}
         recommended={index === 1}
+        priceUnit={index === 0 ? t("subscription.perMonth") : t("subscription.perYear")}
       />
     ));
   };

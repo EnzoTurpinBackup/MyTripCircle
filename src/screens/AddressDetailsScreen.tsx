@@ -35,7 +35,7 @@ try {
   const RNMaps = require("react-native-maps");
   MapView       = RNMaps.default;
   Marker        = RNMaps.Marker;
-  mapsAvailable = true;
+  mapsAvailable = !!MapView;
 } catch (e) {
   if (__DEV__) console.warn("[AddressDetailsScreen] react-native-maps non disponible:", e);
 }
