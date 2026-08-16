@@ -39,7 +39,7 @@ describe("useAttachmentManager", () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.restoreAllMocks();
-    (globalThis as { __DEV__: boolean }).__DEV__ = true;
+    (globalThis as unknown as { __DEV__: boolean }).__DEV__ = true;
   });
 
   it("should start with no attachment and no rename in progress", () => {
@@ -221,7 +221,7 @@ describe("useAttachmentManager", () => {
 
     it("should not log the image picker failure outside development builds", async () => {
       // Arrange
-      (globalThis as { __DEV__: boolean }).__DEV__ = false;
+      (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
       mockLaunchLibrary.mockRejectedValue(new Error("picker crashed"));
       const { result } = setup();
 
@@ -347,7 +347,7 @@ describe("useAttachmentManager", () => {
 
     it("should not log the document picker failure outside development builds", async () => {
       // Arrange
-      (globalThis as { __DEV__: boolean }).__DEV__ = false;
+      (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
       mockGetDocument.mockRejectedValue(new Error("picker crashed"));
       const { result } = setup();
 

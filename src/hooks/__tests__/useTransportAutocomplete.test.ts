@@ -26,6 +26,7 @@ describe("useTransportAutocomplete", () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    (globalThis as unknown as { __DEV__: boolean }).__DEV__ = true;
   });
 
   it("should start with both suggestion lists empty and hidden", () => {
@@ -157,6 +158,22 @@ describe("useTransportAutocomplete", () => {
       "[useTransportAutocomplete] Erreur autocomplétion transport:",
       failure
     );
+  });
+
+  it("should reset the origin without logging when the search fails outside development builds", async () => {
+    // Arrange
+    (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
+    mockGetSuggestions.mockRejectedValue(new Error("network down"));
+    const { result } = renderHook(() => useTransportAutocomplete());
+
+    // Act
+    await act(async () => {
+      await result.current.handleOriginChange("Paris", jest.fn(), "flight");
+    });
+
+    // Assert
+    expect(result.current.originSuggestions).toEqual([]);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it("should display the destination suggestions when the search returns results", async () => {
