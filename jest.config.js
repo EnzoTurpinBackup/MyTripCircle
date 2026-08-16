@@ -26,26 +26,34 @@ module.exports = {
       modulePathIgnorePatterns: ["<rootDir>/.claude/"],
     },
   ],
-  // Périmètre de couverture restreint à la couche réellement testable unitairement
-  // (logique métier client + backend). Écrans, composants UI, contextes,
-  // navigation et fichiers de données/traductions sont validés autrement
-  // (tests d'intégration, recette manuelle, TestFlight) et hors périmètre ici.
+  // Périmètre de couverture : l'intégralité du code applicatif (client, serveur,
+  // scripts), moins les omissions explicites ci-dessous. Un fichier absent de la
+  // mesure est un fichier dont personne ne sait s'il est testé — toute exception
+  // doit donc être justifiée ici, et le périmètre reste aligné sur
+  // `sonar.coverage.exclusions` dans sonar-project.properties.
   collectCoverageFrom: [
-    "src/services/**/*.ts",
-    "src/utils/**/*.ts",
-    "src/hooks/**/*.{ts,tsx}",
-    "src/components/**/*Helpers.ts",
+    "src/**/*.{ts,tsx}",
     "server/**/*.js",
     "scripts/**/*.js",
+
+    // Tests, déclarations de types et barils de réexport : aucun code exécutable.
     "!**/__tests__/**",
+    "!**/*.d.ts",
+    "!src/types/**",
+    "!src/services/api/index.ts",
+
+    // Données statiques et dictionnaires de traduction : aucune logique.
+    "!src/data/**",
+    "!src/utils/i18n/**",
+
+    // Points d'entrée du serveur : validés par les tests d'intégration, qui
+    // démarrent l'application plutôt que d'en tester les unités.
+    "!server/index.js",
+    "!server/db.js",
+
     // Outils de développement interactifs (QR code Expo, détection d'IP locale) :
     // pilotés par la console et l'environnement, hors périmètre unitaire.
     "!scripts/start-with-qr.js",
     "!scripts/update-ip.js",
-    "!**/*.d.ts",
-    "!src/services/api/index.ts",
-    "!src/utils/i18n/**",
-    "!server/index.js",
-    "!server/db.js",
   ],
 };
