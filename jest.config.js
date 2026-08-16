@@ -53,9 +53,11 @@ module.exports = {
     "!server/index.js",
     "!server/db.js",
 
-    // Outils de développement interactifs (QR code Expo, détection d'IP locale) :
-    // pilotés par la console et l'environnement, hors périmètre unitaire.
+    // Outils de développement interactifs (QR code Expo, détection d'IP locale,
+    // création d'un utilisateur de charge) : pilotés par la console et
+    // l'environnement, hors périmètre unitaire.
     "!scripts/start-with-qr.js",
     "!scripts/update-ip.js",
+    "!scripts/create-test-user.js",
   ],
 };
