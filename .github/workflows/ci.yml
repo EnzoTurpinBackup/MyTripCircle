@@ -81,7 +81,10 @@ jobs:
       # L'étape reste inerte tant que le secret `SONAR_TOKEN` n'est pas ajouté
       # dans Settings → Secrets and variables → Actions du dépôt.
       - name: Analyse SonarCloud
-        if: env.HAS_SONAR_TOKEN == 'true'
+        # Le plan SonarCloud n'analyse que la branche principale : sur les
+        # autres pushes le rapport est envoyé puis ignoré. Les pull requests,
+        # elles, sont bien analysées.
+        if: env.HAS_SONAR_TOKEN == 'true' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
         # Action tierce épinglée sur un SHA de commit : un tag reste mutable et
         # pourrait être repointé vers du code malveillant (règle Sonar S7637).
         # Relever le SHA et le commentaire ensemble lors des montées de version.
