@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { GestureHandlerRootView, PanGestureHandler, State } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { MainTabParamList } from "../types";
 
@@ -32,21 +32,20 @@ export const SwipeToNavigate: React.FC<SwipeToNavigateProps> = ({
     }
   };
 
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-15, 15])
+    .failOffsetY([-15, 15])
+    .onEnd((event) => {
+      handleSwipe(event.translationX);
+    });
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PanGestureHandler
-        onHandlerStateChange={(event) => {
-          if (event.nativeEvent.state === State.END) {
-            handleSwipe(event.nativeEvent.translationX);
-          }
-        }}
-        activeOffsetX={[-15, 15]}
-        failOffsetY={[-15, 15]}
-      >
+      <GestureDetector gesture={panGesture}>
         <View style={{ flex: 1 }}>
           {children}
         </View>
-      </PanGestureHandler>
+      </GestureDetector>
     </GestureHandlerRootView>
   );
 };
