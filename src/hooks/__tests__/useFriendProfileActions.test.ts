@@ -150,6 +150,21 @@ describe("useFriendProfileActions", () => {
       );
     });
 
+    it("should ask for confirmation using the route name when the profile has none", async () => {
+      // Arrange
+      const { result } = await setupLoaded({ email: "ana@example.com" });
+
+      // Act
+      act(() => result.current.handleRemove());
+
+      // Assert
+      expect(Alert.alert).toHaveBeenLastCalledWith(
+        "friendProfile.removeTitle",
+        'friendProfile.removeMsg:{"name":"Ana Fallback"}',
+        expect.any(Array),
+      );
+    });
+
     it("should remove the friend and navigate back when confirmed", async () => {
       // Arrange
       mockRemoveFriend.mockResolvedValue(undefined);
@@ -355,6 +370,21 @@ describe("useFriendProfileActions", () => {
       // Assert
       expect(Alert.alert).toHaveBeenLastCalledWith(
         'friendProfile.blockConfirmTitle:{"name":"Ana Réelle"}',
+        "friendProfile.blockConfirmMsg",
+        expect.any(Array),
+      );
+    });
+
+    it("should ask for confirmation using the route name when the profile has none", async () => {
+      // Arrange
+      const { result } = await setupLoaded({ email: "ana@example.com" });
+
+      // Act
+      act(() => result.current.handleBlock());
+
+      // Assert
+      expect(Alert.alert).toHaveBeenLastCalledWith(
+        'friendProfile.blockConfirmTitle:{"name":"Ana Fallback"}',
         "friendProfile.blockConfirmMsg",
         expect.any(Array),
       );
