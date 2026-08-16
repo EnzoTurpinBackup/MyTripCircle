@@ -32,6 +32,8 @@ module.exports = {
   // doit donc être justifiée ici, et le périmètre reste aligné sur
   // `sonar.coverage.exclusions` dans sonar-project.properties.
   collectCoverageFrom: [
+    "App.tsx",
+    "index.ts",
     "src/**/*.{ts,tsx}",
     "server/**/*.js",
     "scripts/**/*.js",
