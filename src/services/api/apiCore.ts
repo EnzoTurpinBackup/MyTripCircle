@@ -33,14 +33,17 @@ async function findWorkingUrl(): Promise<string> {
         logger.debug(`[ApiService] Trying ${url}...`);
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 5000);
-        const response = await fetch(`${url}/health`, { method: "GET", signal: ctrl.signal });
-        clearTimeout(timer);
-        if (response.ok) {
-          workingUrl = url;
-          logger.debug(`[ApiService] ✅ Success! Using URL: ${url}`);
-          return url;
-        } else {
+        try {
+          const response = await fetch(`${url}/health`, { method: "GET", signal: ctrl.signal });
+          if (response.ok) {
+            workingUrl = url;
+            logger.debug(`[ApiService] ✅ Success! Using URL: ${url}`);
+            return url;
+          }
           logger.debug(`[ApiService] ❌ ${url} returned status: ${response.status}`);
+        } finally {
+          // Toujours nettoyer le timer d'abandon, même si fetch rejette
+          clearTimeout(timer);
         }
       } catch (error: any) {
         logger.debug(`[ApiService] ❌ Failed to connect to ${url}: ${error?.message ?? String(error)}`);

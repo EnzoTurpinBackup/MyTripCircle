@@ -14,7 +14,7 @@ Application mobile collaborative de planification de voyages entre amis, constru
 ### Réservations
 
 - Gérer vols, trains, hôtels, restaurants et activités
-- Scanner des billets (QR/code-barres + OCR via l'API Anthropic Claude)
+- Scanner des billets (lecture du code-barres BCBP via ML Kit, sur l'appareil) — _OCR par IA pour les billets sans code-barres : prévu, non activé_
 - Suivi du statut (confirmé, en attente, annulé)
 
 ### Idées & Itinéraires IA

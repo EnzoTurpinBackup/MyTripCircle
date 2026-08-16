@@ -174,6 +174,7 @@ const profile = {
     featureUpdates: "Free updates",
     recommended: "Recommended",
     perMonth: "/mo",
+    perYear: "/yr",
     subscribe: "Subscribe",
     upgradeButton: "Upgrade to Premium",
     tripLimitTitle: "Limit reached",
