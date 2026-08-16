@@ -110,7 +110,7 @@ MyTripCircle/
 
 ### Prérequis
 
-- Node.js ≥ 18
+- Node.js ≥ 22
 - npm
 - Expo CLI (`npx expo`)
 - Instance MongoDB (locale ou Atlas)
