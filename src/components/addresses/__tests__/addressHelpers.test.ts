@@ -47,6 +47,30 @@ describe('getIconColors', () => {
     expect(result.bg).toBeNull();
     expect(result.icon).toBeNull();
   });
+
+  it('should return translucent backgrounds for hotel when dark mode is on', () => {
+    const result = getIconColors('hotel', true);
+    expect(result.bg).toBe('rgba(90,143,170,0.22)');
+    expect(result.icon).toBe(SKY);
+  });
+
+  it('should return a lighter restaurant icon when dark mode is on', () => {
+    const result = getIconColors('restaurant', true);
+    expect(result.bg).toBe('rgba(196,113,74,0.22)');
+    expect(result.icon).toBe('#D08070');
+  });
+
+  it('should return translucent backgrounds for activity when dark mode is on', () => {
+    const result = getIconColors('activity', true);
+    expect(result.bg).toBe('rgba(107,140,90,0.22)');
+    expect(result.icon).toBe(MOSS);
+  });
+
+  it('should return null colors for other types when dark mode is on', () => {
+    const result = getIconColors('other', true);
+    expect(result.bg).toBeNull();
+    expect(result.icon).toBeNull();
+  });
 });
 
 describe('getTagColors', () => {
@@ -66,6 +90,30 @@ describe('getTagColors', () => {
 
   it('should return null colors for transport', () => {
     expect(getTagColors('transport').bg).toBeNull();
+  });
+
+  it('should return translucent hotel tag colors when dark mode is on', () => {
+    const result = getTagColors('hotel', true);
+    expect(result.bg).toBe('rgba(90,143,170,0.22)');
+    expect(result.text).toBe(SKY);
+  });
+
+  it('should return a lighter restaurant tag text when dark mode is on', () => {
+    const result = getTagColors('restaurant', true);
+    expect(result.bg).toBe('rgba(196,113,74,0.22)');
+    expect(result.text).toBe('#D08070');
+  });
+
+  it('should return translucent activity tag colors when dark mode is on', () => {
+    const result = getTagColors('activity', true);
+    expect(result.bg).toBe('rgba(107,140,90,0.22)');
+    expect(result.text).toBe(MOSS);
+  });
+
+  it('should return null tag colors for transport when dark mode is on', () => {
+    const result = getTagColors('transport', true);
+    expect(result.bg).toBeNull();
+    expect(result.text).toBeNull();
   });
 });
 
