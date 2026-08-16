@@ -2,7 +2,7 @@ import "./support/screenMocks";
 
 import React from "react";
 import { Linking, ScrollView } from "react-native";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
 import SubscriptionScreen from "../SubscriptionScreen";
 import { lightColors, useTheme } from "../../contexts/ThemeContext";
@@ -266,18 +266,17 @@ describe("SubscriptionScreen", () => {
       expect(openURL).toHaveBeenCalledWith("https://apps.apple.com/account/subscriptions");
     });
 
-    it("should swallow the error when the store page cannot be opened", async () => {
+    it("should keep the screen usable when the store page cannot be opened", async () => {
       // Arrange
-      const openURL = jest
-        .spyOn(Linking, "openURL")
-        .mockRejectedValue(new Error("aucune application"));
+      jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("aucune application"));
       renderPremium(null);
 
       // Act
       fireEvent.press(screen.getByText("subscription.manageButton"));
+      await act(async () => {});
 
-      // Assert
-      await expect(openURL.mock.results[0].value).rejects.toThrow("aucune application");
+      // Assert : le rejet est absorbé, l'écran reste affiché.
+      expect(screen.getByText("subscription.activeBannerTitle")).toBeTruthy();
     });
 
     it("should lock the scroll when the user is premium", () => {
