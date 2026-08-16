@@ -48,7 +48,7 @@ describe("auditLog middleware", () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it("should trace the audited access in the application log", () => {
+  it("should trace the audited access in the application log", async () => {
     // Arrange
     const req = buildRequest({ user: { _id: "507f1f77bcf86cd799439011" } });
 
@@ -59,6 +59,9 @@ describe("auditLog middleware", () => {
     expect(logger.info).toHaveBeenCalledWith(
       "[audit] GET /users/me/export — userId=507f1f77bcf86cd799439011 — ip=203.0.113.7"
     );
+    // La persistance différée est drainée avant la fin du test : sans cela, son
+    // `insertOne` retomberait dans le test suivant, qui n'en attend aucun.
+    await flushSetImmediate();
   });
 
   it("should persist the audited access in MongoDB when the route matches", async () => {
