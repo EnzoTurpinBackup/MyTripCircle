@@ -6,7 +6,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # `develop` est la branche d'intégration : sans elle, aucune analyse de
+    # branche n'a lieu entre deux passages sur main, et SonarCloud n'a alors
+    # jamais de mesure d'ensemble (couverture, dette) à jour.
+    branches: [main, develop]
   pull_request:
 
 # Annule un run en cours si un nouveau commit est poussé sur la même réf.
@@ -18,6 +21,11 @@ jobs:
   quality:
     name: Lint, tests & audit
     runs-on: ubuntu-latest
+    env:
+      # Booléen dérivé du secret : permet de conditionner l'étape SonarCloud
+      # sans exposer le jeton aux autres étapes du job (`secrets` n'est pas
+      # utilisable dans un `if`).
+      HAS_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -63,15 +71,16 @@ jobs:
           npm audit --json > audit.json || true
           node scripts/audit-report.js < audit.json >> "$GITHUB_STEP_SUMMARY"
 
-      # ──────────────────────────────────────────────────────────────────────
-      # SonarCloud — décommenter une fois le secret `SONAR_TOKEN` ajouté dans
-      # Settings → Secrets and variables → Actions du dépôt GitHub.
-      # (Le projet `EnzoTurpin_MyTripCircle` / org `enzoturpin` est déjà
-      #  configuré dans sonar-project.properties, et la couverture est lue
-      #  depuis coverage/lcov.info généré à l'étape précédente.)
-      # ──────────────────────────────────────────────────────────────────────
-      # - name: Analyse SonarCloud
-      #   uses: SonarSource/sonarqube-scan-action@v5   # vérifier la dernière version sur le Marketplace
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Analyse depuis la CI et non par l'analyse automatique SonarCloud : le
+      # scanner a ici besoin de `node_modules` pour résoudre le tsconfig hérité
+      # d'`expo/tsconfig.base`, et de coverage/lcov.info produit par les tests.
+      # L'étape reste inerte tant que le secret `SONAR_TOKEN` n'est pas ajouté
+      # dans Settings → Secrets and variables → Actions du dépôt.
+      - name: Analyse SonarCloud
+        if: env.HAS_SONAR_TOKEN == 'true'
+        # Action tierce épinglée sur un SHA de commit : un tag reste mutable et
+        # pourrait être repointé vers du code malveillant (règle Sonar S7637).
+        # Relever le SHA et le commentaire ensemble lors des montées de version.
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
