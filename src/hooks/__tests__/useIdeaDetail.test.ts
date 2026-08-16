@@ -338,15 +338,15 @@ describe('useIdeaDetail', () => {
     });
 
     it('should stay silent about the creation failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       mockCreateTrip.mockRejectedValue(new Error('boom'));
       const { result } = renderIdeaDetail();
 
       await createTripFrom(result);
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 
@@ -558,15 +558,15 @@ describe('useIdeaDetail', () => {
     });
 
     it('should stay silent about the place lookup failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       mockSearchPlace.mockRejectedValue(new Error('quota'));
       const { result } = renderIdeaDetail();
 
       await createTripFrom(result);
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 });

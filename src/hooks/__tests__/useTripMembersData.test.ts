@@ -141,14 +141,14 @@ describe('useTripMembersData', () => {
   });
 
   it('should stay silent about the user fetch failure outside development', async () => {
-    const originalDev = (global as { __DEV__: boolean }).__DEV__;
-    (global as { __DEV__: boolean }).__DEV__ = false;
+    const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+    (global as unknown as { __DEV__: boolean }).__DEV__ = false;
     mockApi.getUsersByIds.mockRejectedValue(new Error('boom'));
 
     await renderLoaded();
 
     expect(warnSpy).not.toHaveBeenCalled();
-    (global as { __DEV__: boolean }).__DEV__ = originalDev;
+    (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
   });
 
   it('should skip the user fetch when the trip has neither owner nor collaborators', async () => {
@@ -299,14 +299,14 @@ describe('useTripMembersData', () => {
   });
 
   it('should stay silent about the invitation link failure outside development', async () => {
-    const originalDev = (global as { __DEV__: boolean }).__DEV__;
-    (global as { __DEV__: boolean }).__DEV__ = false;
+    const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+    (global as unknown as { __DEV__: boolean }).__DEV__ = false;
     mockApi.getTripInvitationLink.mockRejectedValue(new Error('boom'));
 
     await renderLoaded();
 
     expect(warnSpy).not.toHaveBeenCalled();
-    (global as { __DEV__: boolean }).__DEV__ = originalDev;
+    (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
   });
 
   it('should log the error and stop loading when the trip fetch fails', async () => {

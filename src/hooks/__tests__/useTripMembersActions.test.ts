@@ -106,8 +106,8 @@ describe('useTripMembersActions', () => {
     });
 
     it('should stay silent when sharing fails outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       const { result } = setup();
       shareSpy.mockRejectedValue(new Error('dismissed'));
 
@@ -116,7 +116,7 @@ describe('useTripMembersActions', () => {
       });
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 
@@ -176,8 +176,8 @@ describe('useTripMembersActions', () => {
     });
 
     it('should stay silent about the renew failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       const { result } = setup();
       mockApi.getTripInvitationLink.mockRejectedValue(new Error('boom'));
       act(() => result.current.handleRenewLink({ setInviteLink: jest.fn(), setLinkExpiry: jest.fn() }));
@@ -187,7 +187,7 @@ describe('useTripMembersActions', () => {
       });
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 
@@ -220,8 +220,8 @@ describe('useTripMembersActions', () => {
     });
 
     it('should stay silent about the cancellation failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       const { result } = setup();
       mockApi.cancelInvitation.mockRejectedValue(new Error('boom'));
       act(() => result.current.handleCancelInvitation(makeMember({ invitationId: 'inv1' })));
@@ -231,7 +231,7 @@ describe('useTripMembersActions', () => {
       });
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 
@@ -274,8 +274,8 @@ describe('useTripMembersActions', () => {
     });
 
     it('should stay silent about the removal failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       const { result } = setup();
       mockApi.removeTripCollaborator.mockRejectedValue(new Error('boom'));
       act(() => result.current.handleRemoveMember(makeMember(), jest.fn()));
@@ -285,7 +285,7 @@ describe('useTripMembersActions', () => {
       });
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 
@@ -328,8 +328,8 @@ describe('useTripMembersActions', () => {
     });
 
     it('should stay silent about the transfer failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       const { result } = setup();
       mockApi.transferTripOwnership.mockRejectedValue(new Error('boom'));
       act(() => result.current.handleTransferOwnership(makeMember(), jest.fn()));
@@ -339,7 +339,7 @@ describe('useTripMembersActions', () => {
       });
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 

@@ -382,8 +382,8 @@ describe('useIdeas', () => {
     });
 
     it('should stay silent about the creation failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       mockCreateTrip.mockRejectedValue(new Error('boom'));
       const { result } = renderIdeas();
       await generateItinerary(result);
@@ -393,7 +393,7 @@ describe('useIdeas', () => {
       });
 
       expect(warnSpy).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
   });
 
@@ -494,15 +494,15 @@ describe('useIdeas', () => {
     });
 
     it('should stay silent about the hotel failure outside development', async () => {
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = (global as unknown as { __DEV__: boolean }).__DEV__;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = false;
       mockCreateBooking.mockRejectedValueOnce(new Error('boom'));
       const { result } = renderIdeas();
 
       await createTripFromItinerary(result);
 
       expect(warnSpy).not.toHaveBeenCalledWith('[useIdeas] Erreur création hôtel:', expect.any(Error));
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      (global as unknown as { __DEV__: boolean }).__DEV__ = originalDev;
     });
 
     it('should use the city as fallback when the address has no readable parts', async () => {
