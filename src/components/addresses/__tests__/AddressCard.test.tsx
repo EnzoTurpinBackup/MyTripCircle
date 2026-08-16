@@ -82,6 +82,19 @@ describe("AddressCard", () => {
     expect(screen.UNSAFE_getByProps({ name: "bed-outline" }).props.color).toBe(SKY);
   });
 
+  it("should default to the light palette when no theme flag is given", () => {
+    render(
+      <AddressCard
+        item={makeAddress()}
+        colors={lightColors}
+        t={(key: string) => key}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(hasViewWithBackground(SKY_LIGHT)).toBe(true);
+  });
+
   it("should use the dark hotel palette when the theme is dark", () => {
     renderCard(makeAddress(), { isDark: true });
 
