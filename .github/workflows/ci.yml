@@ -20,13 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Historique complet : requis pour l'analyse SonarCloud (git blame).
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20.x
           cache: npm
@@ -42,18 +42,26 @@ jobs:
 
       - name: Publier le rapport de couverture
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
           retention-days: 14
 
-      - name: Audit des dépendances
-        run: npm audit --audit-level=high
-        # Non bloquant : informatif tant que les vulnérabilités connues ne sont
-        # pas toutes traitées. Durcir (audit-level=moderate, ou retirer
-        # continue-on-error) une fois le backlog de sécurité résorbé.
-        continue-on-error: true
+      # Barrière bloquante : aucune vulnérabilité critique n'est tolérée.
+      - name: Audit des dépendances (bloquant sur critique)
+        run: npm audit --audit-level=critical
+
+      # Rapport informatif des vulnérabilités restantes (high / moderate).
+      # Elles proviennent toutes de la chaîne metro → image-size de l'outillage
+      # de build Expo/React Native, pour laquelle aucun correctif amont n'est
+      # publié : échouer dessus rendrait la CI rouge en permanence sans action
+      # possible. Durcir en `--audit-level=high` dès qu'image-size est corrigé.
+      - name: Rapport des vulnérabilités restantes
+        if: always()
+        run: |
+          npm audit --json > audit.json || true
+          node scripts/audit-report.js < audit.json >> "$GITHUB_STEP_SUMMARY"
 
       # ──────────────────────────────────────────────────────────────────────
       # SonarCloud — décommenter une fois le secret `SONAR_TOKEN` ajouté dans
