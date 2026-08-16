@@ -33,6 +33,9 @@ const mockAsyncStorage = jest.requireMock("@react-native-async-storage/async-sto
 const mockApi = jest.requireMock("../../services/ApiService").default;
 const mockUseAuth = jest.requireMock("../AuthContext").useAuth as jest.Mock;
 
+/** Le drapeau `__DEV__` conditionne les avertissements : il est basculé dans les tests. */
+const devGlobal = globalThis as unknown as { __DEV__: boolean };
+
 const STORAGE_KEY = "subscription";
 const NOW = new Date("2026-06-15T12:00:00.000Z");
 const USER = { id: "user-1", name: "Ada", email: "ada@example.com", createdAt: NOW };
@@ -396,8 +399,8 @@ describe("SubscriptionContext", () => {
 
     it("should stay silent about the unavailable store when not running in development", async () => {
       // Arrange
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = devGlobal.__DEV__;
+      devGlobal.__DEV__ = false;
       const { result } = await renderWith(makeSubscription());
       mockIapUnavailable = true;
       jest.resetModules();
@@ -409,7 +412,7 @@ describe("SubscriptionContext", () => {
 
       // Assert
       expect(console.warn).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      devGlobal.__DEV__ = originalDev;
     });
   });
 

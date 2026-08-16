@@ -60,6 +60,9 @@ const mockApi = ApiService as unknown as {
 const mockUseUserProfile = useUserProfile as jest.Mock;
 const mockTranslateApiMessage = translateApiMessage as jest.Mock;
 
+/** Le drapeau `__DEV__` conditionne les avertissements : il est basculé dans les tests. */
+const devGlobal = globalThis as unknown as { __DEV__: boolean };
+
 const RAW_USER = {
   id: "user-1",
   name: "Ada",
@@ -450,8 +453,8 @@ describe("AuthContext", () => {
 
     it("should stay silent about the unparsable payload when not running in development", async () => {
       // Arrange
-      const originalDev = (global as { __DEV__: boolean }).__DEV__;
-      (global as { __DEV__: boolean }).__DEV__ = false;
+      const originalDev = devGlobal.__DEV__;
+      devGlobal.__DEV__ = false;
       mockApi.login.mockRejectedValue(new Error("Timeout réseau"));
       const { result } = await renderAuth();
 
@@ -462,7 +465,7 @@ describe("AuthContext", () => {
 
       // Assert
       expect(console.warn).not.toHaveBeenCalled();
-      (global as { __DEV__: boolean }).__DEV__ = originalDev;
+      devGlobal.__DEV__ = originalDev;
     });
   });
 

@@ -1,7 +1,6 @@
 import React, { ReactNode } from "react";
 import { renderHook, act } from "@testing-library/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import useColorScheme from "react-native/Libraries/Utilities/useColorScheme";
 import {
   ThemeProvider,
   useTheme,
@@ -22,7 +21,11 @@ jest.mock("react-native/Libraries/Utilities/useColorScheme", () => ({
 
 const mockGetItem = AsyncStorage.getItem as jest.Mock;
 const mockSetItem = AsyncStorage.setItem as jest.Mock;
-const mockUseColorScheme = useColorScheme as unknown as jest.Mock;
+// `react-native` réexporte ce module en interne : le mocker par son chemin
+// permet de piloter le thème système sans toucher au reste du framework.
+const mockUseColorScheme = jest.requireMock(
+  "react-native/Libraries/Utilities/useColorScheme",
+).default as jest.Mock;
 
 const DARK_MODE_KEY = "@mytripcircle_dark_mode";
 const SATELLITE_KEY = "@mytripcircle_satellite_map";
