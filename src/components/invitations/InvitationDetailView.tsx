@@ -134,8 +134,8 @@ const InvitationBanner: React.FC<InvitationBannerProps> = ({
     />
     <BackButton variant="overlay" onPress={onBack} style={[styles.detailBackBtn, { top: insets.top + 10 }]} />
     <View style={styles.detailBannerContent}>
-      {destination && (
-        <View style={styles.detailDestRow}>
+      {!!destination && (
+        <View style={styles.detailDestRow} testID="invitation-destination-row">
           <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.80)" />
           <Text style={styles.detailDestText}>{destination}</Text>
         </View>
@@ -167,8 +167,11 @@ const DetailChips: React.FC<DetailChipsProps> = ({ duration, destination, invita
           <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>{t("invitation.days")}</Text>
         </View>
       )}
-      {destination && (
-        <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {!!destination && (
+        <View
+          style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          testID="invitation-destination-chip"
+        >
           <Ionicons name="airplane-outline" size={18} color="#5A8FAA" />
           <Text style={[styles.detailChipValue, { fontSize: 13, color: colors.text }]} numberOfLines={1}>{destination}</Text>
         </View>
