@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react-native";
 import PendingRow from "../PendingRow";
 import i18n from "../../../utils/i18n";
 import type { User } from "../../../types";
+import { freezeClockAt, restoreClock } from "../../invitations/__tests__/frozenClock";
 
 // ThemeContext lit/écrit la préférence de thème via AsyncStorage au montage :
 // on la mocke pour éviter l'erreur "NativeModule: AsyncStorage is null" en test.
@@ -40,12 +41,11 @@ describe("PendingRow", () => {
   });
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(NOW);
+    freezeClockAt(NOW);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    restoreClock();
   });
 
   it("should show the pending label", () => {

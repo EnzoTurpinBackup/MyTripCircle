@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import NotifItem from "../NotifItem";
 import i18n from "../../../utils/i18n";
+import { freezeClockAt, restoreClock } from "../../invitations/__tests__/frozenClock";
 
 // ThemeContext lit/écrit la préférence de thème via AsyncStorage au montage :
 // on la mocke pour éviter l'erreur "NativeModule: AsyncStorage is null" en test.
@@ -45,12 +46,11 @@ describe("NotifItem", () => {
   });
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(NOW);
+    freezeClockAt(NOW);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    restoreClock();
   });
 
   it("should announce a received invitation with the trip name and the elapsed time", () => {

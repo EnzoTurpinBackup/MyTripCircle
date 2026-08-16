@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react-native";
 import SentCard from "../SentCard";
 import i18n from "../../../utils/i18n";
 import { findOrphanTextNodes } from "./renderTreeUtils";
+import { freezeClockAt, restoreClock } from "./frozenClock";
 
 // ThemeContext lit/écrit la préférence de thème via AsyncStorage au montage :
 // on la mocke pour éviter l'erreur "NativeModule: AsyncStorage is null" en test.
@@ -38,12 +39,11 @@ describe("SentCard", () => {
   });
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(NOW);
+    freezeClockAt(NOW);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    restoreClock();
   });
 
   it("should render the trip title and the invitee email", () => {

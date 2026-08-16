@@ -4,6 +4,7 @@ import RequestsTab from "../RequestsTab";
 import i18n from "../../../utils/i18n";
 import type { FriendRequest } from "../../../types";
 import { colors, t } from "./friendsTestHarness";
+import { freezeClockAt, restoreClock } from "../../invitations/__tests__/frozenClock";
 
 // ThemeContext lit/écrit la préférence de thème via AsyncStorage au montage :
 // on la mocke pour éviter l'erreur "NativeModule: AsyncStorage is null" en test.
@@ -61,12 +62,11 @@ describe("RequestsTab", () => {
   });
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(NOW);
+    freezeClockAt(NOW);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    restoreClock();
   });
 
   it("should show both empty states when there is no request at all", () => {
