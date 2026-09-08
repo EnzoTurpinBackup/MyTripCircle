@@ -62,3 +62,20 @@ scripts/add-friend.js
 
 # documentation
 docs/
+
+# artefacts Python des scripts de génération du dossier
+__pycache__/
+*.pyc
+# outillage IA local
+.agents/
+
+# dossier de certification (rapport, soutenance, pièces IGENSIA) — hors dépôt
+*.docx
+*.pptx
+~$*
+Rapport-Alternance-*
+Soutenance-CDAN-*
+*CDAN*.html
+TURPIN_Enzo_rapport.pdf
+TITRE CONCEPTEUR*/
+scripts/generate-rapport-alternance*.py
