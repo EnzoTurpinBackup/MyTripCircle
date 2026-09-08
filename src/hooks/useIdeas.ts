@@ -9,6 +9,12 @@ import { useTrips } from "../contexts/TripsContext";
 import { useAuth } from "../contexts/AuthContext";
 import { searchPlaceByText } from "../services/PlacesService";
 
+/**
+ * Catalogue des destinations mises en avant. Seules la catégorie et
+ * l'illustration y figurent : nom et pays proviennent des fichiers de
+ * traduction, indexés par l'identifiant, afin que le catalogue n'ait pas à
+ * être dupliqué par langue.
+ */
 export const DESTINATIONS_BASE = [
   { id: "1",  category: "beach",    image: "https://images.unsplash.com/photo-1552074284-5e88ef1aef18?w=400&q=80&fit=crop" },
   { id: "2",  category: "nature",   image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80&fit=crop" },
@@ -39,6 +45,29 @@ const extractCityCountry = (formattedAddress: string, fallbackCity: string): { c
   return { city, country };
 };
 
+/**
+ * Alimente l'écran d'inspiration : parcours du catalogue de destinations,
+ * génération d'un itinéraire pour une ville et un nombre de jours donnés, puis
+ * conversion de cet itinéraire en voyage complet avec ses réservations et ses
+ * adresses.
+ *
+ * @returns L'état de la recherche et du filtre par catégorie, les destinations
+ * traduites et leur sous-ensemble `filtered`, l'état de la fenêtre de
+ * génération (ville, durée, date de départ, itinéraire obtenu, indicateurs
+ * d'attente), et les commandes d'ouverture, de génération, de création et de
+ * réinitialisation.
+ *
+ * @remarks La durée est bornée à un mois, au-delà duquel la génération n'a plus
+ * de sens et coûterait cher. Les refus du service de génération sont
+ * distingués : quota quotidien atteint et service non configuré appellent des
+ * messages différents d'une panne ordinaire. La création parcourt l'itinéraire
+ * jour par jour et créneau par créneau, en série, chaque entrée interrogeant le
+ * service de lieux pour obtenir une adresse réelle. Les échecs unitaires sont
+ * journalisés sans interrompre la suite : un voyage partiellement pourvu reste
+ * exploitable. Une adresse n'est créée que lorsque le lieu a été retrouvé, sans
+ * quoi elle ne pourrait pas être placée sur la carte. L'hébergement couvre
+ * toute la période, les activités sont datées de leur jour.
+ */
 export const useIdeas = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();

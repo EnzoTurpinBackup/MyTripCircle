@@ -7,6 +7,20 @@ interface BookingsSetters {
   setBookings: React.Dispatch<React.SetStateAction<Booking[]>>;
 }
 
+/**
+ * Volet « réservations » de la façade d'accès distant : création, modification
+ * et suppression, suivies de la mise à jour de la liste du contexte.
+ *
+ * @param setters.setBookings Mise à jour de la liste des réservations.
+ * @returns Les trois opérations sur une réservation.
+ *
+ * @remarks La création recompose explicitement la charge envoyée plutôt que de
+ * transmettre l'objet reçu : elle applique au passage les valeurs par défaut
+ * attendues par le serveur (devise, statut, pièces jointes) et écarte les
+ * champs calculés côté client. La modification apparie l'élément aussi bien
+ * par son identifiant applicatif que par celui de la base, les deux formes
+ * circulant selon l'origine de la réservation.
+ */
 export function useTripsApiBookings({ setBookings }: BookingsSetters) {
   const createBooking = useCallback(
     async (booking: Omit<Booking, "id" | "createdAt" | "updatedAt">): Promise<Booking> => {

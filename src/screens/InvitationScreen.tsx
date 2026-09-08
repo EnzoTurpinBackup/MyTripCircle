@@ -1,3 +1,34 @@
+/**
+ * Écran des invitations à collaborer sur un voyage, dans ses deux usages : la
+ * consultation de tout ce que l'on a reçu et émis, et l'ouverture d'une
+ * invitation précise atteinte par un lien.
+ *
+ * Besoin couvert : décider d'un séjour auquel on est convié — accepter, refuser
+ * en motivant son refus, ou voir de quoi il s'agit avant de trancher — et, du
+ * côté de l'organisateur, suivre les invitations envoyées et revenir sur un
+ * envoi resté sans réponse.
+ *
+ * Position dans le parcours : atteint depuis l'onglet Profil sans paramètre, ce
+ * qui ouvre la liste, ou par le deep link `mytripcircle://invitation/:token`,
+ * qui ouvre l'invitation désignée. Ce lien porte l'adhésion à un voyage, à ne
+ * pas confondre avec `mytripcircle://friend-invite/:token`, qui porte une
+ * demande d'amitié et mène à FriendInvitationScreen. L'écran figure dans
+ * MainStack comme dans AuthStack : un visiteur non connecté qui suit le lien
+ * voit donc l'invitation, mais sa liste reste vide faute de compte et toute
+ * acceptation lui propose d'abord de s'authentifier. En sortie, TripPublicView
+ * avant de répondre, et TripDetails une fois membre.
+ *
+ * Données : tout vient de useInvitationManagement, qui s'appuie sur
+ * TripsContext pour lire, accepter, refuser et annuler les invitations
+ * (invitationsApi en dessous), sur AuthContext pour identifier le destinataire,
+ * et sur NotificationContext, consulter cet écran valant prise de connaissance.
+ *
+ * États pris en charge : chargement (cartes squelette), onglet vide (message
+ * propre à chacun), refus en cours de saisie (fenêtre dédiée), acceptation en
+ * cours (seule la ligne concernée signale l'attente), hors-ligne (les actions
+ * des cartes sont neutralisées). Un échec de chargement de la liste est
+ * seulement journalisé et laisse l'écran vide ; en mode lien, il alerte.
+ */
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -26,6 +57,18 @@ import InvitationDetailView from "../components/invitations/InvitationDetailView
 import BackButton from "../components/ui/BackButton";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
+/**
+ * Compose l'écran des invitations et arbitre entre ses deux modes.
+ *
+ * @param route.params.token Jeton d'invitation, facultatif : présent, il fait
+ * basculer l'écran sur la vue détaillée d'une seule invitation ; absent, la
+ * liste s'affiche. Il est lu par useInvitationManagement, non ici.
+ *
+ * Effets de bord notables — chargement réseau des invitations reçues et émises
+ * au montage puis à chaque changement de jeton, marquage des notifications
+ * comme lues, et redirection vers TripPublicView lorsque le voyage visé par le
+ * lien est identifiable.
+ */
 const InvitationScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { t }      = useTranslation();
@@ -51,6 +94,9 @@ const InvitationScreen: React.FC = () => {
         invitation={invitation}
         loading={loading}
         responding={responding}
+        // Venu d'un lien, l'écran n'a pas de liste derrière lui et doit se
+        // dépiler ; ouvert depuis la liste, oublier le jeton suffit à y
+        // revenir sans recharger.
         onBack={() => {
           if (initialToken) {
             navigation.goBack();
@@ -134,6 +180,8 @@ const InvitationScreen: React.FC = () => {
             if (displayed.length === 0) return <EmptyState tab={tab} />;
             if (tab === "sent") return displayed.map((inv) => (
               <SentCard
+                // Les invitations n'exposent pas toutes le même identifiant
+                // selon leur origine ; la cascade garantit une clé stable.
                 key={inv._id ?? inv.token ?? inv.id}
                 invitation={inv}
                 disabled={offlineDisabled}
@@ -148,11 +196,16 @@ const InvitationScreen: React.FC = () => {
               <InvitationCard
                 key={inv._id ?? inv.token}
                 invitation={inv}
+                // Seul l'onglet des invitations en attente déplie les cartes :
+                // ce sont les seules qui appellent une décision.
                 expanded={tab === "pending"}
                 accepting={acceptingId === inv.token}
                 disabled={offlineDisabled}
                 onAccept={() => handleAccept(inv)}
                 onDecline={() => openDecline(inv)}
+                // Le détail mène de préférence à l'aperçu public du voyage :
+                // décider suppose de savoir à quoi l'on est convié. La vue
+                // d'invitation seule n'est qu'un repli.
                 onDetail={() => {
                   const tripId = inv.tripId ?? inv.trip?._id;
                   if (tripId) {

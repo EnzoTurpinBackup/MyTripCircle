@@ -14,6 +14,25 @@ interface LinkSetters {
   setLinkExpiry: (date: Date) => void;
 }
 
+/**
+ * Regroupe les actions administratives de l'écran des membres : partage et
+ * renouvellement du lien d'invitation, annulation d'une invitation, retrait
+ * d'un membre, transfert de la propriété et consultation d'un profil.
+ *
+ * @param tripId Voyage administré.
+ * @param onSuccess Rechargement de la composition du groupe, appelé après
+ * chaque action aboutie.
+ * @returns L'indicateur `actionLoading`, qui neutralise l'interface pendant une
+ * opération, et les six gestionnaires d'action.
+ *
+ * @remarks Ce hook ne détient ni la liste des membres ni le lien : ils sont
+ * passés en argument par l'écran, qui les tient de `useTripMembersData`. Cette
+ * séparation évite de dupliquer l'état entre chargement et actions. Toute
+ * opération irréversible passe par une confirmation, et la feuille d'actions
+ * est refermée au préalable pour ne pas superposer deux couches modales. Les
+ * échecs sont signalés à l'utilisateur puis absorbés : l'écran reste
+ * exploitable et l'action peut être retentée.
+ */
 export function useTripMembersActions(tripId: string, onSuccess: () => Promise<void>) {
   const navigation = useNavigation<NavProp>();
   const { t } = useTranslation();

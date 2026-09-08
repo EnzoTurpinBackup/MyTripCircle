@@ -1,5 +1,20 @@
 import { Booking } from "../types";
 
+/**
+ * Correspondances entre les types et statuts de réservation et leur habillage visuel.
+ *
+ * Deux conventions de repli coexistent volontairement dans ce fichier, et les confondre est
+ * la principale source d'erreur à sa lecture :
+ * - les fonctions de liste rendent `null` sur une valeur inconnue, ce qui laisse l'appelant
+ *   afficher la ligne sans liseré ni pastille plutôt que d'inventer une couleur ;
+ * - les fonctions de détail rendent toujours un couple neutre, l'écran de détail devant
+ *   remplir une surface qui ne peut pas rester vide.
+ *
+ * Dans les deux cas, une valeur inconnue est un cas normal et non une anomalie : les types
+ * de réservation évoluent, et une donnée créée par une version plus récente doit rester
+ * affichable par une version plus ancienne.
+ */
+
 // ─── Couleurs non-thémifiables ─────────────────────────────────────────────────
 const MOSS       = '#6B8C5A';
 const MOSS_LIGHT = '#E2EDD9';
@@ -7,6 +22,13 @@ const SKY        = '#5A8FAA';
 const SKY_LIGHT  = '#DCF0F5';
 
 // ─── Icône par type de réservation ────────────────────────────────────────────
+/**
+ * Retourne le nom de l'icône illustrant un type de réservation.
+ *
+ * @param type Type de la réservation.
+ * @returns Un nom d'icône du jeu embarqué. Un type inconnu rend `"receipt"`, générique mais
+ * toujours pertinent : toute réservation est d'abord un justificatif.
+ */
 export const getBookingTypeIcon = (type: Booking["type"]): string => {
   switch (type) {
     case "flight":     return "airplane";
@@ -19,6 +41,19 @@ export const getBookingTypeIcon = (type: Booking["type"]): string => {
 };
 
 // ─── Couleurs carte/liste (adaptées light/dark) ───────────────────────────────
+/**
+ * Retourne le liseré et le fond d'une carte de réservation dans une liste.
+ *
+ * Le thème sombre ne réutilise pas les fonds clairs mais des versions translucides de la
+ * couleur d'accent : un aplat pastel sur fond sombre paraîtrait lumineux et attirerait
+ * l'œil plus que le contenu de la carte.
+ *
+ * @param type Type de la réservation.
+ * @param isDark Thème sombre actif. Par défaut `false` — un appelant qui oublie de le
+ * transmettre obtient les couleurs claires, dégradation visible mais sans plantage.
+ * @returns Le couple de couleurs, ou `null` pour un type inconnu, l'appelant devant alors
+ * rendre la carte sans habillage de type.
+ */
 export const getBookingTypeColors = (
   type: Booking["type"],
   isDark = false,
@@ -43,6 +78,17 @@ export const getBookingTypeColors = (
   }
 };
 
+/**
+ * Retourne les couleurs de la pastille de statut dans une liste.
+ *
+ * Les trois statuts sont distingués par le libellé autant que par la couleur : la teinte
+ * seule ne porte jamais l'information, contrainte d'accessibilité pour les daltonismes.
+ *
+ * @param status Statut de la réservation.
+ * @param isDark Thème sombre actif ; par défaut `false`.
+ * @returns Le couple de couleurs, ou `null` pour un statut inconnu — la pastille est alors
+ * omise plutôt que rendue dans une couleur arbitraire qui suggérerait un état faux.
+ */
 export const getBookingStatusColors = (
   status: Booking["status"],
   isDark = false,
@@ -64,6 +110,17 @@ export const getBookingStatusColors = (
 };
 
 // ─── Couleurs détail (fond sombre / rgba) ─────────────────────────────────────
+/**
+ * Retourne le liseré et le fond du bloc de type sur l'écran de détail.
+ *
+ * L'écran de détail est toujours dessiné sur une bannière sombre, quel que soit le thème :
+ * il n'y a donc pas de variante claire, et les teintes diffèrent de celles des listes pour
+ * conserver leur contraste sur ce fond.
+ *
+ * @param type Type de la réservation.
+ * @returns Toujours un couple de couleurs — un gris neutre pour un type inconnu, jamais
+ * `null`, contrairement à la variante de liste.
+ */
 export const getBookingTypeColorsDetail = (
   type: Booking["type"]
 ): { stripe: string; bg: string } => {
@@ -77,6 +134,14 @@ export const getBookingTypeColorsDetail = (
   }
 };
 
+/**
+ * Retourne les couleurs de la pastille de statut sur l'écran de détail.
+ *
+ * @param status Statut de la réservation.
+ * @returns Toujours un couple de couleurs — un gris neutre pour un statut inconnu. La
+ * pastille reste donc affichée avec le libellé brut du statut, ce qui vaut mieux, sur un
+ * écran de détail, que de masquer une information que l'utilisateur y cherche.
+ */
 export const getBookingStatusColorsDetail = (
   status: Booking["status"]
 ): { color: string; bg: string } => {
@@ -88,6 +153,13 @@ export const getBookingStatusColorsDetail = (
   }
 };
 
+/**
+ * Retourne le dégradé de la bannière d'une réservation, en trois teintes.
+ *
+ * @param type Type de la réservation.
+ * @returns Un triplet de couleurs hexadécimales, avec un dégradé neutre pour un type
+ * inconnu. Jamais `null` : le composant de dégradé destinataire exige trois valeurs.
+ */
 export const getBookingHeroGradient = (
   type: Booking["type"]
 ): [string, string, string] => {

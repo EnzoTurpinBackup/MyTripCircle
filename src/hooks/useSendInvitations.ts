@@ -10,6 +10,26 @@ interface UseSendInvitationsOptions {
   friends: User[];
 }
 
+/**
+ * Compose et envoie un lot d'invitations à un voyage, en combinant des amis
+ * choisis dans la liste de contacts et une adresse saisie librement pour
+ * quelqu'un qui n'a pas encore de compte.
+ *
+ * @param options.trip Voyage concerné ; l'envoi est sans effet tant qu'il n'est
+ * pas chargé.
+ * @param options.friends Amis proposés à la sélection, dont on tire l'adresse
+ * de destination.
+ * @returns La sélection courante, la saisie libre et son accesseur, l'état
+ * d'envoi, le décompte `inviteCount` pour le libellé du bouton, ainsi que les
+ * commandes de bascule, de réinitialisation et d'envoi.
+ *
+ * @remarks Les invitations partent en parallèle, l'attente cumulée d'un envoi
+ * séquentiel étant sensible dès quelques destinataires. Les amis sans adresse
+ * connue sont écartés et signalés nommément plutôt que de faire échouer le lot
+ * entier. Tous les invités reçoivent le rôle d'éditeur sans droit
+ * d'invitation : la propagation des invitations reste à la main de
+ * l'organisateur.
+ */
 export function useSendInvitations({ trip, friends }: UseSendInvitationsOptions) {
   const { t } = useTranslation();
   const { createInvitation } = useTrips();

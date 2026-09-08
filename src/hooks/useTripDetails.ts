@@ -13,6 +13,25 @@ type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 // Re-exporté pour la compatibilité descendante
 export type { CountdownValue } from "./useTripCountdown";
 
+/**
+ * Point d'entrée unique de l'écran de détail d'un voyage. Assemble les données,
+ * les droits et le décompte, et y ajoute l'état propre à l'écran (onglet actif,
+ * notification de confirmation), afin que le composant de vue n'ait qu'un seul
+ * hook à consommer.
+ *
+ * @param tripId Voyage affiché.
+ * @param showToastParam Passé par l'écran précédent après un enregistrement
+ * réussi, pour afficher la confirmation à l'arrivée sur le détail.
+ * @returns L'ensemble aplati des valeurs des trois hooks sous-jacents, complété
+ * par l'onglet courant, l'état de la notification et la navigation vers
+ * l'invitation.
+ *
+ * @remarks Les données sont rechargées à chaque prise de focus et non au seul
+ * montage : l'écran reste en mémoire pendant qu'on modifie une réservation, et
+ * un simple retour doit en refléter l'effet. Le retour est aplati pour
+ * conserver la signature attendue par l'écran malgré le découpage interne en
+ * trois hooks.
+ */
 export function useTripDetails(tripId: string, showToastParam?: boolean) {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
