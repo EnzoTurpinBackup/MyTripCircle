@@ -1,3 +1,31 @@
+/**
+ * Administration du groupe d'un voyage : qui l'organise, qui l'a rejoint, qui
+ * est encore attendu, et par quel lien on invite.
+ *
+ * Besoin couvert : voir d'un coup l'état réel de la composition du séjour —
+ * membres confirmés comme invitations restées sans réponse — et agir sur
+ * chacun : partager ou renouveler le lien, annuler une invitation, retirer un
+ * membre, consulter son profil, lui transmettre l'organisation.
+ *
+ * Position dans le parcours : écran de MainStack sous la route `TripMembers`,
+ * de paramètre unique `tripId`. En sortie : InviteFriends depuis ses trois
+ * points d'appel, et FriendProfile depuis la fiche d'un membre.
+ *
+ * Données : useTripMembersData reconstitue la liste à partir de trois sources —
+ * le voyage, qui ne porte que des identifiants ; les profils, résolus
+ * séparément ; les invitations émises, seule trace des personnes attendues — et
+ * fournit le lien d'invitation avec son expiration. useTripMembersActions porte
+ * les opérations, adressées à ApiService puis suivies d'un rechargement. Cet
+ * écran ne passe pas par TripsContext, la composition d'un voyage n'y étant pas
+ * tenue.
+ *
+ * États pris en charge : chargement initial (squelette), rafraîchissement tiré
+ * vers le bas (la liste reste visible), action en cours (voile bloquant),
+ * hors-ligne (commandes réseau neutralisées), permissions (retrait, transfert
+ * et annulation réservés au propriétaire). Pas d'état d'erreur : un échec de
+ * chargement laisse une liste vide, un échec d'action une simple alerte.
+ */
+
 import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -29,15 +57,29 @@ import { useTripMembersActions } from "../hooks/useTripMembersActions";
 import { useBottomSheet } from "../hooks/useBottomSheet";
 import { s } from "./TripMembersScreen.styles";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 type TripMembersScreenRouteProp = RouteProp<RootStackParamList, "TripMembers">;
 type TripMembersScreenNavProp   = StackNavigationProp<RootStackParamList, "TripMembers">;
 
+/**
+ * Jours restants, arrondis au supérieur et bornés à zéro : le lien reste
+ * utilisable pendant toute sa dernière journée, et une échéance dépassée
+ * s'annonce « 0 jour » plutôt qu'en négatif.
+ */
 const daysUntil = (date: Date) => {
   const diff = new Date(date).getTime() - Date.now();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 };
 
+/**
+ * Compose l'écran d'administration des membres d'un voyage.
+ *
+ * Aucune prop : le seul paramètre est `tripId`, lu dans la route. Effets de
+ * bord — chargement de la composition au montage puis après chaque action
+ * aboutie, récupération du lien d'invitation, ouverture de la feuille de
+ * partage du système, confirmations avant toute opération irréversible.
+ */
 const TripMembersScreen: React.FC = () => {
   const route      = useRoute<TripMembersScreenRouteProp>();
   const navigation = useNavigation<TripMembersScreenNavProp>();
@@ -60,6 +102,9 @@ const TripMembersScreen: React.FC = () => {
   const { actionLoading, handleShareLink, handleRenewLink, handleCancelInvitation, handleRemoveMember, handleTransferOwnership, handleViewProfile } =
     useTripMembersActions(tripId, loadData);
 
+  // Déduit de la fiche rapportée par le serveur et non d'un paramètre de
+  // navigation : un transfert d'organisation fait ici retire les commandes
+  // correspondantes dès le rechargement, sans quitter l'écran.
   const isOwner = !!(user && owner?.userId === user.id);
 
   const openSheet = (member: MemberInfo) => {
@@ -67,6 +112,8 @@ const TripMembersScreen: React.FC = () => {
     sheet.open();
   };
 
+  // Le membre n'est effacé qu'à la fin de l'animation : le vider plus tôt
+  // démonterait la feuille au lieu de la laisser glisser vers le bas.
   const closeSheet = () => {
     sheet.close(() => setSelectedMember(null));
   };
@@ -80,7 +127,10 @@ const TripMembersScreen: React.FC = () => {
       isOwnerAvatar && { borderWidth: 2, borderColor: colors.terraLight },
     ]}>
       {avatar
-        ? <Image source={{ uri: avatar }} style={{ width: size, height: size, borderRadius: size / 2 }} />
+        /* Décorative : le nom et le rôle du membre sont lus juste à côté. */
+        ? <Image source={{ uri: avatar }} style={{ width: size, height: size, borderRadius: size / 2 }} {...DECORATIVE_ELEMENT_PROPS} />
+        // Repli sur les initiales, la teinte du fond étant dérivée du nom : elle
+        // ne varie pas d'un écran à l'autre et sert donc de repère visuel.
         : <Text style={[s.avatarTxt, { fontSize: size * 0.35 }]}>{getInitials(name)}</Text>
       }
     </View>
@@ -89,11 +139,16 @@ const TripMembersScreen: React.FC = () => {
   const renderMemberRow = (member: MemberInfo, isOwnerRow = false, tappable = true) => {
     const isSelected = selectedMember?.userId === member.userId;
     const isSelf     = member.userId === user?.id;
+    // Trois conditions pour ouvrir la feuille : la ligne doit l'autoriser
+    // (celle de l'organisateur ne le fait pas), le lecteur doit être
+    // propriétaire, et l'on ne s'administre pas soi-même.
     const canTap     = tappable && isOwner && !isSelf;
 
     const organizerRole = isSelf ? t("tripMembers.roleOrganizerSelf") : t("tripMembers.roleOrganizer");
     const roleText = isOwnerRow ? organizerRole : t("tripMembers.roleParticipant");
 
+    // L'élément de fin dit ce que la ligne permet : pastille pour se repérer,
+    // chevron si la fiche s'ouvre, rien sinon — jamais un chevron inerte.
     let trailingEl: React.ReactNode = null;
     if (isSelf) {
       trailingEl = <View style={s.meTag}><Text style={s.meTagTxt}>{t("tripMembers.meLabel")}</Text></View>;
@@ -114,6 +169,8 @@ const TripMembersScreen: React.FC = () => {
 
     const rowStyle = [s.mc, { backgroundColor: colors.surface, borderColor: colors.border }, isSelected && s.mcSelected];
 
+    // Ligne non actionnable rendue en simple vue plutôt qu'en TouchableOpacity
+    // désactivé, qui resterait annoncé comme un bouton aux lecteurs d'écran.
     if (canTap) {
       return (
         <TouchableOpacity key={member.userId} style={rowStyle} onPress={() => openSheet(member)} activeOpacity={0.75}>
@@ -124,7 +181,10 @@ const TripMembersScreen: React.FC = () => {
     return <View key={member.userId} style={rowStyle}>{inner}</View>;
   };
 
+  // Invitations en attente : même mise en forme, mais opacité réduite et avatar
+  // neutre — la personne n'a pas de profil, seule son adresse est connue.
   const renderPendingRow = (inv: MemberInfo) => {
+    // Ancienneté arrondie au jour inférieur : repère de relance, non échéance.
     const daysAgo = inv.invitedAt
       ? Math.floor((Date.now() - new Date(inv.invitedAt).getTime()) / (1000 * 60 * 60 * 24))
       : null;
@@ -203,6 +263,9 @@ const TripMembersScreen: React.FC = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.terra} colors={[colors.terra]} />
         }
       >
+        {/* Carte absente si le serveur n'a pas fourni de lien : mieux vaut rien
+            qu'un cadre vide laissant croire à un partage cassé, les invitations
+            nominatives restant accessibles par le bouton d'en-tête. */}
         {inviteLink ? (
           <View style={[s.linkCard, { backgroundColor: colors.terraLight, borderColor: colors.border }]}>
             <Text style={[s.linkTitle, { color: colors.terra }]}>{t("tripMembers.linkTitle")}</Text>
@@ -215,6 +278,8 @@ const TripMembersScreen: React.FC = () => {
             {linkExpiry && (
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
                 <Text style={[s.expiryTxt, { color: colors.terra }]}>{t("tripMembers.linkExpiry", { count: daysUntil(linkExpiry) })}</Text>
+                {/* Le renouvellement reçoit les accesseurs d'état : seul le lien
+                    change, et un rechargement complet ferait clignoter la page. */}
                 <TouchableOpacity onPress={() => handleRenewLink({ setInviteLink, setLinkExpiry })} disabled={offlineDisabled} style={offlineStyle}>
                   <Text style={[s.expiryTxt, { color: colors.terra, fontFamily: F.sans600, textDecorationLine: "underline" }]}>
                     {t("tripMembers.linkRenew")}
@@ -225,6 +290,9 @@ const TripMembersScreen: React.FC = () => {
           </View>
         ) : null}
 
+        {/* L'organisateur ouvre la liste, seul dans sa section : il ne figure
+            pas parmi les collaborateurs et sa ligne n'est jamais actionnable, le
+            transfert se déclenchant depuis la fiche d'un autre membre. */}
         {owner && (
           <>
             <Text style={[s.sec, { color: colors.textLight }]}>{t("tripMembers.sectionOrganizer")}</Text>
@@ -257,12 +325,17 @@ const TripMembersScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
+      {/* Voile bloquant pendant une action : un second geste lancé avant le
+          rechargement porterait sur une composition déjà périmée. */}
       {actionLoading && (
         <View style={s.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.terra} />
         </View>
       )}
 
+      {/* `animationType="none"` : l'apparition est pilotée par useBottomSheet et
+          l'animation intégrée de Modal s'y superposerait. `onRequestClose`
+          rattache le bouton retour d'Android à la même fermeture. */}
       {selectedMember && (
         <Modal transparent visible animationType="none" onRequestClose={closeSheet}>
           <Animated.View style={[StyleSheet.absoluteFill, s.backdrop, { opacity: sheet.backdropAnim }]}>
@@ -289,9 +362,12 @@ const TripMembersScreen: React.FC = () => {
                   <Text style={{ fontSize: 14 }}>👤</Text>
                 </View>
                 <Text style={[s.sheetRowLabel, { flex: 1, color: colors.text }]}>{t("tripMembers.viewProfile")}</Text>
-                <Ionicons name="chevron-forward" size={15} color={colors.border} />
+                <Ionicons name="chevron-forward" size={15} color={colors.border} {...DECORATIVE_ELEMENT_PROPS} />
               </TouchableOpacity>
 
+              {/* Transfert et retrait sont de nouveau conditionnés à `isOwner`
+                  alors que la feuille ne s'ouvre déjà que pour lui : la garde
+                  tient encore si un autre chemin y mène un jour. */}
               {isOwner && (
                 <TouchableOpacity style={[s.sheetRow, { backgroundColor: colors.bgMid }, offlineStyle]} onPress={() => handleTransferOwnership(selectedMember, closeSheet)} disabled={offlineDisabled} activeOpacity={0.75}>
                   <View style={[s.sheetIcon, { backgroundColor: colors.terraLight }]}>

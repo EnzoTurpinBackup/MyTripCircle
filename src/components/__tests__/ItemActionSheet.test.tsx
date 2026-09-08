@@ -18,11 +18,15 @@ jest.mock("../../contexts/ThemeContext", () => {
 const flatten = (style: unknown): Record<string, unknown> =>
   Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
 
-/** La ligne « supprimer » n'a pas de testID : on la reconnaît à sa couleur de fond. */
-const hasViewWithBackground = (color: string) =>
+/** Ni la ligne « supprimer » ni le voile n'ont de testID : on les reconnaît à leur couleur de fond. */
+const findViewWithBackground = (color: string) =>
   screen
     .UNSAFE_getAllByType(View)
-    .some((view) => flatten(view.props.style).backgroundColor === color);
+    .find((view) => flatten(view.props.style).backgroundColor === color);
+
+const hasViewWithBackground = (color: string) => !!findViewWithBackground(color);
+
+const BACKDROP_COLOR = "rgba(42,35,24,0.45)";
 
 const useThemeMock = useTheme as jest.MockedFunction<typeof useTheme>;
 
@@ -146,5 +150,85 @@ describe("ItemActionSheet", () => {
     render(<ItemActionSheet {...baseProps} />);
 
     expect(hasViewWithBackground("rgba(192,64,64,0.18)")).toBe(true);
+  });
+
+  describe("accessibility", () => {
+    it("should announce the item title as a heading when visible", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByRole("header").props.children).toBe("Hôtel Sakura");
+    });
+
+    it("should keep the screen reader inside the sheet when visible", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByLabelText("common.a11y.actionsFor").props.accessibilityViewIsModal)
+        .toBe(true);
+    });
+
+    it("should expose the edit row as a button when editing is allowed", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByLabelText("common.a11y.editItem").props.accessibilityRole)
+        .toBe("button");
+    });
+
+    it("should report the edit row as enabled when editing is allowed", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByLabelText("common.a11y.editItem").props.accessibilityState)
+        .toMatchObject({ disabled: false });
+    });
+
+    it("should expose no edit button when editing is not allowed", () => {
+      render(<ItemActionSheet {...baseProps} canEdit={false} />);
+
+      expect(screen.queryByLabelText("common.a11y.editItem")).toBeNull();
+    });
+
+    it("should expose the delete row as a button when deleting is allowed", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByLabelText("common.a11y.deleteItem").props.accessibilityRole)
+        .toBe("button");
+    });
+
+    it("should report the delete row as enabled when deleting is allowed", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByLabelText("common.a11y.deleteItem").props.accessibilityState)
+        .toMatchObject({ disabled: false });
+    });
+
+    it("should expose no delete button when deleting is not allowed", () => {
+      render(<ItemActionSheet {...baseProps} canDelete={false} />);
+
+      expect(screen.queryByLabelText("common.a11y.deleteItem")).toBeNull();
+    });
+
+    it("should expose the cancel action as a labelled button", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(screen.getByLabelText("common.cancel").props.accessibilityRole).toBe("button");
+    });
+
+    it("should hide the closing backdrop from assistive technologies", () => {
+      render(<ItemActionSheet {...baseProps} />);
+
+      expect(findViewWithBackground(BACKDROP_COLOR)?.props).toMatchObject({
+        accessible: false,
+        accessibilityElementsHidden: true,
+        importantForAccessibility: "no",
+      });
+    });
+
+    it("should still close the sheet when the backdrop is tapped", () => {
+      const onClose = jest.fn();
+      render(<ItemActionSheet {...baseProps} onClose={onClose} />);
+
+      fireEvent.press(findViewWithBackground(BACKDROP_COLOR)!);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 });

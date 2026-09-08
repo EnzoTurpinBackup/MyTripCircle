@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 import { F } from "../../theme/fonts";
 
 const MOSS = "#6B8C5A";
@@ -45,14 +46,14 @@ const SearchResultCard: React.FC<Props> = ({ result: r, sending, onSend, onViewP
   if (isAlreadyFriend) {
     actionEl = (
       <View style={[styles.alreadyPill, { backgroundColor: MOSS_LIGHT }]}>
-        <Ionicons name="checkmark-circle" size={17} color={MOSS} />
+        <Ionicons name="checkmark-circle" size={17} color={MOSS} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.alreadyText, { color: MOSS }]}>{t("addFriend.alreadyFriend")}</Text>
       </View>
     );
   } else if (isPendingSent) {
     actionEl = (
       <View style={[styles.actionBtn, { backgroundColor: colors.bgMid }]}>
-        <Ionicons name="hourglass-outline" size={17} color={colors.textMid} />
+        <Ionicons name="hourglass-outline" size={17} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.actionBtnText, { color: colors.textMid }]}>{t("addFriend.requestSent")}</Text>
       </View>
     );
@@ -71,6 +72,7 @@ const SearchResultCard: React.FC<Props> = ({ result: r, sending, onSend, onViewP
             name={isPendingReceived ? "checkmark" : "person-add-outline"}
             size={17}
             color={colors.white}
+            {...DECORATIVE_ELEMENT_PROPS}
           />
         )}
         <Text style={styles.actionBtnText}>
@@ -89,7 +91,8 @@ const SearchResultCard: React.FC<Props> = ({ result: r, sending, onSend, onViewP
         <View style={styles.resultRow}>
           <View style={[styles.avatar, { backgroundColor: avatarColor, overflow: "hidden" }]}>
             {r.avatar ? (
-              <Image source={{ uri: r.avatar }} style={{ width: 52, height: 52, borderRadius: 26 }} />
+              /* Décorative : le nom et l'e-mail du profil trouvé sont lus juste à côté. */
+              <Image source={{ uri: r.avatar }} style={{ width: 52, height: 52, borderRadius: 26 }} {...DECORATIVE_ELEMENT_PROPS} />
             ) : (
               <Text style={styles.avatarText}>{initials}</Text>
             )}

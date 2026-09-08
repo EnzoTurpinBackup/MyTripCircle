@@ -1,4 +1,5 @@
 import React from "react";
+import { Image } from "react-native";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import MemberRow, { AvatarBubble } from "../MemberRow";
 import i18n from "../../../utils/i18n";
@@ -161,6 +162,18 @@ describe("AvatarBubble", () => {
 
     // Assert
     expect(screen.queryByText("CR")).toBeNull();
+  });
+
+  it("should hide the avatar from assistive technologies when one is provided", () => {
+    // Arrange / Act
+    render(<AvatarBubble name="Camille Roy" avatar="https://example.test/a.png" />);
+
+    // Assert — le nom du membre est déjà lu à côté de la bulle.
+    expect(screen.UNSAFE_getByType(Image).props).toMatchObject({
+      accessible: false,
+      accessibilityElementsHidden: true,
+      importantForAccessibility: "no",
+    });
   });
 
   it("should render the initials when the avatar is explicitly null", () => {

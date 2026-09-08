@@ -7,6 +7,7 @@ jest.mock("@expo/vector-icons", () => {
 });
 
 import React from "react";
+import { Image } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { makeTrip } from "../../__tests__/voyagesTestUtils";
 import TripAllRow from "../TripAllRow";
@@ -37,6 +38,17 @@ describe("TripAllRow", () => {
     );
 
     expect(screen.getByText("📍 Lima · 1 Dec–1 Dec")).toBeTruthy();
+  });
+
+  it("should hide the cover photo from assistive technologies", () => {
+    render(<TripAllRow trip={makeTrip()} photoUri="https://cdn/lima.jpg" onPress={jest.fn()} />);
+
+    // Le titre et la destination du voyage sont déjà lus dans la même ligne.
+    expect(screen.UNSAFE_getByType(Image).props).toMatchObject({
+      accessible: false,
+      accessibilityElementsHidden: true,
+      importantForAccessibility: "no",
+    });
   });
 
   it("should open the trip when the row is pressed", () => {

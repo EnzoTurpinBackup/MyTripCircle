@@ -3,6 +3,23 @@ import { Alert, Share } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 
+/**
+ * Gère le lien d'invitation partageable d'un voyage : obtention, partage par le
+ * sélecteur du système et renouvellement. Ce lien permet de convier une
+ * personne dont on ne connaît ni le compte ni l'adresse électronique.
+ *
+ * @param tripId Voyage auquel le lien donne accès.
+ * @returns Le lien courant, sa date d'expiration à afficher, `loadLink` à
+ * appeler à l'ouverture de l'écran, et les deux gestionnaires de partage et de
+ * renouvellement.
+ *
+ * @remarks Le renouvellement passe par une confirmation car il invalide le lien
+ * précédent, potentiellement déjà transmis. L'expiration est reconstituée
+ * côté client sur la durée de validité convenue de sept jours : elle est
+ * indicative, le serveur restant seul à décider de la validité réelle. Un échec
+ * de chargement laisse le lien vide plutôt que d'interrompre l'écran, dont les
+ * autres modes d'invitation restent utilisables.
+ */
 export function useInvitationLink(tripId: string) {
   const { t } = useTranslation();
   const { getTripInvitationLink } = useTrips();

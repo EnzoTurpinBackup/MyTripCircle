@@ -12,8 +12,14 @@ import { fetchDestinationPhotoUrl } from "../utils/destinationPhoto";
 
 type CreateTripNavigationProp = StackNavigationProp<RootStackParamList, "CreateTrip">;
 
+/**
+ * Portée de diffusion d'un voyage, du plus restreint au plus ouvert. Le palier
+ * intermédiaire limite la visibilité au cercle d'amis sans rendre le voyage
+ * public.
+ */
 export type TripVisibility = "private" | "friends" | "public";
 
+/** Champs saisis dans le formulaire de création, avant envoi au serveur. */
 export interface TripFormData {
   title: string;
   description: string;
@@ -38,6 +44,28 @@ const buildInitialFormData = (): TripFormData => {
   };
 };
 
+/**
+ * Pilote le formulaire de création d'un voyage : saisie, cohérence des dates,
+ * recherche automatique d'une photographie de couverture, contrôle du quota
+ * d'abonnement et enregistrement.
+ *
+ * @returns Les champs du formulaire, l'état d'ouverture des trois sélecteurs
+ * avec leurs accesseurs, l'indicateur `loading`, le message `dateError`, et les
+ * gestionnaires de saisie, de dates, de visibilité, de création et
+ * d'abandon.
+ *
+ * @remarks Une photographie de couverture est recherchée à partir de la
+ * destination, quelque temps après la dernière frappe pour ne pas lancer une
+ * requête par caractère ; son absence n'empêche pas la création. Reculer la
+ * date de début repousse la date de fin si nécessaire, alors qu'une date de fin
+ * antérieure au début est seulement signalée : dans le premier cas l'intention
+ * est claire, dans le second l'utilisateur est probablement en cours de saisie.
+ * Sur Android, le sélecteur est refermé dès la validation, la plateforme
+ * n'offrant pas de dialogue persistant. Le quota d'abonnement est vérifié avant
+ * l'appel réseau et propose la souscription plutôt que de refuser sèchement.
+ * L'arrivée sur le voyage créé remplace l'écran dans la pile, un retour vers un
+ * formulaire déjà soumis n'ayant pas de sens.
+ */
 export const useCreateTrip = () => {
   const navigation = useNavigation<CreateTripNavigationProp>();
   const { createTrip, trips } = useTrips();

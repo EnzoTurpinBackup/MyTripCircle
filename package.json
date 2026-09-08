@@ -7,8 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios --device 'F9121F82-E95E-40D9-BDAF-DE819B9C70CA'",
     "web": "expo start --web",
-    "seed": "node database/seed.js",
-    "test-db": "node database/test-connection.js",
+    "seed": "node scripts/seed.js",
+    "test-db": "node scripts/test-connection.js",
     "update-ip": "node scripts/update-ip.js",
     "server": "node server/index.js",
     "dev": "npm run update-ip && concurrently \"npm run server\" \"expo start\"",
@@ -18,6 +18,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "doc:mesure": "node scripts/mesure-doc-interne.js",
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {

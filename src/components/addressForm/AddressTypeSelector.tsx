@@ -6,6 +6,7 @@ import { Address } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 import { ADDRESS_TYPES, getTypeIcon } from "../../hooks/useAddressForm";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 type Props = {
   selectedType: Address["type"];
@@ -40,6 +41,7 @@ const AddressTypeSelector: React.FC<Props> = ({ selectedType, onSelect }) => {
                 name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap}
                 size={22}
                 color={selected ? "#FFFFFF" : colors.terra}
+                {...DECORATIVE_ELEMENT_PROPS}
               />
             </View>
             <Text

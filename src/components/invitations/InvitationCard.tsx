@@ -7,6 +7,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { cardStyles } from "./cardStyles";
 import { getBannerGradient, formatRelative, formatDateRange, tripDuration } from "../../utils/invitationUtils";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 function buildBadge(expanded: boolean, isUnread: boolean, t: ReturnType<typeof useTranslation>["t"]): React.ReactNode {
   if (expanded) return <View style={cardStyles.bannerBadge}><Text style={cardStyles.bannerBadgeText}>{t("invitation.badgePending")}</Text></View>;
@@ -29,7 +30,7 @@ function buildFooter(
   if (isExpired) {
     return (
       <View style={cardStyles.expiredRow}>
-        <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
+        <Ionicons name="hourglass-outline" size={16} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
       </View>
     );
@@ -70,7 +71,7 @@ function buildInviterBody(
 
 function buildAcceptContent(accepting: boolean, t: ReturnType<typeof useTranslation>["t"]): React.ReactNode {
   if (accepting) return <ActivityIndicator size="small" color="#FFFFFF" />;
-  return <><Ionicons name="checkmark" size={16} color="#FFFFFF" /><Text style={cardStyles.btnAcceptText}>{t("invitation.acceptBtn")}</Text></>;
+  return <><Ionicons name="checkmark" size={16} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} /><Text style={cardStyles.btnAcceptText}>{t("invitation.acceptBtn")}</Text></>;
 }
 
 function buildDestinationEl(destination: string, dateRange: string | null): React.ReactNode {
@@ -127,8 +128,9 @@ const InvitationCard: React.FC<CardProps> = ({
     ? [cardStyles.cardActive, { borderColor: colors.terra, shadowColor: colors.terra }]
     : cardStyles.cardDefault;
 
+  // Bannière décorative : le nom du voyage et sa destination sont lus par-dessus.
   const bannerBgEl = hasImage
-    ? <Image source={{ uri: inv.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+    ? <Image source={{ uri: inv.trip.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
     : <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />;
 
   const destinationEl = buildDestinationEl(destination, dateRange);
@@ -205,7 +207,7 @@ const InvitationCard: React.FC<CardProps> = ({
               disabled={accepting || disabled}
               activeOpacity={0.8}
             >
-              <Ionicons name="close" size={16} color={colors.textMid} />
+              <Ionicons name="close" size={16} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[cardStyles.btnDeclineText, { color: colors.textMid }]}>{t("invitation.declineBtn")}</Text>
             </TouchableOpacity>
             {moreBtnEl}

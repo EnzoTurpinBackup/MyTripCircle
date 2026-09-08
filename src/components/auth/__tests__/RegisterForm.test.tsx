@@ -408,3 +408,43 @@ describe("RegisterForm — keyboard avoidance", () => {
     expect(screen.UNSAFE_getByType(KeyboardAvoidingView).props.behavior).toBe("height");
   });
 });
+
+describe("RegisterForm — accessibilité", () => {
+  it("should expose the terms box as a checkbox, its checkmark being its only content", () => {
+    // Arrange / Act
+    renderForm();
+
+    // Assert
+    expect(screen.getByLabelText("common.a11y.acceptTerms").props.accessibilityRole)
+      .toBe("checkbox");
+  });
+
+  it("should report the terms box as unchecked while the terms are refused", () => {
+    // Arrange / Act
+    renderForm({ termsAccepted: false });
+
+    // Assert
+    expect(screen.getByLabelText("common.a11y.acceptTerms").props.accessibilityState)
+      .toMatchObject({ checked: false });
+  });
+
+  it("should report the terms box as checked once the terms are accepted", () => {
+    // Arrange / Act
+    renderForm();
+
+    // Assert
+    expect(screen.getByLabelText("common.a11y.acceptTerms").props.accessibilityState)
+      .toMatchObject({ checked: true });
+  });
+
+  it("should toggle the terms box when it is pressed", () => {
+    // Arrange
+    const spies = renderForm({ termsAccepted: false });
+
+    // Act
+    fireEvent.press(screen.getByLabelText("common.a11y.acceptTerms"));
+
+    // Assert
+    expect(spies.setTermsAccepted).toHaveBeenCalledWith(true);
+  });
+});

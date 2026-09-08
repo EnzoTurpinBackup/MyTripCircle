@@ -7,6 +7,7 @@ import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { listSharedStyles } from "./listSharedStyles";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const BOOKING_ICON: Record<Booking["type"], string> = {
   flight:     "airplane",
@@ -72,14 +73,14 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
           onPress={onAdd}
           activeOpacity={0.8}
         >
-          <Ionicons name="add" size={17} color={colors.terra} />
+          <Ionicons name="add" size={17} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.addBtnText, { color: colors.terra }]}>{t("bookings.addBooking")}</Text>
         </TouchableOpacity>
       </View>
 
       {bookings.length === 0 ? (
         <View style={s.empty}>
-          <Ionicons name="receipt-outline" size={40} color={colors.border} />
+          <Ionicons name="receipt-outline" size={40} color={colors.border} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.emptyText, { color: colors.textLight }]}>{t("bookings.emptyAll")}</Text>
         </View>
       ) : (
@@ -96,6 +97,7 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
                     name={(BOOKING_ICON[booking.type] ?? "receipt") as keyof typeof Ionicons.glyphMap}
                     size={20}
                     color={BOOKING_STRIPE_COLOR[booking.type] ?? "#C4714A"}
+                    {...DECORATIVE_ELEMENT_PROPS}
                   />
                 </View>
                 <View style={s.info}>
@@ -108,12 +110,16 @@ const BookingsList: React.FC<Props> = ({ bookings, colors, onAdd, onEdit, onDele
                 <TouchableOpacity
                   style={[s.actionBtn, { backgroundColor: colors.bgMid }]}
                   onPress={() => onEdit(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.a11y.editItem", { item: booking.title })}
                 >
                   <Ionicons name="pencil" size={17} color={colors.textMid} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[s.actionBtn, { backgroundColor: colors.dangerLight }]}
                   onPress={() => onDelete(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.a11y.deleteItem", { item: booking.title })}
                 >
                   <Ionicons name="trash" size={17} color="#C04040" />
                 </TouchableOpacity>

@@ -6,6 +6,7 @@ import { ModernButton } from "./ModernButton";
 import { F } from "../theme/fonts";
 import { RADIUS, SPACING, SHADOW } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 type Props = {
   id: string;
@@ -15,6 +16,7 @@ type Props = {
   onSubscribe: (productId: string) => void;
   loading?: boolean;
   recommended?: boolean;
+  priceUnit?: string;
 };
 
 const PlanCard: React.FC<Props> = ({
@@ -25,6 +27,7 @@ const PlanCard: React.FC<Props> = ({
   onSubscribe,
   loading,
   recommended = false,
+  priceUnit,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -42,7 +45,7 @@ const PlanCard: React.FC<Props> = ({
     >
       {recommended && (
         <View style={[styles.badge, { backgroundColor: colors.terra }]}>
-          <Ionicons name="star" size={11} color={colors.white} />
+          <Ionicons name="star" size={11} color={colors.white} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.badgeText}>{t("subscription.recommended")}</Text>
         </View>
       )}
@@ -53,7 +56,7 @@ const PlanCard: React.FC<Props> = ({
           <View style={styles.priceRow}>
             <Text style={[styles.price, { color: colors.terra }]}>{price}</Text>
             <Text style={[styles.priceUnit, { color: colors.textMid }]}>
-              {t("subscription.perMonth")}
+              {priceUnit ?? t("subscription.perMonth")}
             </Text>
           </View>
         )}
@@ -63,7 +66,7 @@ const PlanCard: React.FC<Props> = ({
         {advantages.map((advantage) => (
           <View key={advantage} style={styles.advantageItem}>
             <View style={[styles.checkWrap, { backgroundColor: colors.terraLight }]}>
-              <Ionicons name="checkmark" size={14} color={colors.terra} />
+              <Ionicons name="checkmark" size={14} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
             </View>
             <Text style={[styles.advantageText, { color: colors.text }]}>{advantage}</Text>
           </View>

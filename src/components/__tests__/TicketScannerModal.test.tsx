@@ -256,6 +256,13 @@ describe("TicketScannerModal", () => {
       expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe("file:///ticket.png");
     });
 
+    it("should label the picked picture for assistive technologies when there is one", () => {
+      setScannerState({ mode: "gallery", previewUri: "file:///ticket.png" });
+      renderModal();
+
+      expect(screen.getByLabelText("bookings.a11y.ticketPreview")).toBeTruthy();
+    });
+
     it("should render no preview when no picture was picked", () => {
       setScannerState({ mode: "gallery", previewUri: null });
       renderModal();

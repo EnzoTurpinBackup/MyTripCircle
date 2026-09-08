@@ -603,7 +603,9 @@ describe("BookingForm — autocomplétion transport", () => {
     renderForm();
 
     // Assert
-    expect(screen.getByText("icon:airplane-outline")).toBeTruthy();
+    // Les pictogrammes décoratifs sont retirés de l'arbre d'accessibilité :
+    // les interroger suppose désormais d'inclure explicitement les éléments masqués.
+    expect(screen.getByText("icon:airplane-outline", { includeHiddenElements: true })).toBeTruthy();
   });
 
   it("should offer a train icon on the train suggestions", () => {
@@ -615,7 +617,7 @@ describe("BookingForm — autocomplétion transport", () => {
     renderForm({ initialBooking: { type: "train" } });
 
     // Assert
-    expect(screen.getByText("icon:train-outline")).toBeTruthy();
+    expect(screen.getByText("icon:train-outline", { includeHiddenElements: true })).toBeTruthy();
   });
 
   it("should report the chosen origin suggestion", () => {
@@ -679,7 +681,7 @@ describe("BookingForm — pièces jointes", () => {
 
     // Assert
     expect(screen.getByText("billet.pdf")).toBeTruthy();
-    expect(screen.getByText("icon:document")).toBeTruthy();
+    expect(screen.getByText("icon:document", { includeHiddenElements: true })).toBeTruthy();
   });
 
   it("should ask the manager to rename the file when the pencil is pressed", () => {

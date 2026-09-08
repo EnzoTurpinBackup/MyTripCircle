@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { F } from "../../theme/fonts";
 import TripSquare from "./TripSquare";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface TripSectionProps {
   title: string;
@@ -28,7 +29,7 @@ const TripSection: React.FC<TripSectionProps> = ({
       </ScrollView>
     ) : (
       <View style={[styles.emptyCard, { backgroundColor: bgMid }]}>
-        <Ionicons name={emptyIcon} size={26} color={textLight} />
+        <Ionicons name={emptyIcon} size={26} color={textLight} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.emptyText, { color: textLight }]}>{emptyText}</Text>
       </View>
     )}

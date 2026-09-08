@@ -146,7 +146,11 @@ describe("FullMapScreen", () => {
       render(<FullMapScreen />);
 
       // Assert
-      expect(screen.getAllByText(icon).length).toBeGreaterThan(0);
+      // L'icône du marqueur est décorative : le type de l'adresse est déjà
+      // annoncé par le libellé du marqueur, aussi l'icône est-elle retirée du
+      // parcours des lecteurs d'écran — que les requêtes ignorent par défaut.
+      // C'est bien son rendu visuel que ce cas observe.
+      expect(screen.getAllByText(icon, { includeHiddenElements: true }).length).toBeGreaterThan(0);
     });
 
     it("should fit the map to the markers once it is ready", async () => {

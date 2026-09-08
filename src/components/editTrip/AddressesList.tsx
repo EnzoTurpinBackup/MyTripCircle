@@ -6,6 +6,7 @@ import { Address } from "../../types";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { listSharedStyles } from "./listSharedStyles";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const ADDRESS_STRIPE_COLOR: Record<Address["type"], string> = {
   hotel:      "#6B8C5A",
@@ -73,14 +74,14 @@ const AddressesList: React.FC<Props> = ({ addresses, colors, onAdd, onEdit, onDe
           onPress={onAdd}
           activeOpacity={0.8}
         >
-          <Ionicons name="add" size={17} color={colors.terra} />
+          <Ionicons name="add" size={17} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.addBtnText, { color: colors.terra }]}>{t("addresses.addAddress")}</Text>
         </TouchableOpacity>
       </View>
 
       {addresses.length === 0 ? (
         <View style={s.empty}>
-          <Ionicons name="location-outline" size={40} color={colors.border} />
+          <Ionicons name="location-outline" size={40} color={colors.border} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.emptyText, { color: colors.textLight }]}>{t("addresses.emptyAll")}</Text>
         </View>
       ) : (
@@ -99,6 +100,7 @@ const AddressesList: React.FC<Props> = ({ addresses, colors, onAdd, onEdit, onDe
                       name={(ADDRESS_ICON[address.type] ?? "location") as keyof typeof Ionicons.glyphMap}
                       size={20}
                       color={stripe}
+                      {...DECORATIVE_ELEMENT_PROPS}
                     />
                   </View>
                   <View style={s.info}>
@@ -112,12 +114,16 @@ const AddressesList: React.FC<Props> = ({ addresses, colors, onAdd, onEdit, onDe
                   <TouchableOpacity
                     style={[s.actionBtn, { backgroundColor: colors.bgMid }]}
                     onPress={() => onEdit(index)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("common.a11y.editItem", { item: address.name })}
                   >
                     <Ionicons name="pencil" size={17} color={colors.textMid} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[s.actionBtn, { backgroundColor: colors.dangerLight }]}
                     onPress={() => onDelete(index)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("common.a11y.deleteItem", { item: address.name })}
                   >
                     <Ionicons name="trash" size={17} color="#C04040" />
                   </TouchableOpacity>

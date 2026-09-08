@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface ProfileActionsProps {
   isFriend: boolean;
@@ -29,13 +30,14 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
       {isFriend ? (
         <>
           <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.terra, shadowColor: colors.terra }]} activeOpacity={0.85} onPress={onInvite}>
-            <Ionicons name="airplane" size={16} color="#FFFFFF" />
+            <Ionicons name="airplane" size={16} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={styles.inviteBtnText}>{t("friendProfile.inviteToTrip")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.bgMid }]}
             onPress={onReport}
             activeOpacity={0.8}
+            accessibilityRole="button"
             accessibilityLabel={t("friendProfile.reportUser")}
           >
             <Ionicons name="flag-outline" size={18} color={colors.textLight} />
@@ -44,6 +46,8 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
             style={[styles.iconBtn, { backgroundColor: dangerBg }]}
             onPress={onRemove}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={t("friendProfile.removeTitle")}
           >
             <Ionicons name="trash-outline" size={18} color={dangerColor} />
           </TouchableOpacity>
@@ -58,7 +62,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
           >
             {sending
               ? <ActivityIndicator size="small" color="#FFFFFF" />
-              : <Ionicons name="person-add" size={16} color="#FFFFFF" />
+              : <Ionicons name="person-add" size={16} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
             }
             <Text style={styles.inviteBtnText}>{t("friendProfile.addFriend")}</Text>
           </TouchableOpacity>
@@ -66,6 +70,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
             style={[styles.iconBtn, { backgroundColor: colors.bgMid }]}
             onPress={onReport}
             activeOpacity={0.8}
+            accessibilityRole="button"
             accessibilityLabel={t("friendProfile.reportUser")}
           >
             <Ionicons name="flag-outline" size={18} color={colors.textLight} />
@@ -74,6 +79,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
             style={[styles.iconBtn, { backgroundColor: dangerBg }]}
             onPress={onBlock}
             activeOpacity={0.8}
+            accessibilityRole="button"
             accessibilityLabel={t("friendProfile.blockUser")}
           >
             <Ionicons name="ban-outline" size={18} color={dangerColor} />

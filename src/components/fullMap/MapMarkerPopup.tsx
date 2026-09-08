@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { Address } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const MOSS = "#6B8C5A";
 const MOSS_LIGHT = "#E2EDD9";
@@ -57,7 +58,7 @@ const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNav
       <TouchableOpacity style={styles.popup} activeOpacity={1} onPress={() => {}}>
         <View style={styles.popupRow}>
           <View style={[styles.popupIcon, { backgroundColor: ic.bg }]}>
-            <Ionicons name={getTypeIcon(address.type) as keyof typeof Ionicons.glyphMap} size={16} color={ic.icon} />
+            <Ionicons name={getTypeIcon(address.type) as keyof typeof Ionicons.glyphMap} size={16} color={ic.icon} {...DECORATIVE_ELEMENT_PROPS} />
           </View>
           <View style={{ flex: 1, marginRight: 6 }}>
             <Text style={[styles.popupName, { color: colors.text }]} numberOfLines={1}>{address.name}</Text>
@@ -72,6 +73,8 @@ const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNav
             style={styles.popupClose}
             onPress={onClose}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.a11y.close")}
           >
             <Ionicons name="close" size={16} color={colors.textMid} />
           </TouchableOpacity>
@@ -85,7 +88,7 @@ const MapMarkerPopup: React.FC<MapMarkerPopupProps> = ({ address, onClose, onNav
           onPress={() => onNavigate(address.id)}
         >
           <Text style={styles.popupCtaText}>Voir les détails</Text>
-          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
         </TouchableOpacity>
       </TouchableOpacity>
     </TouchableOpacity>

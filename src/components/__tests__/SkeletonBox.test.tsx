@@ -78,4 +78,22 @@ describe("SkeletonBox", () => {
 
     expect(stop).toHaveBeenCalledTimes(1);
   });
+
+  describe("accessibility", () => {
+    it("should hide the placeholder from assistive technologies", () => {
+      render(<SkeletonBox />);
+
+      expect(screen.UNSAFE_getByType(View).props).toMatchObject({
+        accessible: false,
+        accessibilityElementsHidden: true,
+        importantForAccessibility: "no",
+      });
+    });
+
+    it("should keep hiding the placeholder when a caller style is merged in", () => {
+      render(<SkeletonBox style={{ flex: 1 }} />);
+
+      expect(screen.UNSAFE_getByType(View).props.accessibilityElementsHidden).toBe(true);
+    });
+  });
 });

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { RADIUS, SPACING, SHADOW } from "../../theme";
 import { useTheme } from "../../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface Props {
   variant?: "default" | "premium";
@@ -70,7 +71,7 @@ const SubscriptionFeaturesCard: React.FC<Props> = ({ variant = "default" }) => {
         {features.map((f) => (
           <View key={f.icon} style={styles.item}>
             <View style={[styles.iconWrap, { backgroundColor: colors.terraLight }]}>
-              <Ionicons name={f.icon} size={18} color={colors.terra} />
+              <Ionicons name={f.icon} size={18} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
             </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{f.text}</Text>
           </View>

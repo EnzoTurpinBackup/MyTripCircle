@@ -19,6 +19,7 @@ import { useAddressFormModal } from "../hooks/useAddressFormModal";
 import AddressTypeSelector from "./addressForm/AddressTypeSelector";
 import AddressAutocompleteField from "./addressForm/AddressAutocompleteField";
 import FormField from "./addressForm/FormField";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 interface AddressFormProps {
   visible: boolean;
@@ -59,7 +60,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
           {/* Header */}
           <View style={[styles.header, { backgroundColor: colors.bgMid, borderBottomColor: colors.border }]}>
             <View style={[styles.headerIcon, { backgroundColor: colors.terraLight }]}>
-              <Ionicons name="location" size={24} color={COLORS.terra} />
+              <Ionicons name="location" size={24} color={COLORS.terra} {...DECORATIVE_ELEMENT_PROPS} />
             </View>
             <Text style={[styles.headerTitle, { color: colors.text }]}>
               {initialAddress ? t("addresses.form.editTitle") : t("addresses.form.title")}
@@ -67,6 +68,8 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             <TouchableOpacity
               onPress={onClose}
               style={[styles.closeBtn, { backgroundColor: colors.bgDark }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.close")}
             >
               <Ionicons name="close" size={24} color={colors.textMid} />
             </TouchableOpacity>
@@ -176,7 +179,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} />
+                  <Ionicons name="checkmark-circle" size={20} color="white" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={styles.saveText}>{t("common.save")}</Text>
                 </>
               )}

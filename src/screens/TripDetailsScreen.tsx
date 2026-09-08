@@ -1,3 +1,37 @@
+/**
+ * Fiche complète d'un voyage auquel l'utilisateur appartient déjà, propriétaire
+ * ou membre invité.
+ *
+ * Besoin couvert : disposer d'un point unique où retrouver tout ce qui compose
+ * un séjour — l'avancement dans le temps, les réservations, le carnet
+ * d'adresses et les personnes du groupe — et agir dessus sans changer d'écran,
+ * les trois collections étant présentées en onglets plutôt qu'empilées.
+ *
+ * Position dans le parcours : atteint depuis la liste de TripsScreen, depuis
+ * CreateTrip qui remplace le formulaire par cette fiche une fois le voyage créé
+ * (avec `showValidateButton` pour inviter à sortir du brouillon), depuis
+ * EditTrip qui y revient avec `showToast` après un enregistrement réussi, et
+ * enfin après l'acceptation d'une invitation ou la conversion d'une idée en
+ * voyage. En sortie : TripActions par le crayon de l'en-tête, InviteFriends
+ * depuis l'onglet des membres, AddressForm pour créer ou corriger une adresse.
+ *
+ * Données : tout provient de useTripDetails, qui assemble trois hooks —
+ * useTripData pour la fiche, les réservations et les adresses (préremplissage
+ * depuis le cache de TripsContext, puis appels à ApiService),
+ * useTripPermissions pour `isOwner`, l'entrée `userCollaborator` du membre
+ * courant et le décompte des membres, useTripCountdown pour l'avancement du
+ * séjour. L'identité de l'utilisateur connecté vient d'AuthContext, pour que
+ * l'onglet des membres sache se reconnaître dans la liste.
+ *
+ * États pris en charge : chargement (squelette reproduisant la silhouette de
+ * la page, défilement neutralisé pour ne pas laisser croire à du contenu),
+ * voyage introuvable ou inaccessible (message unique, sans possibilité de
+ * réessayer), et permissions — un membre sans droit de modification ne voit ni
+ * les commandes d'ajout ni le crayon d'accès aux actions. L'écran n'a pas
+ * d'état hors-ligne propre : une erreur réseau est absorbée par useTripData,
+ * qui laisse en place les données déjà issues du cache.
+ */
+
 import React, { useState } from "react";
 import {
   View,
@@ -33,11 +67,25 @@ import {
 import { F } from "../theme/fonts";
 import { RADIUS, SHADOW } from "../theme";
 import SkeletonBox from "../components/SkeletonBox";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 type TripDetailsScreenRouteProp = RouteProp<RootStackParamList, "TripDetails">;
 
 type TripDetailsNavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 
+/**
+ * Compose la fiche d'un voyage et arbitre les commandes selon les droits du
+ * lecteur.
+ *
+ * Le composant ne reçoit pas de props : ses paramètres sont lus dans la route —
+ * `tripId` (obligatoire), `showValidateButton` qui force la bannière de
+ * brouillon au retour de la création, et `showToast` qui déclenche la
+ * confirmation après une modification. Effets de bord notables : useTripDetails
+ * recharge la fiche, les réservations et les adresses à chaque prise de focus,
+ * useTripPermissions émet une requête pour résoudre les profils des membres, et
+ * useTripCountdown maintient un intervalle d'une seconde tant que le départ
+ * n'est pas passé. La validation du voyage réinitialise la pile de navigation.
+ */
 const TripDetailsScreen: React.FC = () => {
   const route = useRoute<TripDetailsScreenRouteProp>();
   const navigation = useNavigation<TripDetailsNavigationProp>();
@@ -80,9 +128,14 @@ const TripDetailsScreen: React.FC = () => {
   const [showBookingPicker, setShowBookingPicker] = useState(false);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
 
+  // Le propriétaire n'apparaît pas parmi les collaborateurs du voyage : sa
+  // permission n'est donc écrite nulle part et doit être ajoutée ici, sinon il
+  // se verrait refuser l'ajout d'adresses sur son propre séjour.
   const canEdit = isOwner || userCollaborator?.permissions?.canEdit;
 
   const handleAddBookingPress = () => {
+    // Sans réservation ailleurs, le choix « créer ou reprendre » n'aurait qu'une
+    // branche utile : on ouvre directement le formulaire de création.
     if (!otherBookings.length) {
       setShowBookingForm(true);
       return;
@@ -106,6 +159,8 @@ const TripDetailsScreen: React.FC = () => {
     return (
       <View style={[s.wrapper, { backgroundColor: colors.bg }]}>
         <StatusBar barStyle="light-content" translucent />
+        {/* Défilement neutralisé pendant l'attente : faire glisser un squelette
+            laisserait croire à du contenu réel situé plus bas. */}
         <ScrollView scrollEnabled={false} contentContainerStyle={s.scrollContent}>
           {/* Hero */}
           <SkeletonBox width="100%" height={220} borderRadius={0} />
@@ -150,6 +205,9 @@ const TripDetailsScreen: React.FC = () => {
     );
   }
 
+  // Un voyage absent après chargement recouvre deux cas indiscernables côté
+  // client — supprimé entre-temps, ou accès révoqué — d'où un message unique
+  // plutôt qu'un diagnostic qui pourrait être faux.
   if (!trip) {
     return (
       <View style={[s.errorContainer, { backgroundColor: colors.bg }]}>
@@ -167,6 +225,11 @@ const TripDetailsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.scrollContent}
       >
+        {/* `canEdit` ne transporte ici que la permission du collaborateur, sans
+            le repli propriétaire : les composants enfants reçoivent aussi
+            `isOwner` et recomposent eux-mêmes la règle, ce qui leur permet de
+            distinguer les actions ouvertes à tout éditeur de celles réservées
+            au propriétaire. */}
         <TripHero
           trip={trip}
           tripId={tripId}
@@ -188,6 +251,9 @@ const TripDetailsScreen: React.FC = () => {
           durationDays={durationDays}
         />
 
+        {/* Le paramètre de route sert de repli au statut : au retour immédiat de
+            la création, la fiche rapatriée peut ne pas encore porter l'état
+            « brouillon », et la bannière doit tout de même s'afficher. */}
         {(showValidateButton || trip.status === "draft") && (
           <TripDraftBanner onValidate={handleValidateTrip} />
         )}
@@ -229,6 +295,8 @@ const TripDetailsScreen: React.FC = () => {
         <View style={s.bottomPad} />
       </ScrollView>
 
+      {/* Le formulaire est monté conditionnellement pour disposer des bornes du
+          séjour : elles servent à contraindre la date de la réservation. */}
       {trip && (
         <BookingForm
           visible={showBookingForm}
@@ -240,6 +308,9 @@ const TripDetailsScreen: React.FC = () => {
         />
       )}
 
+      {/* Le sélecteur est refermé avant la copie : celle-ci passe par le réseau
+          et laisserait sinon la liste ouverte pendant l'appel, au risque d'un
+          second choix qui dupliquerait l'élément. */}
       <ExistingBookingPicker
         visible={showBookingPicker}
         bookings={otherBookings}
@@ -254,10 +325,12 @@ const TripDetailsScreen: React.FC = () => {
         onClose={() => setShowAddressPicker(false)}
       />
 
+      {/* La confirmation s'efface d'elle-même après quelques secondes ; la croix
+          n'est là que pour l'écarter plus tôt si elle masque une action. */}
       {showToast && (
         <Animated.View style={[s.toast, { opacity: toastOpacity }]}>
           <View style={s.toastIcon}>
-            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+            <Ionicons name="checkmark" size={16} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
           </View>
           <View style={s.toastInfo}>
             <Text style={s.toastTitle}>{t("tripDetails.toastUpdatedTitle")}</Text>

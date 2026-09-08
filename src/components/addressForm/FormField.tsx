@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { RADIUS } from "../../theme";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 type Props = {
   label: string;
@@ -47,6 +48,7 @@ const FormField: React.FC<Props> = ({
             size={20}
             color={colors.textLight}
             style={[styles.inputIcon, multiline && styles.inputIconTop]}
+            {...DECORATIVE_ELEMENT_PROPS}
           />
         )}
         <TextInput

@@ -1,3 +1,31 @@
+/**
+ * Écran plein de saisie d'une adresse, en création comme en modification.
+ *
+ * Besoin couvert : enregistrer un lieu sans avoir à le retaper. L'utilisateur
+ * choisit une catégorie puis frappe quelques caractères ; la complétion propose
+ * des lieux réels et remplit d'un coup nom, adresse, ville, pays, téléphone et
+ * site.
+ *
+ * Position dans le parcours : atteint depuis le carnet d'adresses (bouton
+ * d'ajout, ou action « modifier » de la feuille d'actions), depuis la fiche
+ * d'une adresse, et depuis les écrans de voyage. Le paramètre de route décide
+ * du mode : `addressId` place l'écran en modification, `tripId` rattache la
+ * création à un voyage, l'absence des deux ajoute au carnet personnel. En
+ * sortie, un simple retour à l'écran appelant.
+ *
+ * Données : tout vient de useAddressForm, qui lit l'adresse à modifier dans la
+ * collection de TripsContext puis appelle createAddress ou updateAddress du
+ * même contexte. Suggestions et fiche détaillée d'un lieu proviennent de
+ * PlacesService ; useCurrentLocation les oriente vers les environs quand la
+ * permission de localisation a déjà été accordée — elle n'est jamais réclamée
+ * ici, et son refus donne seulement des suggestions moins pertinentes.
+ *
+ * États pris en charge : chargement du contexte (squelette calqué sur le
+ * formulaire), adresse à modifier introuvable (message d'erreur seul),
+ * recherche de suggestions et récupération d'une fiche de lieu, enregistrement
+ * en cours, hors-ligne (enregistrement neutralisé). Un échec d'enregistrement
+ * est signalé par une alerte et laisse la saisie en place.
+ */
 import React from "react";
 import {
   View,
@@ -21,7 +49,16 @@ import AddressAutocompleteField from "../components/addressForm/AddressAutocompl
 import FormField from "../components/addressForm/FormField";
 import styles from "../components/addressForm/addressFormStyles";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Compose le formulaire d'adresse.
+ *
+ * L'écran ne reçoit pas de prop du parent : ses deux paramètres facultatifs,
+ * `addressId` et `tripId`, sont lus dans `route.params` par useAddressForm.
+ * Effets de bord notables — interrogation du service de lieux au fil de la
+ * frappe, appel réseau à l'enregistrement, puis retour à l'écran appelant.
+ */
 const AddressFormScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -44,6 +81,9 @@ const AddressFormScreen: React.FC = () => {
     navigation,
   } = useAddressForm();
 
+  // Le squelette n'est montré que pendant le tout premier chargement : passé le
+  // préremplissage, un rafraîchissement du contexte ne doit plus remplacer un
+  // formulaire déjà rempli par une silhouette vide.
   if (!initialized && contextLoading) {
     return (
       <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -94,6 +134,9 @@ const AddressFormScreen: React.FC = () => {
     );
   }
 
+  // Cas d'une adresse supprimée entre-temps, par soi-même sur un autre écran ou
+  // par un collaborateur : le chargement doit être terminé pour conclure à
+  // l'absence, sinon le message s'afficherait pendant le chargement initial.
   if (!contextLoading && addressId && !existingAddress) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
@@ -105,6 +148,9 @@ const AddressFormScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: colors.bg }]}
+      // Aucun comportement sur Android : le système y redimensionne déjà la
+      // fenêtre à l'ouverture du clavier, et cumuler les deux ajustements
+      // décalerait le formulaire deux fois.
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
@@ -112,12 +158,16 @@ const AddressFormScreen: React.FC = () => {
       <View style={[styles.topBar, { backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
         <BackButton onPress={() => navigation.goBack()} />
         <Text style={[styles.topBarTitle, { color: colors.text }]}>{screenTitle}</Text>
+        {/* Contrepoids de la largeur du bouton de retour : sans lui, le titre
+            centré se décalerait vers la droite. */}
         <View style={{ width: 44 }} />
       </View>
 
       <ScrollView
         style={[styles.scroll, { backgroundColor: colors.bg }]}
         contentContainerStyle={styles.scrollContent}
+        // Sans cela, la liste de suggestions se refermerait avec le clavier au
+        // premier contact et il faudrait toucher deux fois pour en choisir une.
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -148,9 +198,12 @@ const AddressFormScreen: React.FC = () => {
           placeholder={t("addresses.form.namePlaceholder")}
         />
 
+        {/* La note n'apparaît qu'après le choix d'une suggestion : elle provient
+            du service de lieux et n'est pas saisissable. Elle est montrée pour
+            que l'utilisateur sache ce qui sera enregistré avec la fiche. */}
         {googleRating != null && (
           <View style={[styles.ratingRow, { backgroundColor: colors.bgMid }]}>
-            <Ionicons name="star" size={17} color={colors.terra} />
+            <Ionicons name="star" size={17} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.ratingLabel, { color: colors.textMid }]}>Note Google :</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((s) => (
@@ -222,6 +275,9 @@ const AddressFormScreen: React.FC = () => {
           <Text style={[styles.cancelButtonText, { color: colors.textMid }]}>{t("common.cancel")}</Text>
         </TouchableOpacity>
 
+        {/* L'enregistrement est aussi bloqué pendant la récupération de la fiche
+            du lieu : celle-ci va encore écrire dans les champs, et valider
+            maintenant enregistrerait une adresse à moitié complétée. */}
         <TouchableOpacity
           style={[styles.primaryButton, { backgroundColor: colors.terra }, (submitting || fetchingPlaceDetails || offlineDisabled) && { opacity: DISABLED_OPACITY }]}
           onPress={handleSubmit}
@@ -232,7 +288,7 @@ const AddressFormScreen: React.FC = () => {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
-              <Ionicons name="checkmark-circle-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Ionicons name="checkmark-circle-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={styles.primaryButtonText}>{t("common.save")}</Text>
             </>
           )}

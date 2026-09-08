@@ -1,3 +1,29 @@
+/**
+ * Écran de révision des consentements, une fois l'application en usage.
+ *
+ * Besoin couvert : revenir sur un accord donné au premier lancement, l'accord devant
+ * rester aussi facile à retirer qu'il a été facile à donner. C'est le pendant durable
+ * de ConsentScreen : celui-ci est bloquant et ne se présente qu'une fois, celui-là est
+ * consultable à volonté et n'interrompt rien.
+ *
+ * Position dans le parcours : atteint depuis SettingsScreen, dans MainStack, donc
+ * uniquement lorsqu'une session est ouverte. L'enregistrement ramène à l'écran
+ * précédent ; le lien de bas de page ouvre Privacy.
+ *
+ * Données : les choix courants sont relus dans AsyncStorage sous `CONSENT_KEY`, la
+ * clé qu'expose ConsentScreen et que se partagent les deux écrans. L'enregistrement
+ * réécrit cette même entrée puis transmet les préférences au compte via
+ * `userApi.updateConsent`, ce que ConsentScreen ne pouvait pas faire faute de session.
+ * Le consentement au traitement des données est réaffirmé sans être présenté comme
+ * modifiable : le retirer reviendrait à demander la suppression du compte, qui relève
+ * d'un autre écran.
+ *
+ * États pris en charge : lecture du stockage (indicateur d'activité à la place de la
+ * carte), enregistrement en cours (le bouton porte un indicateur et se neutralise),
+ * permission de position refusée par le système (l'interrupteur est ramené en arrière
+ * et un renvoi vers les réglages est proposé), échec de l'enregistrement (boîte de
+ * dialogue, les interrupteurs conservant l'état saisi).
+ */
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -22,11 +48,24 @@ import { userApi, ConsentPayload } from "../services/api/userApi";
 import { CONSENT_KEY, ConsentPreferences } from "./ConsentScreen";
 import BackButton from "../components/ui/BackButton";
 
+/**
+ * Compose l'écran de gestion des consentements.
+ *
+ * Aucune prop n'est reçue : l'écran est empilé sans paramètre depuis les réglages et
+ * reconstitue son état à partir du stockage local.
+ *
+ * Effets de bord : lecture d'AsyncStorage au montage, demande de permission de
+ * position au système lors de l'enregistrement, réécriture d'AsyncStorage et appel à
+ * `userApi.updateConsent` pour porter les préférences au compte.
+ */
 const ConsentManagementScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
   const { colors } = useTheme();
 
+  // Les interrupteurs partent fermés et ne s'ouvrent qu'au vu du stockage : afficher un
+  // consentement actif avant de l'avoir relu donnerait, le temps d'un rendu, une image
+  // fausse de ce à quoi l'utilisateur a consenti.
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,6 +73,9 @@ const ConsentManagementScreen: React.FC = () => {
 
   useEffect(() => {
     AsyncStorage.getItem(CONSENT_KEY).then((raw) => {
+      // L'entrée est en principe toujours présente, AppNavigator refusant de monter
+      // cette pile sans elle ; son absence est néanmoins tolérée et laisse les deux
+      // usages facultatifs à l'arrêt, qui est l'état le moins engageant.
       if (raw) {
         const prefs: ConsentPreferences = JSON.parse(raw);
         setLocationEnabled(prefs.location);
@@ -46,9 +88,15 @@ const ConsentManagementScreen: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // La permission système est sollicitée avant l'enregistrement : consentir dans
+      // l'application ne donne pas accès à la position, et retenir un accord que le
+      // système refuse produirait un réglage affiché comme actif mais inopérant.
       if (locationEnabled) {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
+          // L'interrupteur est ramené en arrière et l'enregistrement abandonné : la
+          // permission ayant pu être refusée définitivement, seul un passage par les
+          // réglages du système peut désormais la rétablir, d'où le raccourci proposé.
           setLocationEnabled(false);
           Alert.alert(
             t("consentManagement.locationDeniedTitle"),
@@ -63,6 +111,8 @@ const ConsentManagementScreen: React.FC = () => {
         }
       }
 
+      // `acceptedAt` est redaté à chaque enregistrement : c'est la dernière expression
+      // de volonté qui fait foi, et non le premier accord donné à l'installation.
       const prefs: ConsentPreferences = {
         data: true,
         location: locationEnabled,
@@ -70,6 +120,9 @@ const ConsentManagementScreen: React.FC = () => {
         acceptedAt: new Date().toISOString(),
       };
 
+      // Le stockage local est écrit avant l'appel au serveur car c'est lui que consultent
+      // AppNavigator et cet écran : la copie serveur sert de trace opposable, non de
+      // source de vérité pour le fonctionnement de l'application.
       await AsyncStorage.setItem(CONSENT_KEY, JSON.stringify(prefs));
 
       const payload: ConsentPayload = {
@@ -79,6 +132,8 @@ const ConsentManagementScreen: React.FC = () => {
       };
       await userApi.updateConsent(payload);
 
+      // Le retour n'a lieu qu'après acquittement : un changement de consentement mérite
+      // une confirmation lue, et non un écran qui se referme de lui-même.
       Alert.alert(
         t("consentManagement.savedTitle"),
         t("consentManagement.savedMessage"),
@@ -101,6 +156,8 @@ const ConsentManagementScreen: React.FC = () => {
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           {t("consentManagement.title")}
         </Text>
+        {/* Cale de la largeur du bouton de retour : elle équilibre la rangée pour que le
+            titre tombe au centre de l'écran, et non au centre de l'espace restant. */}
         <View style={{ width: 44 }} />
       </View>
 
@@ -121,6 +178,9 @@ const ConsentManagementScreen: React.FC = () => {
         ) : (
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {/* Données — obligatoire, non modifiable */}
+            {/* La ligne obligatoire figure malgré l'absence de choix : l'utilisateur doit
+                pouvoir vérifier ce à quoi il reste engagé, et l'interrupteur inerte le
+                montre au même titre que les autres plutôt que de le passer sous silence. */}
             <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <Text style={styles.rowEmoji}>🔐</Text>
@@ -141,6 +201,9 @@ const ConsentManagementScreen: React.FC = () => {
             <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
 
             {/* Localisation */}
+            {/* Les intitulés et descriptions reprennent les clés de traduction du mur de
+                consentement initial : l'utilisateur doit retrouver mot pour mot ce à quoi
+                il a consenti, une reformulation rendant la comparaison incertaine. */}
             <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <Text style={styles.rowEmoji}>📍</Text>

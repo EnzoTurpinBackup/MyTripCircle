@@ -43,6 +43,12 @@ jest.mock("../../hooks/useAddresses", () => ({
 const mockUseNetwork = jest.fn();
 jest.mock("../../contexts/NetworkContext", () => ({ useNetwork: () => mockUseNetwork() }));
 
+// L'écran compare le propriétaire de l'adresse à l'utilisateur connecté pour
+// décider des actions offertes : sans cette doublure, `useAuth` lève faute de
+// fournisseur.
+const mockUseAuth = jest.fn();
+jest.mock("../../contexts/AuthContext", () => ({ useAuth: () => mockUseAuth() }));
+
 // Le geste de navigation entre onglets repose sur `react-native-gesture-handler` :
 // il n'apporte rien au rendu et son détecteur natif n'est pas monté en test.
 jest.mock("../../hooks/useSwipeToNavigate", () => ({
@@ -50,6 +56,9 @@ jest.mock("../../hooks/useSwipeToNavigate", () => ({
 }));
 
 const mockUseAddresses = useAddresses as jest.Mock;
+
+const OWNER_ID = "user-1";
+const OTHER_MEMBER_ID = "user-2";
 
 const WIDGET_REGION = {
   latitude: 45.75,
@@ -66,7 +75,7 @@ const makeAddress = (overrides: Partial<Address> = {}): Address =>
     address: "12 rue des Lilas",
     city: "Lyon",
     country: "France",
-    userId: "user-1",
+    userId: OWNER_ID,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     updatedAt: new Date("2026-01-01T00:00:00.000Z"),
     ...overrides,
@@ -91,6 +100,7 @@ interface HookOverrides {
   actionAddress?: Address | null;
   isGeocoding?: boolean;
   isConnected?: boolean;
+  currentUserId?: string;
 }
 
 const setupHook = (overrides: HookOverrides = {}) => {
@@ -102,10 +112,12 @@ const setupHook = (overrides: HookOverrides = {}) => {
     actionAddress = null,
     isGeocoding = false,
     isConnected = true,
+    currentUserId = OWNER_ID,
   } = overrides;
   const filteredAddresses = overrides.filteredAddresses ?? addresses;
 
   mockUseNetwork.mockReturnValue({ isConnected });
+  mockUseAuth.mockReturnValue({ user: { id: currentUserId } });
   mockUseAddresses.mockReturnValue({
     t: (key: string) => key,
     colors: lightColors,
@@ -377,6 +389,66 @@ describe("AddressesScreen", () => {
 
       // Assert
       expect(handlers.handleEditAddress).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Une adresse rattachée à un voyage partagé est visible par tous ses membres
+  // mais ne se modifie que par celui qui l'a ajoutée : la feuille doit refléter
+  // cette règle plutôt que de retomber sur ses valeurs par défaut.
+  describe("droits sur l'adresse du carnet", () => {
+    it("should offer the edit action when the address belongs to the current user", () => {
+      // Arrange
+      setupHook({ actionAddress: makeAddress({ userId: OWNER_ID }) });
+
+      // Act
+      render(<AddressesScreen />);
+
+      // Assert
+      expect(screen.getByText("common.edit")).toBeTruthy();
+    });
+
+    it("should offer the delete action when the address belongs to the current user", () => {
+      // Arrange
+      setupHook({ actionAddress: makeAddress({ userId: OWNER_ID }) });
+
+      // Act
+      render(<AddressesScreen />);
+
+      // Assert
+      expect(screen.getByText("common.delete")).toBeTruthy();
+    });
+
+    it("should still open the sheet when the address belongs to another member", () => {
+      // Arrange
+      setupHook({ actionAddress: makeAddress({ userId: OTHER_MEMBER_ID }) });
+
+      // Act
+      render(<AddressesScreen />);
+
+      // Assert
+      expect(screen.getByText("common.cancel")).toBeTruthy();
+    });
+
+    it("should hide the edit action when the address belongs to another member", () => {
+      // Arrange
+      setupHook({ actionAddress: makeAddress({ userId: OTHER_MEMBER_ID }) });
+
+      // Act
+      render(<AddressesScreen />);
+
+      // Assert
+      expect(screen.queryByText("common.edit")).toBeNull();
+    });
+
+    it("should hide the delete action when the address belongs to another member", () => {
+      // Arrange
+      setupHook({ actionAddress: makeAddress({ userId: OTHER_MEMBER_ID }) });
+
+      // Act
+      render(<AddressesScreen />);
+
+      // Assert
+      expect(screen.queryByText("common.delete")).toBeNull();
     });
   });
 

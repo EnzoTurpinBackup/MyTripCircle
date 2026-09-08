@@ -122,6 +122,9 @@ const profile = {
     changePhoto: "Change",
     photoPermissionDenied: "Permission denied. Please allow access to your photo library in settings.",
     photoUploadError: "Failed to update profile photo.",
+    a11y: {
+      currentAvatar: "Current profile photo",
+    },
   },
   changePassword: {
     title: "Change Password",
@@ -174,6 +177,7 @@ const profile = {
     featureUpdates: "Free updates",
     recommended: "Recommended",
     perMonth: "/mo",
+    perYear: "/yr",
     subscribe: "Subscribe",
     upgradeButton: "Upgrade to Premium",
     tripLimitTitle: "Limit reached",

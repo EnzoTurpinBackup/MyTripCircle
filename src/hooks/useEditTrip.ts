@@ -26,6 +26,11 @@ function parseVisibility(
   return "private";
 }
 
+/**
+ * Champs modifiables d'un voyage. La visibilité y est portée par une valeur à
+ * trois états plutôt que par le seul booléen historique, celui-ci ne pouvant
+ * pas exprimer le partage limité aux amis.
+ */
 export interface EditTripFormData {
   title:       string;
   description: string;
@@ -37,6 +42,12 @@ export interface EditTripFormData {
   coverImage:  string;
 }
 
+/**
+ * Surface exposée à l'écran de modification : l'état propre au voyage, augmenté
+ * de celui des trois hooks de calendrier, de réservations et d'adresses. Le
+ * type est déclaré explicitement pour que cet assemblage reste vérifiable et
+ * que l'écran ne dépende pas d'une inférence.
+ */
 export type UseEditTripReturn = {
   formData: EditTripFormData;
   setFormData: React.Dispatch<React.SetStateAction<EditTripFormData>>;
@@ -53,6 +64,31 @@ export type UseEditTripReturn = {
   handleCancel: () => void;
 } & UseCalendarPickerReturn & UseTripBookingsReturn & UseTripAddressesReturn;
 
+/**
+ * Point d'entrée unique de l'écran de modification d'un voyage : charge la
+ * fiche et son contenu, pilote le formulaire, la photographie de couverture,
+ * les réservations et les adresses, et porte l'enregistrement comme la
+ * suppression.
+ *
+ * @returns Les champs du voyage et leur accesseur, les indicateurs de
+ * chargement, `isOwner` qui conditionne les actions réservées au propriétaire,
+ * les éléments des autres voyages proposés à la copie, les gestionnaires du
+ * voyage, et l'état aplati des trois hooks de calendrier, de réservations et
+ * d'adresses.
+ *
+ * @remarks Une photographie de couverture est recherchée automatiquement depuis
+ * la destination, mais un choix manuel de l'utilisateur la fige
+ * définitivement : sans ce verrou, une correction de la destination écraserait
+ * l'image qu'il a retenue. La recherche est différée après la dernière frappe
+ * pour ne pas émettre un appel par caractère. Les adresses sont resynchronisées
+ * au retour sur l'écran, leur saisie s'effectuant sur un écran distinct. Les
+ * réponses du serveur sont normalisées ici, dates comprises, et la visibilité
+ * est reconstituée à partir du champ dédié ou, à défaut, de l'ancien booléen
+ * public. Une réservation copiée depuis un autre voyage perd ses pièces
+ * jointes, qui restent attachées à l'original. La suppression réinitialise la
+ * pile de navigation, l'écran de détail du voyage supprimé n'ayant plus
+ * d'objet.
+ */
 const useEditTrip = (): UseEditTripReturn => {
   const route      = useRoute<EditTripRouteProp>();
   const navigation = useNavigation<EditTripNavigationProp>();

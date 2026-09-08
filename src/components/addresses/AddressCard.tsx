@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Address } from "../../types";
 import { getTypeIcon, getIconColors, getTagColors, getTagLabel } from "./addressHelpers";
 import { styles } from "./addressStyles";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface AddressCardProps {
   item: Address;
@@ -28,7 +29,7 @@ const AddressCard: React.FC<AddressCardProps> = ({ item, colors, isDark = false,
       activeOpacity={0.85}
     >
       <View style={[styles.addressIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={getTypeIcon(item.type) as keyof typeof Ionicons.glyphMap} size={26} color={iconColor} />
+        <Ionicons name={getTypeIcon(item.type) as keyof typeof Ionicons.glyphMap} size={26} color={iconColor} {...DECORATIVE_ELEMENT_PROPS} />
       </View>
       <View style={styles.addressInfo}>
         <Text style={[styles.addressName, { color: colors.text }]} numberOfLines={1}>
