@@ -49,7 +49,7 @@ jobs:
       - name: Vérification de types (TypeScript)
         run: npm run typecheck
 
-      - name: Tests + couverture (client + serveur)
+      - name: Tests + couverture (client + scripts)
         run: npm run test:coverage -- --ci
 
       - name: Publier le rapport de couverture
