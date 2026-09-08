@@ -92,13 +92,6 @@ MyTripCircle/
 │   ├── types/             # Interfaces TypeScript
 │   ├── theme/             # Couleurs, typographie, espacements
 │   └── config/            # Configuration API
-├── server/
-│   ├── index.js           # Point d'entrée Express
-│   ├── config.js          # Variables d'environnement
-│   ├── db.js              # Connexion MongoDB, index, validators
-│   ├── middleware/         # Auth JWT, rate limiter, error handler
-│   ├── routes/            # auth, users, trips, bookings, addresses, friends, invitations, itinerary
-│   └── utils/             # Email templates, helpers
 ├── assets/                # Icônes et splash screen
 ├── App.tsx                # Composant racine
 ├── app.json               # Configuration Expo
@@ -144,29 +137,21 @@ MyTripCircle/
    JWT_SECRET=votre_secret_jwt
    REFRESH_SECRET=votre_secret_refresh
 
-   # Serveur
-   API_PORT=4000
-   API_BASE_URL=http://localhost:4000
-
    # Google Places (autocomplétion adresses)
    EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=votre_clé_google
-
-   # Email (Gmail)
-   MAIL_USER=votre_email@gmail.com
-   MAIL_PASS=votre_app_password
-
-   # IA — Génération d'itinéraires
-   GROQ_API_KEY=votre_clé_groq
 
    # Apple Sign-In (optionnel)
    APPLE_APP_ID=com.votre.bundle.id
    ```
 
-4. Lancer le serveur backend
+4. Lancer l'API
 
-   ```bash
-   npm run server
-   ```
+   L'API vit dans son propre dépôt,
+   [MyTripCircle-API](https://github.com/MyTripCircle/MyTripCircle-API). Le
+   client interroge par défaut l'instance déployée : rien à lancer pour
+   travailler sur l'interface. Pour développer contre une API locale, cloner ce
+   dépôt, y suivre son README, puis pointer `src/config/api.ts` sur
+   `http://localhost:4000`.
 
 5. Lancer l'application Expo
 
@@ -179,80 +164,18 @@ MyTripCircle/
 | Commande | Description |
 |---|---|
 | `npm start` | Lancer Expo |
-| `npm run dev` | Lancer Expo + serveur en parallèle |
-| `npm run server` | Lancer le backend Express |
+| `npm run dev` | Détecter l'IP locale puis lancer Expo |
 | `npm run ios` | Build et lancement iOS |
 | `npm run android` | Build et lancement Android |
-| `npm test` | Lancer les tests (client, serveur, scripts) |
-| `npm run seed` | Alimenter la base avec le jeu de démonstration |
-| `npm run test-db` | Vérifier la connexion à MongoDB et l'état de la base |
+| `npm test` | Lancer les tests (client, scripts) |
 
-## Base de données — vérification et jeu de démonstration
+## Base de données
 
-Deux commandes couvrent la mise en route d'une base neuve. Elles se lancent
-depuis la racine du dépôt, sans dépendance supplémentaire à installer.
+Le peuplement et le diagnostic de la base relèvent désormais du dépôt
+[MyTripCircle-API](https://github.com/MyTripCircle/MyTripCircle-API), qui porte
+les scripts `seed`, `seed:dataset`, `test-db` et `mongo` ainsi que les clés de
+chiffrement qu'ils requièrent.
 
-### Variables d'environnement requises
-
-| Variable | Utilisée par | Rôle |
-|---|---|---|
-| `MONGODB_URI` | `test-db`, `seed` | Chaîne de connexion (`mongodb://` ou `mongodb+srv://`) |
-| `DB_NAME` | `test-db`, `seed` | Nom de la base ; `mytripcircle` par défaut |
-| `ENCRYPTION_KEY` | `seed` | Clé AES-256 (64 caractères hexadécimaux) — les données personnelles sont chiffrées en base |
-| `HMAC_KEY` | `seed` | Clé HMAC (64 caractères hexadécimaux) — empreintes de recherche |
-
-Toutes figurent dans `.env.example`. Une commande lancée sans ces variables
-s'arrête immédiatement en les nommant, sans tenter de se connecter.
-
-### Ordre de mise en route
-
-```bash
-npm run server   # premier démarrage : crée les index et les validateurs
-npm run seed     # écrit le jeu de démonstration
-npm run test-db  # vérifie connexion, collections et index critiques
-```
-
-### `npm run test-db` — test de connexion
-
-Ouvre la connexion, envoie un `ping`, liste les collections avec leur nombre de
-documents, puis vérifie la présence des index critiques (unicité de
-`users.emailHash`, index TTL portant les durées de conservation). Sort en code
-`0` si tout est vérifié, `1` sinon — connexion impossible, variable manquante
-ou index absent — avec le message de correction correspondant. Aucun contenu de
-document n'est affiché, et la chaîne de connexion est journalisée sans ses
-identifiants.
-
-### `npm run seed` — alimentation initiale
-
-Écrit un jeu de démonstration de 15 documents : 3 comptes vérifiés, 2 voyages
-(dont un partagé avec un collaborateur), 4 réservations couvrant les quatre
-types gérés, 3 adresses, la relation d'amitié réciproque et un abonnement
-premium.
-
-| Option | Effet |
-|---|---|
-| _(aucune)_ | Écrit le jeu ; refuse si la base contient des documents étrangers |
-| `--force` | Écrit malgré la présence d'autres documents (aucun n'est supprimé) |
-| `--clean` | Retire le jeu de démonstration, et lui seul |
-
-Le script est **idempotent** : chaque document porte un identifiant figé, une
-seconde exécution met à jour les mêmes documents au lieu d'en créer d'autres.
-Il refuse de s'exécuter sur une base contenant des données qu'il n'a pas
-écrites, ainsi que lorsque `NODE_ENV=production`, sauf `--force` explicite.
-
-Les comptes créés utilisent le domaine `example.com` (réservé à la
-documentation par la RFC 2606) et des numéros de la plage `+3363998xxxx`
-(réservée à la fiction par l'ARCEP) : **aucune donnée personnelle réelle** ne
-figure dans le jeu, et aucun secret n'y est écrit en dur.
-
-| Compte | Rôle dans le jeu |
-|---|---|
-| `alice.demo@example.com` | Propriétaire des deux voyages, abonnement premium |
-| `bruno.demo@example.com` | Collaborateur du voyage « Week-end à Porto » |
-| `chloe.demo@example.com` | Compte sans voyage, offre gratuite |
-
-Mot de passe commun : `Demo!Passw0rd` — valeur de démonstration, sans usage hors
-d'une base locale.
 
 ## Navigation
 

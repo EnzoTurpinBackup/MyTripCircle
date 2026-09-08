@@ -1,5 +1,6 @@
-// Deux projets Jest : le client Expo/React Native (preset jest-expo) et le
-// backend Node/Express (environnement node). Lancer les deux avec `npm test`.
+// Deux projets Jest : le client Expo/React Native (preset jest-expo) et les
+// scripts d'outillage (environnement node). Lancer les deux avec `npm test`.
+// L'API vit désormais dans son propre dépôt et porte ses propres tests.
 module.exports = {
   projects: [
     {
@@ -11,13 +12,6 @@ module.exports = {
         "<rootDir>/ios/",
         "<rootDir>/android/",
       ],
-    },
-    {
-      displayName: "server",
-      testEnvironment: "node",
-      testMatch: ["<rootDir>/server/**/*.test.js"],
-      setupFiles: ["<rootDir>/server/__tests__/setupEnv.js"],
-      modulePathIgnorePatterns: ["<rootDir>/.claude/"],
     },
     {
       displayName: "scripts",
@@ -35,7 +29,6 @@ module.exports = {
     "App.tsx",
     "index.ts",
     "src/**/*.{ts,tsx}",
-    "server/**/*.js",
     "scripts/**/*.js",
 
     // Tests, déclarations de types et barils de réexport : aucun code exécutable.
@@ -47,11 +40,6 @@ module.exports = {
     // Données statiques et dictionnaires de traduction : aucune logique.
     "!src/data/**",
     "!src/utils/i18n/**",
-
-    // Points d'entrée du serveur : validés par les tests d'intégration, qui
-    // démarrent l'application plutôt que d'en tester les unités.
-    "!server/index.js",
-    "!server/db.js",
 
     // Outils de développement interactifs (QR code Expo, détection d'IP locale,
     // création d'un utilisateur de charge) : pilotés par la console et
