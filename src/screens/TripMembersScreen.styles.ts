@@ -1,3 +1,22 @@
+/**
+ * Styles de l'écran d'administration des membres d'un voyage, extraits dans un
+ * module distinct : l'écran combine une liste, une carte de lien d'invitation et
+ * une feuille d'actions modale, et garder cette feuille de styles à sa suite le
+ * ferait dépasser la taille maximale admise par les conventions du dépôt.
+ *
+ * Les familles suivent les zones de l'écran : mise en page générale (`safe`,
+ * `content`) et en-tête avec son bouton d'invitation ; carte du lien de partage
+ * (`link*`, `copyBtn`, `expiryTxt`) ; lignes de membres (`mc`, `avatar`, `mn`,
+ * `ms`, `meTag`, `mcSelected`, `rowChevron`, `cancelTxt`) ; bouton d'ajout en
+ * pied de liste (`addBtn*`) ; enfin voile de chargement et feuille d'actions
+ * (`backdrop`, `sheet*`).
+ *
+ * Les couleurs sont ici celles du thème clair. Les composants qui en dépendent
+ * les recouvrent au rendu par les valeurs de ThemeContext ; celles inscrites
+ * dans ce fichier ne servent que de valeurs par défaut pour les propriétés que
+ * l'écran ne surcharge pas.
+ */
+
 import { StyleSheet } from "react-native";
 import { F } from "../theme/fonts";
 import { COLORS as C } from "../theme/colors";

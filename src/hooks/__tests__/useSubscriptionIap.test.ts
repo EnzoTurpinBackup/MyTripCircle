@@ -515,6 +515,97 @@ describe("useSubscriptionIap", () => {
         expect.any(Error),
       );
     });
+
+    it("should notify the caller once the validated transaction is finished", async () => {
+      // Arrange
+      const iap = createIapModule();
+      const onPurchaseSuccess = jest.fn().mockResolvedValue(undefined);
+      const { useSubscriptionIap } = load({ iap: iap.module });
+      renderHook(() => useSubscriptionIap({ onPurchaseSuccess }));
+      await act(async () => {});
+
+      // Act
+      await act(async () => {
+        await iap.listeners.purchaseUpdate!({ transactionReceipt: "reçu-1" });
+      });
+
+      // Assert
+      expect(onPurchaseSuccess).toHaveBeenCalledTimes(1);
+      expect(iap.module.finishTransaction).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not notify the caller when the server rejects the receipt", async () => {
+      // Arrange
+      const iap = createIapModule();
+      const onPurchaseSuccess = jest.fn().mockResolvedValue(undefined);
+      mockRequest.mockRejectedValue(new Error("reçu invalide"));
+      const { useSubscriptionIap } = load({ iap: iap.module });
+      renderHook(() => useSubscriptionIap({ onPurchaseSuccess }));
+      await act(async () => {});
+
+      // Act
+      await act(async () => {
+        await iap.listeners.purchaseUpdate!({ transactionReceipt: "reçu-1" });
+      });
+
+      // Assert
+      expect(onPurchaseSuccess).not.toHaveBeenCalled();
+    });
+
+    it("should still confirm the purchase when the caller notification fails", async () => {
+      // Arrange
+      const iap = createIapModule();
+      const onPurchaseSuccess = jest.fn().mockRejectedValue(new Error("réseau indisponible"));
+      const { useSubscriptionIap } = load({ iap: iap.module });
+      renderHook(() => useSubscriptionIap({ onPurchaseSuccess }));
+      await act(async () => {});
+
+      // Act
+      await act(async () => {
+        await iap.listeners.purchaseUpdate!({ transactionReceipt: "reçu-1" });
+      });
+
+      // Assert
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "subscription.purchaseSuccessTitle",
+        "subscription.purchaseSuccessMessage",
+        [{ text: "common.ok" }],
+      );
+      expect(Alert.alert).not.toHaveBeenCalledWith(
+        "subscription.purchaseErrorTitle",
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        "subscription refresh after purchase error",
+        expect.any(Error),
+      );
+    });
+
+    it("should notify the latest callback when the caller rerenders with a new one", async () => {
+      // Arrange
+      const iap = createIapModule();
+      const initial = jest.fn().mockResolvedValue(undefined);
+      const latest = jest.fn().mockResolvedValue(undefined);
+      const { useSubscriptionIap } = load({ iap: iap.module });
+      const { rerender } = renderHook(
+        ({ onPurchaseSuccess }: { onPurchaseSuccess: () => Promise<void> }) =>
+          useSubscriptionIap({ onPurchaseSuccess }),
+        { initialProps: { onPurchaseSuccess: initial } },
+      );
+      await act(async () => {});
+
+      // Act
+      rerender({ onPurchaseSuccess: latest });
+      await act(async () => {
+        await iap.listeners.purchaseUpdate!({ transactionReceipt: "reçu-1" });
+      });
+
+      // Assert
+      expect(latest).toHaveBeenCalledTimes(1);
+      expect(initial).not.toHaveBeenCalled();
+      expect(iap.module.purchaseUpdatedListener).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("purchase errors", () => {

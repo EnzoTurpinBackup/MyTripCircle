@@ -84,6 +84,17 @@ describe("ConsentScreen", () => {
       expect(screen.getByText("consent.notificationsTitle")).toBeTruthy();
     });
 
+    // Le logo est la seule image de l'écran à porter du sens — il identifie
+    // l'application qui demande le consentement. Il est donc annoncé, là où les
+    // autres illustrations sont retirées du parcours des lecteurs d'écran.
+    it("should label the application logo when mounted", () => {
+      // Arrange & Act
+      render(<ConsentScreen />);
+
+      // Assert
+      expect(screen.getByLabelText("common.a11y.appLogo")).toBeTruthy();
+    });
+
     it("should mark the data topic as required and the two others as optional", () => {
       // Arrange & Act
       render(<ConsentScreen />);

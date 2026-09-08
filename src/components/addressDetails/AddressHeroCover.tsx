@@ -6,6 +6,7 @@ import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import BackButton from "../ui/BackButton";
 import { getCachedDestinationPhoto, getSyncCachedPhoto } from "../../utils/destinationPhoto";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const FALLBACK_PHOTOS = [
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
@@ -40,11 +41,13 @@ const AddressHeroCover: React.FC<Props> = ({ address, gradient, badge, insetTop,
 
   return (
     <View style={styles.heroCover}>
+      {/* Décorative : illustration d'ambiance, le nom et le type d'adresse sont lus en dessous. */}
       <Image
         source={{ uri: coverUri }}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
         onError={() => setCoverUri(fallbackPhoto)}
+        {...DECORATIVE_ELEMENT_PROPS}
       />
       <LinearGradient
         colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.70)"]}

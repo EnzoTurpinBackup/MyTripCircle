@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface TripSummary {
   title: string;
@@ -41,10 +42,12 @@ const TripCoverHero: React.FC<Props> = ({
   return (
     <View style={[styles.cover, { backgroundColor: colors.textMid }]}>
       {trip.coverImage ? (
+        /* Décorative : le titre, la destination et les dates du voyage sont lus en dessous. */
         <Image
           source={{ uri: trip.coverImage }}
           style={StyleSheet.absoluteFill as StyleProp<ImageStyle>}
           resizeMode="cover"
+          {...DECORATIVE_ELEMENT_PROPS}
         />
       ) : (
         <View style={[StyleSheet.absoluteFill as StyleProp<ViewStyle>, { backgroundColor: colors.textMid }]} />
@@ -63,7 +66,7 @@ const TripCoverHero: React.FC<Props> = ({
 
       <View style={[styles.topRight, { top: insetTop + 10 }]}>
         <View style={styles.readOnlyBadge}>
-          <Ionicons name="eye-outline" size={13} color="#FFFFFF" />
+          <Ionicons name="eye-outline" size={13} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.readOnlyText}>{t("tripPublicView.readOnly")}</Text>
         </View>
         {onReport && (
@@ -71,6 +74,7 @@ const TripCoverHero: React.FC<Props> = ({
             onPress={onReport}
             style={styles.reportBtn}
             activeOpacity={0.8}
+            accessibilityRole="button"
             accessibilityLabel={t("tripPublicView.reportTrip")}
           >
             <Ionicons name="flag-outline" size={15} color="#FFFFFF" />
@@ -85,12 +89,12 @@ const TripCoverHero: React.FC<Props> = ({
         <Text style={styles.coverTitle}>{trip.title}</Text>
         {trip.destination ? (
           <View style={styles.coverRow}>
-            <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.8)" />
+            <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.8)" {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={styles.coverSub}>{trip.destination}</Text>
           </View>
         ) : null}
         <View style={styles.coverRow}>
-          <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.7)" />
+          <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.7)" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.coverDates}>
             {fmtDateShort(trip.startDate)} – {fmtDate(trip.endDate)}
           </Text>

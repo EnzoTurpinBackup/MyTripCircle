@@ -39,7 +39,10 @@ describe("NotFoundScreen", () => {
     render(<NotFoundScreen />);
 
     // Assert
-    expect(screen.getByText("icon:map-outline")).toBeTruthy();
+    // Icône décorative : l'information est portée par le texte qui
+    // l'accompagne, aussi sort-elle du parcours des lecteurs d'écran, que
+    // les requêtes ignorent par défaut. Ce cas observe son rendu visuel.
+    expect(screen.getByText("icon:map-outline", { includeHiddenElements: true })).toBeTruthy();
   });
 
   it("should reserve the iOS status bar height", () => {

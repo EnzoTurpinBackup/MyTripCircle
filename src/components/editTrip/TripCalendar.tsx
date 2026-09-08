@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, DimensionValue } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 
 const buildCalendarCells = (year: number, month: number): (number | null)[] => {
@@ -52,6 +53,7 @@ const TripCalendar: React.FC<Props> = ({
   onNextMonth,
   onDayPress,
 }) => {
+  const { t } = useTranslation();
   const cells = buildCalendarCells(year, month);
 
   return (
@@ -65,6 +67,8 @@ const TripCalendar: React.FC<Props> = ({
           onPress={onPrevMonth}
           style={[s.calNavBtn, { backgroundColor: colors.bgMid }]}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.previousMonth")}
         >
           <Ionicons name="chevron-back" size={20} color={colors.textMid} />
         </TouchableOpacity>
@@ -75,6 +79,8 @@ const TripCalendar: React.FC<Props> = ({
           onPress={onNextMonth}
           style={[s.calNavBtn, { backgroundColor: colors.bgMid }]}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.nextMonth")}
         >
           <Ionicons name="chevron-forward" size={20} color={colors.textMid} />
         </TouchableOpacity>

@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { ModernButton } from "../ModernButton";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface Props {
   onValidate: () => void;
@@ -18,7 +19,7 @@ const TripDraftBanner: React.FC<Props> = ({ onValidate }) => {
   return (
     <View style={[s.validateContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={[s.draftBanner, { backgroundColor: colors.terraLight, borderColor: colors.terra }]}>
-        <Ionicons name="information-circle" size={22} color={colors.terra} />
+        <Ionicons name="information-circle" size={22} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[s.draftBannerText, { color: colors.terraDark ?? colors.terra }]}>{t("tripDetails.draftMessage")}</Text>
       </View>
       <ModernButton

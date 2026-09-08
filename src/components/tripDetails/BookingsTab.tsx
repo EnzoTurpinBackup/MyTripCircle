@@ -9,6 +9,7 @@ import { F } from "../../theme/fonts";
 import ItemActionSheet from "../ItemActionSheet";
 import BookingForm from "../BookingForm";
 import { tabSharedStyles } from "./tabSharedStyles";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const bookingStripeColor = (type: string): string => {
   switch (type) {
@@ -109,7 +110,7 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking
           <Text style={[s.emptyText, { color: colors.textMid }]}>{t("tripDetails.noBookings")}</Text>
           {canAdd && onAddBooking && (
             <TouchableOpacity style={[s.addBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddBooking} activeOpacity={0.8}>
-              <Ionicons name="add" size={18} color={colors.textMid} />
+              <Ionicons name="add" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addBooking")}</Text>
             </TouchableOpacity>
           )}
@@ -122,7 +123,7 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking
     <View style={s.tabContent}>
       {canAdd && onAddBooking && (
         <TouchableOpacity style={[s.addBtnTop, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddBooking} activeOpacity={0.8}>
-          <Ionicons name="add-circle-outline" size={18} color={colors.textMid} />
+          <Ionicons name="add-circle-outline" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addBooking")}</Text>
         </TouchableOpacity>
       )}
@@ -139,7 +140,7 @@ const BookingsTab: React.FC<Props> = ({ bookings, isOwner, canEdit, onAddBooking
           >
             <View style={[s.listStripe, { backgroundColor: stripe }]} />
             <View style={[s.listIconWrap, { backgroundColor: iconBg }]}>
-              <Ionicons name={bookingIconName(booking.type)} size={22} color={stripe} />
+              <Ionicons name={bookingIconName(booking.type)} size={22} color={stripe} {...DECORATIVE_ELEMENT_PROPS} />
             </View>
             <View style={s.listInfo}>
               <Text style={[s.listTitle, { color: colors.text }]} numberOfLines={1}>{booking.title}</Text>

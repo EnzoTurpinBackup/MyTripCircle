@@ -1,3 +1,28 @@
+/**
+ * Fiche détaillée d'une réservation : ce qui est réservé, quand, à quelle heure,
+ * sous quel numéro de dossier, avec les justificatifs joints.
+ *
+ * Besoin couvert : retrouver au moment utile — au comptoir, à l'embarquement, à
+ * l'arrivée à l'hôtel — le numéro de confirmation et le billet correspondant,
+ * puis corriger ou annuler la réservation si le programme change.
+ *
+ * Position dans le parcours : ouvert depuis la frise d'un voyage, et depuis
+ * TripPublicViewScreen lorsqu'un voyage public est consulté par un tiers, ce
+ * second appel passant `readOnly`. Retour au seul écran appelant ; l'annulation
+ * confirmée referme également la fiche, la réservation n'existant plus.
+ *
+ * Données : la réservation est d'abord cherchée dans la collection déjà chargée
+ * par TripsContext, source partagée qui rend l'ouverture immédiate ; à défaut
+ * elle est demandée à l'unité au serveur via bookingsApi. Les modifications et
+ * la suppression passent par le même contexte. Le formulaire de modification est
+ * BookingForm, adossé à useBookingForm.
+ *
+ * États pris en charge : chargement (squelette), réservation introuvable
+ * (message d'erreur seul, sans possibilité de réessayer), lecture seule (les
+ * actions de modification et d'annulation disparaissent), et hors-ligne (ces
+ * mêmes actions sont grisées et neutralisées). L'ouverture d'une pièce jointe
+ * qui n'est plus accessible donne lieu à une alerte.
+ */
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -29,6 +54,17 @@ import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 type BookingDetailsScreenRouteProp = RouteProp<RootStackParamList, "BookingDetails">;
 type BookingDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, "BookingDetails">;
 
+/**
+ * Compose la fiche d'une réservation.
+ *
+ * Les props ne transitent pas par le composant mais par la route :
+ * `route.params.bookingId` désigne la réservation à afficher et
+ * `route.params.readOnly` retire les commandes d'écriture, la fiche étant alors
+ * ouverte depuis la vue publique d'un voyage dont on n'est pas membre. Effets de
+ * bord notables — une requête réseau au montage si la réservation n'est pas déjà
+ * en mémoire, une écriture distante à l'enregistrement et à l'annulation, et
+ * l'ouverture d'une pièce jointe par l'application système associée.
+ */
 const BookingDetailsScreen: React.FC = () => {
   const route      = useRoute<BookingDetailsScreenRouteProp>();
   const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
@@ -43,11 +79,20 @@ const BookingDetailsScreen: React.FC = () => {
   const [loading, setLoading]     = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
 
+  // Réagir aussi aux évolutions de la collection du contexte : une modification
+  // faite ailleurs, ou l'arrivée tardive du chargement initial, doit rafraîchir
+  // la fiche sans que l'utilisateur ait à ressortir puis revenir.
   useEffect(() => { loadBooking(); }, [bookingId, bookings]);
 
   const loadBooking = async () => {
     setLoading(true);
+    // Deux identifiants sont comparés : les réservations issues du serveur
+    // portent `_id`, celles déjà normalisées par le contexte portent `id`, et
+    // l'appelant peut avoir transmis l'un ou l'autre.
     const found = bookings.find((b) => b.id === bookingId || b._id === bookingId);
+    // Lecture locale prioritaire : la fiche s'ouvre sans attente réseau, la
+    // requête à l'unité n'étant nécessaire que pour une réservation absente de
+    // la collection, cas d'une ouverture par un tiers sur un voyage public.
     if (found) { setBooking(found); setLoading(false); return; }
     try {
       const data = await ApiService.getBookingById(bookingId);
@@ -67,6 +112,8 @@ const BookingDetailsScreen: React.FC = () => {
 
   const handleSaveBooking = async (updates: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
     if (!booking) return;
+    // `_id` prime sur `id` : c'est la clé attendue par le serveur, la seconde
+    // n'étant qu'une recopie produite à la normalisation.
     const id = (booking as any)._id ?? booking.id;
     try {
       await updateBooking(id, updates);
@@ -101,6 +148,11 @@ const BookingDetailsScreen: React.FC = () => {
   };
 
   const handleViewAttachment = async (attachment: string) => {
+    // Les quatre schémas admis couvrent les emplacements réellement produits par
+    // la sélection de fichiers : cache local, fournisseur de contenu Android,
+    // photothèque iOS et lien distant. Tout autre contenu est un reliquat d'une
+    // ancienne version, ouvrable par aucune application ; mieux vaut le dire que
+    // laisser le système afficher un échec sans explication.
     const isUri = attachment.startsWith("file://") || attachment.startsWith("content://")
       || attachment.startsWith("https://") || attachment.startsWith("ph://");
     if (!isUri) { Alert.alert(t("common.error"), t("bookings.details.fileNotAccessible")); return; }
@@ -112,6 +164,10 @@ const BookingDetailsScreen: React.FC = () => {
     }
   };
 
+  // La troisième case de la grille change d'intitulé selon la nature de la
+  // réservation : un numéro de vol, une référence de dossier ferroviaire et une
+  // confirmation d'hôtel ne se nomment pas de la même manière, alors qu'ils
+  // occupent la même place.
   const getGridThirdLabel = (type: Booking["type"]): string => {
     const keys: Partial<Record<Booking["type"], string>> = {
       flight: "bookings.details.gridThirdLabel.flight",
@@ -190,6 +246,10 @@ const BookingDetailsScreen: React.FC = () => {
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attachmentsScroll}>
               {booking.attachments.map((attachment) => {
+                // Une pièce jointe est stockée sous la forme « nom::emplacement »
+                // pour conserver le nom donné par l'utilisateur. Les entrées
+                // antérieures à cette convention ne contiennent que
+                // l'emplacement : leur dernier segment fait alors office de nom.
                 const [name, uri] = attachment.includes("::")
                   ? attachment.split("::")
                   : [attachment.split("/").pop() || attachment, attachment];
@@ -216,7 +276,10 @@ const BookingDetailsScreen: React.FC = () => {
           </View>
         ) : null}
 
-        {/* Actions */}
+        {/* Actions retirées, et non simplement grisées, en lecture seule : la
+            fiche est alors ouverte depuis un voyage public dont le visiteur
+            n'est pas membre, et lui présenter des commandes inopérantes
+            laisserait croire à un droit qu'il n'a pas. */}
         {!readOnly && (
           <View style={styles.actionsRow}>
             <TouchableOpacity

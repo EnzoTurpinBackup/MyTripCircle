@@ -1,3 +1,27 @@
+/**
+ * Écran d'aide et de contact du support, dernier recours de l'utilisateur bloqué.
+ *
+ * Besoin couvert : répondre d'abord seul aux questions les plus courantes —
+ * créer un voyage, inviter des proches, gérer les réservations, retrouver les
+ * adresses sur la carte — puis, si la réponse n'y est pas, écrire au support
+ * sans avoir à chercher son adresse ailleurs.
+ *
+ * Position dans le parcours : ouvert depuis la section « Préférences » de
+ * ProfileScreen et quitté par le bouton de retour. Aucun autre écran de
+ * l'application n'en découle ; la seule sortie est vers l'extérieur, le client
+ * de messagerie du téléphone.
+ *
+ * Données : aucune requête réseau ni aucun contexte métier. Les quatre questions
+ * et leurs réponses sont bâties à partir des clés `helpSupport.*` des fichiers
+ * i18n embarqués dans l'application, et ThemeContext fournit la palette. Le
+ * contenu est donc disponible hors connexion.
+ *
+ * États pris en charge : ni chargement, ni erreur, ni état vide — la liste des
+ * questions est constante. Le seul aléa est l'ouverture du client de messagerie,
+ * qui dépend de l'appareil ; l'adresse du support reste affichée en clair en bas
+ * de page pour que l'utilisateur puisse la reprendre à la main si le bouton
+ * n'aboutit pas.
+ */
 import React from "react";
 import {
   View,
@@ -16,12 +40,26 @@ import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 import BackButton from "../components/ui/BackButton";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Compose la page d'aide.
+ *
+ * Montée par la pile racine sans paramètre de route ; son seul état est
+ * l'identifiant de la question dépliée. Effet de bord notable : le bouton de
+ * contact quitte l'application pour ouvrir le client de messagerie du système
+ * sur un brouillon pré-rempli.
+ */
 const HelpSupportScreen: React.FC = () => {
+  // Une seule question ouverte à la fois, d'où un identifiant plutôt qu'un
+  // ensemble : la liste tient alors dans un écran sans défilement acrobatique.
   const [openId, setOpenId] = React.useState<string | null>(null);
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
 
+  // La transition est déclarée avant la mise à jour de l'état : LayoutAnimation
+  // anime le prochain calcul de disposition, ce qui évite que la réponse
+  // n'apparaisse d'un bloc sous la question.
   const toggle = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpenId(openId === id ? null : id);
@@ -29,11 +67,19 @@ const HelpSupportScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
+  // Le sujet est encodé avant d'être inséré dans l'URL : traduit, il contient des
+  // espaces et des accents qui invalideraient le lien `mailto:` tel quel. Passer
+  // par la messagerie du téléphone plutôt que par un formulaire interne évite de
+  // convoyer les coordonnées de l'utilisateur et lui laisse une trace de son
+  // message dans ses messages envoyés.
   const openEmail = () => {
     const subject = encodeURIComponent(t("helpSupport.emailSubject"));
     Linking.openURL(`mailto:support@mytripcircle.com?subject=${subject}`);
   };
 
+  // Reconstruit à chaque rendu, et non figé au niveau du module : les libellés
+  // dépendent de la langue courante et les couleurs du thème actif, qui changent
+  // tous deux en cours de session depuis l'écran de réglages.
   const faqItems = [
     {
       id: "faq-1",
@@ -43,6 +89,10 @@ const HelpSupportScreen: React.FC = () => {
       iconColor: colors.terra,
       iconBg: colors.terraLight,
     },
+    // Les deux entrées suivantes portent des teintes littérales : la palette du
+    // thème n'expose qu'un accent, insuffisant pour distinguer quatre sujets d'un
+    // coup d'œil. Chaque teinte est déclinée en clair et en sombre pour conserver
+    // un contraste suffisant sur les deux fonds.
     {
       id: "faq-2",
       icon: "people-outline",
@@ -89,7 +139,7 @@ const HelpSupportScreen: React.FC = () => {
           <View style={[styles.infoCard, { backgroundColor: colors.terraLight, borderColor: colors.border }]}>
             <View style={styles.infoHeader}>
               <View style={styles.infoIconBg}>
-                <Ionicons name="chatbubble-ellipses" size={24} color={colors.terra} />
+                <Ionicons name="chatbubble-ellipses" size={24} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[styles.infoTitle, { color: colors.text }]}>{t("helpSupport.needHelp")}</Text>
             </View>
@@ -110,13 +160,14 @@ const HelpSupportScreen: React.FC = () => {
                     activeOpacity={0.7}
                   >
                     <View style={[styles.faqIconBg, { backgroundColor: item.iconBg }]}>
-                      <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={item.iconColor} />
+                      <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={18} color={item.iconColor} {...DECORATIVE_ELEMENT_PROPS} />
                     </View>
                     <Text style={[styles.faqTitle, { color: colors.text }]}>{item.title}</Text>
                     <Ionicons
                       name={isOpen ? "chevron-up" : "chevron-down"}
                       size={16}
                       color={colors.textLight}
+                      {...DECORATIVE_ELEMENT_PROPS}
                     />
                   </TouchableOpacity>
                   {isOpen && (
@@ -135,7 +186,7 @@ const HelpSupportScreen: React.FC = () => {
             onPress={openEmail}
             activeOpacity={0.8}
           >
-            <Ionicons name="mail" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Ionicons name="mail" size={18} color="#FFFFFF" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={styles.contactButtonText}>{t("helpSupport.contactSupport")}</Text>
           </TouchableOpacity>
 
@@ -143,14 +194,14 @@ const HelpSupportScreen: React.FC = () => {
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.contactRow}>
               <View style={[styles.contactIconBg, { backgroundColor: colors.bgDark }]}>
-                <Ionicons name="mail-outline" size={18} color={colors.textMid} />
+                <Ionicons name="mail-outline" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[styles.contactText, { color: colors.textMid }]}>support@mytripcircle.com</Text>
             </View>
             <View style={[styles.rowDivider, { backgroundColor: colors.bgMid }]} />
             <View style={styles.contactRow}>
               <View style={[styles.contactIconBg, { backgroundColor: colors.bgDark }]}>
-                <Ionicons name="time-outline" size={18} color={colors.textMid} />
+                <Ionicons name="time-outline" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[styles.contactText, { color: colors.textMid }]}>{t("helpSupport.availability")}</Text>
             </View>
@@ -177,6 +228,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    // L'en-tête défile avec le contenu, il ne peut donc pas s'appuyer sur une
+    // SafeAreaView : la marge haute est réservée à la main, plus large sur iOS
+    // où l'encoche et la barre d'état empiètent davantage.
     paddingTop: Platform.OS === "ios" ? 60 : 20,
     paddingHorizontal: 16,
     paddingBottom: 12,

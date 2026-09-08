@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
+import { Ionicons } from "@expo/vector-icons";
 import ProfileActions from "../ProfileActions";
 import i18n from "../../../utils/i18n";
 
@@ -127,5 +128,48 @@ describe("ProfileActions", () => {
 
     // Assert
     expect(screen.queryByLabelText("Block this user")).toBeNull();
+  });
+
+  describe("accessibility", () => {
+    it.each([
+      ["Report this user", false],
+      ["Block this user", false],
+      ["Remove friend", true],
+    ])("should expose %s as a button", (label, isFriend) => {
+      // Arrange / Act
+      renderActions({ isFriend });
+
+      // Assert
+      expect(screen.getByLabelText(label).props.accessibilityRole).toBe("button");
+    });
+
+    it("should keep the pictogram of an icon-only action announceable", () => {
+      // Arrange / Act
+      renderActions({ isFriend: true });
+
+      // Assert — aucun texte n'accompagne la corbeille : masquer son
+      // pictogramme priverait le bouton de son seul contenu visible
+      const trash = screen
+        .UNSAFE_queryAllByType(Ionicons)
+        .filter((icon) => icon.props.name === "trash-outline");
+      expect(trash).toHaveLength(1);
+      expect(trash[0].props.accessibilityElementsHidden).toBeUndefined();
+    });
+
+    it("should not expose the pictogram of the invite button, whose text carries the meaning", () => {
+      // Arrange / Act
+      renderActions({ isFriend: true });
+
+      // Assert — seul le libellé texte du bouton reste annonçable
+      const icons = screen
+        .UNSAFE_queryAllByType(Ionicons)
+        .filter((icon) => icon.props.name === "airplane");
+      expect(icons).toHaveLength(1);
+      expect(icons[0].props).toMatchObject({
+        accessible: false,
+        accessibilityElementsHidden: true,
+        importantForAccessibility: "no",
+      });
+    });
   });
 });

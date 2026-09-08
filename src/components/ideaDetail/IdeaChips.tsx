@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { Difficulty } from "../../data/tripIdeas";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface ThemeColors {
   surface: string;
@@ -50,8 +51,14 @@ const IdeaChips: React.FC<Props> = ({
           },
         ]}
       >
-        <Ionicons name="calendar-outline" size={14} color={colors.terra} />
-        <TouchableOpacity onPress={onDecrement} activeOpacity={0.7} style={s.stepperBtn}>
+        <Ionicons name="calendar-outline" size={14} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
+        <TouchableOpacity
+          onPress={onDecrement}
+          activeOpacity={0.7}
+          style={s.stepperBtn}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.decreaseDays")}
+        >
           <Ionicons name="remove" size={14} color={colors.textMid} />
         </TouchableOpacity>
         <Text
@@ -59,7 +66,13 @@ const IdeaChips: React.FC<Props> = ({
         >
           {customDays} {t("ideas.addModal.days")}
         </Text>
-        <TouchableOpacity onPress={onIncrement} activeOpacity={0.7} style={s.stepperBtn}>
+        <TouchableOpacity
+          onPress={onIncrement}
+          activeOpacity={0.7}
+          style={s.stepperBtn}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.increaseDays")}
+        >
           <Ionicons name="add" size={14} color={colors.textMid} />
         </TouchableOpacity>
       </View>

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { AppColors } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
 import { RADIUS, DISABLED_OPACITY } from "../../theme";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const GoogleLogo: React.FC = () => (
   <Svg width={20} height={20} viewBox="0 0 48 48">
@@ -80,7 +81,7 @@ const SocialAuthButtons: React.FC<SocialAuthButtonsProps> = ({
           onPress={onApplePress}
           disabled={busy}
         >
-          <Ionicons name="logo-apple" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+          <Ionicons name="logo-apple" size={18} color="#FFFFFF" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.appleBtnText}>{t("auth.appleButton")}</Text>
         </TouchableOpacity>
       )}

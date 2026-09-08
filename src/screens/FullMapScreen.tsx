@@ -1,3 +1,26 @@
+/**
+ * Carte plein écran de toutes les adresses du carnet.
+ *
+ * Besoin couvert : passer d'une liste de lieux à leur répartition réelle dans
+ * l'espace, pour juger des distances et regrouper ce qui se visite le même
+ * jour. Le filtre par catégorie isole un type de lieu sans quitter la carte.
+ *
+ * Position dans le parcours : atteint depuis l'aperçu cartographique du carnet
+ * d'adresses. En sortie, AddressDetails par la bulle d'un marqueur, ou retour.
+ *
+ * Données : les adresses viennent de TripsContext ; useAddressGeocoding en
+ * dérive les coordonnées en espaçant les appels au géocodeur Nominatim.
+ * ThemeContext fournit la palette, le mode sombre et la préférence de fond
+ * satellite, conservée d'une session à l'autre. Le repère de position est
+ * affiché par la carte native : il dépend de la permission de localisation
+ * accordée au système, dont le refus le supprime sans autre effet.
+ *
+ * États pris en charge : cartographie native indisponible (message de
+ * substitution, filtres conservés), géocodage en cours et absence de marqueur
+ * (messages superposés), sélection d'un marqueur (bulle et gel des gestes). Un
+ * géocodage sans résultat se traduit par un marqueur manquant, l'adresse
+ * restant listée dans le carnet ; il n'y a pas d'autre état d'erreur.
+ */
 import React, { useState, useCallback, useRef } from "react";
 import {
   View,
@@ -13,6 +36,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
+// Chargement protégé du module natif : il manque dans Expo Go et dans tout
+// client construit sans lui, et l'alias du bundle web le résout sans exposer de
+// composant. Les deux cas laissent `MapView` à une valeur fausse, seule
+// condition testée au rendu ; un import statique ferait, lui, échouer le
+// chargement de l'écran entier.
 let MapView: any = null;
 let Marker: any = null;
 try {
@@ -20,6 +48,7 @@ try {
   MapView = RNMaps.default;
   Marker = RNMaps.Marker;
 } catch (e) {
+  // Silencieux en production : l'absence de carte y est une dégradation prévue.
   if (__DEV__) console.warn("[FullMapScreen] react-native-maps non disponible:", e);
 }
 
@@ -31,6 +60,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import BackButton from "../components/ui/BackButton";
 import { useAddressGeocoding } from "../hooks/useAddressGeocoding";
 import MapMarkerPopup from "../components/fullMap/MapMarkerPopup";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 type FilterType = "all" | "hotel" | "restaurant" | "activity" | "transport" | "other";
 
@@ -41,6 +71,10 @@ type Region = {
   longitudeDelta: number;
 };
 
+/**
+ * Habillage sombre de la carte, aligné sur la palette de l'application : le
+ * fond clair par défaut trancherait avec l'écran et éblouirait de nuit.
+ */
 const DARK_MAP_STYLE = [
   { elementType: "geometry", stylers: [{ color: "#1A1714" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#A89880" }] },
@@ -55,6 +89,10 @@ const DARK_MAP_STYLE = [
   { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#3A3530" }] },
 ];
 
+/**
+ * Cadrage initial, tenu jusqu'au recadrage sur les marqueurs. Son amplitude
+ * évite qu'un carnet dispersé n'apparaisse d'abord au ras du sol.
+ */
 const DEFAULT_REGION: Region = {
   latitude: 48.8566,
   longitude: 2.3522,
@@ -62,6 +100,7 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 20,
 };
 
+// Codage visuel repris des fiches du carnet : même type, même repère.
 const getTypeIcon = (type: Address["type"]) => {
   switch (type) {
     case "hotel":      return "bed-outline";
@@ -81,6 +120,15 @@ const getMarkerColor = (type: Address["type"]): string => {
   }
 };
 
+/**
+ * Compose la carte plein écran du carnet d'adresses.
+ *
+ * L'écran n'attend aucun paramètre de route ni prop du parent : il repart de la
+ * collection entière, son filtre étant indépendant de celui du carnet. Effets
+ * de bord notables — géocodage réseau, recadrage animé quand la carte est
+ * prête, déplacement de la caméra au choix d'un marqueur, et écriture locale de
+ * la préférence de fond satellite.
+ */
 const FullMapScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { addresses }                          = useTrips();
@@ -96,11 +144,15 @@ const FullMapScreen: React.FC = () => {
   const { mapCoords, isGeocoding } = useAddressGeocoding(addresses);
 
   const filteredAddresses  = addresses.filter((a) => selectedFilter === "all" || a.type === selectedFilter);
+  // Sans coordonnées, pas de place sur la carte : l'adresse est écartée du
+  // cadrage et des marqueurs, mais reste dans le carnet.
   const filteredWithCoords = filteredAddresses.filter((a) => mapCoords[a.id] != null);
 
   const handleMapReady = () => {
     const coords = filteredWithCoords.map((a) => mapCoords[a.id]);
     if (coords.length === 0) return;
+    // Contourne une limite de la carte native : appelé dans la foulée de
+    // `onMapReady`, le recadrage est ignoré, la vue n'étant pas encore mesurée.
     setTimeout(() => {
       mapRef.current?.fitToCoordinates(coords, {
         edgePadding: { top: 80, right: 40, bottom: 80, left: 40 },
@@ -114,6 +166,8 @@ const FullMapScreen: React.FC = () => {
     if (!coords) return;
     setSelectedAddress(address);
     // Centre le marker dans le tiers bas de l'écran pour que la popup soit visible
+    // Le décalage suit l'amplitude affichée : une valeur fixe en degrés serait
+    // imperceptible en vue large et démesurée en vue rapprochée.
     const offsetLat = coords.latitude - currentRegionRef.current.latitudeDelta * 0.2;
     mapRef.current?.animateCamera(
       { center: { latitude: offsetLat, longitude: coords.longitude } },
@@ -139,7 +193,7 @@ const FullMapScreen: React.FC = () => {
 
   const renderMarkerPin = (type: Address["type"]) => (
     <View style={[styles.markerPin, { backgroundColor: getMarkerColor(type) }]}>
-      <Ionicons name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap} size={13} color="white" />
+      <Ionicons name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap} size={13} color="white" {...DECORATIVE_ELEMENT_PROPS} />
     </View>
   );
 
@@ -178,11 +232,18 @@ const FullMapScreen: React.FC = () => {
             showsMyLocationButton={false}
             showsCompass
             onMapReady={handleMapReady}
+            // Région mémorisée dans une référence et non dans un état : elle ne
+            // sert qu'au calcul de décalage et déclencherait sinon un rendu à
+            // chaque déplacement.
             onRegionChangeComplete={(region: Region) => { currentRegionRef.current = region; }}
+            // Gestes gelés tant qu'une bulle est ouverte : posée à une position
+            // fixe de l'écran, elle se détacherait du marqueur qu'elle décrit.
             scrollEnabled={selectedAddress === null}
             zoomEnabled={selectedAddress === null}
             rotateEnabled={selectedAddress === null}
             pitchEnabled={selectedAddress === null}
+            // Habillage sombre écarté en vue satellite : il porte sur les
+            // couches vectorielles et n'assombrirait que les libellés.
             customMapStyle={isDark && !satelliteMap ? DARK_MAP_STYLE : []}
           >
             {filteredWithCoords.map((address) => (
@@ -190,6 +251,8 @@ const FullMapScreen: React.FC = () => {
                 key={address.id}
                 coordinate={mapCoords[address.id]}
                 anchor={{ x: 0.5, y: 1 }}
+                // Pastille statique : surveiller ses redessins dégrade la
+                // fluidité dès quelques dizaines de marqueurs sur Android.
                 tracksViewChanges={false}
                 onPress={() => handleMarkerPress(address)}
               >
@@ -199,7 +262,7 @@ const FullMapScreen: React.FC = () => {
           </MapView>
         ) : (
           <View style={styles.placeholder}>
-            <Ionicons name="map-outline" size={52} color={colors.textLight} />
+            <Ionicons name="map-outline" size={52} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.placeholderTitle, { color: colors.text }]}>Carte non disponible</Text>
           </View>
         )}
@@ -210,6 +273,9 @@ const FullMapScreen: React.FC = () => {
             style={[styles.satelliteBtn, { backgroundColor: colors.surface }]}
             onPress={toggleSatelliteMap}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.a11y.toggleSatelliteView")}
+            accessibilityState={{ selected: satelliteMap }}
           >
             <Ionicons name={satelliteMap ? "map-outline" : "globe-outline"} size={20} color={colors.terra} />
           </TouchableOpacity>
@@ -228,6 +294,8 @@ const FullMapScreen: React.FC = () => {
         )}
 
         {/* Aucun marqueur */}
+        {/* Deux causes distinguées : géocodage en cours, ou achevé sans
+            résultat. Le bandeau laisse passer les gestes vers la carte. */}
         {filteredWithCoords.length === 0 && (
           <View style={styles.noMarkersOverlay} pointerEvents="none">
             <View style={[styles.noMarkersBadge, { backgroundColor: colors.surface }]}>

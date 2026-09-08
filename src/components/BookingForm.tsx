@@ -36,6 +36,7 @@ import {
   statusLabel,
   getSafeDate,
 } from "./bookingForm/bookingFormConstants";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -119,7 +120,7 @@ function OriginDestinationSection({ form, colors, t }: Readonly<{ form: FormHand
               style={styles.suggestionsList}
               renderItem={({ item }) => (
                 <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectOrigin(item)}>
-                  <Ionicons name={icon} size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                  <Ionicons name={icon} size={16} color={colors.textMid} style={styles.suggestionIcon} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
                 </TouchableOpacity>
               )}
@@ -129,7 +130,7 @@ function OriginDestinationSection({ form, colors, t }: Readonly<{ form: FormHand
       </View>
 
       <View style={styles.transportArrowRow}>
-        <Ionicons name="arrow-down" size={18} color={colors.textLight} />
+        <Ionicons name="arrow-down" size={18} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
       </View>
 
       <View style={[styles.fieldBox, { backgroundColor: colors.surface, borderColor: colors.border }, form.fieldErrors.destination ? styles.fieldBoxError : null]}>
@@ -151,7 +152,7 @@ function OriginDestinationSection({ form, colors, t }: Readonly<{ form: FormHand
               style={styles.suggestionsList}
               renderItem={({ item }) => (
                 <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectDestination(item)}>
-                  <Ionicons name={icon} size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                  <Ionicons name={icon} size={16} color={colors.textMid} style={styles.suggestionIcon} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
                 </TouchableOpacity>
               )}
@@ -258,7 +259,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
             onPress={() => form.setShowScanner(true)}
             activeOpacity={0.75}
           >
-            <Ionicons name="scan-outline" size={20} color="#5A8FAA" style={{ marginRight: 8 }} />
+            <Ionicons name="scan-outline" size={20} color="#5A8FAA" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.scanButtonText, { color: "#5A8FAA" }]}>{t("bookings.scanTicketButton")}</Text>
           </TouchableOpacity>
 
@@ -390,7 +391,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                   style={styles.suggestionsList}
                   renderItem={({ item }) => (
                     <TouchableOpacity style={[styles.suggestionItem, { borderBottomColor: colors.bgMid }]} onPress={() => form.handleSelectAddress(item)}>
-                      <Ionicons name="location" size={16} color={colors.textMid} style={styles.suggestionIcon} />
+                      <Ionicons name="location" size={16} color={colors.textMid} style={styles.suggestionIcon} {...DECORATIVE_ELEMENT_PROPS} />
                       <Text style={[styles.suggestionText, { color: colors.text }]}>{item.description}</Text>
                     </TouchableOpacity>
                   )}
@@ -422,10 +423,20 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
               <View key={attachment.uri} style={[styles.attachmentItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <AttachmentThumb attachment={attachment} colors={colors} />
                 <Text style={[styles.attachmentName, { color: colors.text }]} numberOfLines={1}>{attachment.name}</Text>
-                <TouchableOpacity style={styles.renameAttachmentButton} onPress={() => form.handleOpenRename(idx)}>
+                <TouchableOpacity
+                  style={styles.renameAttachmentButton}
+                  onPress={() => form.handleOpenRename(idx)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.a11y.editItem", { item: attachment.name })}
+                >
                   <Ionicons name="pencil" size={16} color={colors.terra} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.removeAttachmentButton} onPress={() => form.handleRemoveAttachment(idx)}>
+                <TouchableOpacity
+                  style={styles.removeAttachmentButton}
+                  onPress={() => form.handleRemoveAttachment(idx)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.a11y.deleteItem", { item: attachment.name })}
+                >
                   <Ionicons name="close-circle" size={22} color="#C04040" />
                 </TouchableOpacity>
               </View>

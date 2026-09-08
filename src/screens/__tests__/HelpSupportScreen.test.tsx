@@ -90,7 +90,12 @@ describe("HelpSupportScreen", () => {
       FAQ_QUESTIONS.forEach((question) => {
         expect(screen.queryByText(answerOf(question))).toBeNull();
       });
-      expect(screen.getAllByText("icon:chevron-down")).toHaveLength(FAQ_QUESTIONS.length);
+      // Icône décorative : l'information est portée par le texte qui
+      // l'accompagne, aussi sort-elle du parcours des lecteurs d'écran, que
+      // les requêtes ignorent par défaut. Ce cas observe son rendu visuel.
+      expect(
+        screen.getAllByText("icon:chevron-down", { includeHiddenElements: true }),
+      ).toHaveLength(FAQ_QUESTIONS.length);
     });
   });
 
@@ -104,7 +109,7 @@ describe("HelpSupportScreen", () => {
 
       // Assert
       expect(screen.getByText(answerOf(question))).toBeTruthy();
-      expect(screen.getByText("icon:chevron-up")).toBeTruthy();
+      expect(screen.getByText("icon:chevron-up", { includeHiddenElements: true })).toBeTruthy();
     });
 
     it("should collapse the answer when the same entry is pressed twice", () => {

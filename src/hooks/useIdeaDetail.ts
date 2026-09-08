@@ -21,6 +21,26 @@ type IdeaDetailNavigationProp = StackNavigationProp<RootStackParamList, "IdeaDet
 
 const SCREEN_H = Dimensions.get("window").height;
 
+/**
+ * Alimente l'écran de détail d'une idée de voyage et transforme cette idée en
+ * voyage réel : à partir d'un itinéraire type, il crée le voyage, ses
+ * réservations suggérées et les adresses correspondantes, épargnant à
+ * l'utilisateur une saisie intégrale.
+ *
+ * @returns L'idée consultée et ses libellés traduits, l'état de la fenêtre de
+ * création (titre, durée, dates, valeurs animées), l'indicateur `creating`, et
+ * les commandes d'ouverture, de fermeture et de création.
+ *
+ * @remarks La durée est ajustable mais bornée par la longueur de l'itinéraire
+ * proposé : au-delà, il n'y aurait plus rien à suggérer. Les réservations sont
+ * créées en série et non en parallèle, chacune interrogeant le service de lieux
+ * pour retrouver une adresse réelle. L'échec d'une suggestion est journalisé et
+ * la suite se poursuit : un voyage partiellement pourvu reste préférable à un
+ * abandon complet, l'utilisateur pouvant compléter ensuite. Une adresse n'est
+ * créée que si le lieu a été retrouvé, faute de quoi elle serait inexploitable
+ * sur la carte. Les hôtels couvrent tout le séjour, tandis qu'activités et
+ * restaurants sont répartis jour par jour.
+ */
 export function useIdeaDetail() {
   const navigation = useNavigation<IdeaDetailNavigationProp>();
   const route = useRoute<IdeaDetailRouteProp>();

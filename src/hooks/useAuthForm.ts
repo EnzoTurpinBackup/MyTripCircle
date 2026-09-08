@@ -13,6 +13,11 @@ import {
 } from "../utils/authValidators";
 import useSocialAuth from "./useSocialAuth";
 
+/**
+ * Messages d'erreur par champ. Une chaîne vide vaut absence d'erreur, ce qui
+ * permet de lier directement chaque entrée au champ correspondant sans test
+ * d'existence dans la vue.
+ */
 export interface AuthFormErrors {
   email: string;
   password: string;
@@ -21,6 +26,11 @@ export interface AuthFormErrors {
   phone: string;
 }
 
+/**
+ * Surface consommée par les écrans de connexion et d'inscription. Elle est
+ * déclarée explicitement afin que les deux écrans s'appuient sur un contrat
+ * stable, et non sur ce que l'implémentation se trouve renvoyer.
+ */
 export interface UseAuthFormReturn {
   name: string;
   setName: (v: string) => void;
@@ -58,6 +68,32 @@ export interface UseAuthFormReturn {
   switchMode: () => void;
 }
 
+/**
+ * Tient l'ensemble du formulaire d'authentification, connexion et inscription
+ * confondues : saisie, validation champ par champ, soumission et traduction des
+ * refus du serveur en messages rattachés au bon champ. Les deux parcours
+ * partagent l'essentiel de leurs champs et de leurs règles, d'où leur
+ * réunion ici.
+ *
+ * @param isLogin Détermine le parcours : la connexion se contente d'une adresse
+ * et d'un mot de passe, l'inscription exige en plus le nom, le téléphone, la
+ * confirmation et l'acceptation des conditions.
+ * @returns Les valeurs de tous les champs et leurs accesseurs, les erreurs par
+ * champ, les indicateurs `isSubmitting` et `busy`, les validateurs unitaires à
+ * brancher sur la perte de focus, `handleSubmit`, les deux entrées
+ * d'authentification par compte tiers et `switchMode`.
+ *
+ * @remarks Les validateurs sont exposés individuellement pour être appelés à la
+ * sortie de chaque champ : signaler l'erreur au fil de la saisie évite de tout
+ * découvrir au moment de valider. La règle de robustesse du mot de passe n'est
+ * appliquée qu'à l'inscription, un compte ancien pouvant avoir un mot de passe
+ * qui ne la respecte plus. Les refus du serveur sont replacés sur le champ
+ * qu'ils concernent plutôt qu'affichés en boîte de dialogue, sauf lorsqu'aucun
+ * champ n'est désigné. Le cas d'un compte non vérifié n'est pas une erreur mais
+ * une redirection vers la saisie du code, d'où le rappel `onOtpRedirect` confié
+ * par l'écran. `busy` combine l'envoi local et le chargement du contexte
+ * d'authentification, l'un et l'autre devant neutraliser le bouton.
+ */
 export function useAuthForm(isLogin: boolean = false): UseAuthFormReturn {
   const [name,            setName]            = useState("");
   const [phone,           setPhone]           = useState("");

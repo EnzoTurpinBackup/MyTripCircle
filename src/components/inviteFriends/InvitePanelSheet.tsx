@@ -17,6 +17,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { User } from "../../types";
 import { AvatarBubble } from "./MemberRow";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface Props {
   inviteAnim: Animated.Value;
@@ -90,7 +91,7 @@ const InvitePanelSheet: React.FC<Props> = ({
                 { backgroundColor: colors.surface, borderColor: colors.border },
               ]}
             >
-              <Ionicons name="mail-outline" size={18} color={colors.textLight} />
+              <Ionicons name="mail-outline" size={18} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
               <TextInput
                 style={[s.emailInputTxt, { color: colors.text }]}
                 placeholder={t("inviteFriends.emailPlaceholder")}
@@ -133,7 +134,7 @@ const InvitePanelSheet: React.FC<Props> = ({
                           selected && [s.checkboxSelected, { backgroundColor: colors.terra, borderColor: colors.terra }],
                         ]}
                       >
-                        {selected && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
+                        {selected && <Ionicons name="checkmark" size={15} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />}
                       </View>
                     </TouchableOpacity>
                   );

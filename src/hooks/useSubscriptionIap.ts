@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
@@ -35,9 +35,48 @@ interface MockProduct {
   localizedPrice: string;
 }
 
-export function useSubscriptionIap() {
+interface UseSubscriptionIapOptions {
+  /**
+   * Notifié après la finalisation d'un achat dont le reçu a été validé par le
+   * serveur. Le hook n'accorde aucun droit lui-même : c'est à l'appelant de
+   * resynchroniser l'état d'abonnement qu'il détient.
+   */
+  onPurchaseSuccess?: () => void | Promise<void>;
+}
+
+/**
+ * Conduit l'achat d'un abonnement par la boutique de la plateforme : offre les
+ * formules disponibles, déclenche l'achat et fait valider le reçu par le
+ * serveur avant d'accorder le service.
+ *
+ * @param options `onPurchaseSuccess`, appelé une fois la transaction finalisée,
+ * pour que l'appelant resynchronise l'abonnement qu'il affiche.
+ *
+ * @returns Les formules à présenter, `loadingId` qui identifie celle dont
+ * l'achat est en cours, `onSubscribe` déclenchant l'achat, et `isExpoGo` qui
+ * signale un environnement dépourvu de boutique.
+ *
+ * @remarks Le module d'achat natif est chargé de manière conditionnelle : il
+ * est absent d'Expo Go, où son importation directe ferait échouer le
+ * démarrage. L'écran affiche d'abord des formules de repli traduites, puis les
+ * dernières formules mises en cache sur disque, avant les tarifs réels de la
+ * boutique ; cette gradation évite un écran de tarifs vide au premier rendu, la
+ * boutique étant lente à répondre. Le reçu est validé côté serveur avant que la
+ * transaction ne soit finalisée : une validation échouée laisse la transaction
+ * ouverte, ce qui la fait rejouer plutôt que de la perdre. La souscription
+ * reste possible sans que ce hook n'accorde lui-même le moindre droit, cette
+ * décision appartenant au serveur.
+ */
+export function useSubscriptionIap(options?: UseSubscriptionIapOptions) {
   const { t } = useTranslation();
   const isExpoGo = !isIapAvailable;
+
+  // Les écouteurs d'achat ne sont posés qu'une fois, au montage : ils ne
+  // peuvent pas capturer la fonction reçue en paramètre, qui change à chaque
+  // rendu de l'appelant. La référence, tenue à jour ici, leur donne la dernière
+  // version sans imposer de réabonner la boutique à chaque rendu.
+  const onPurchaseSuccessRef = useRef(options?.onPurchaseSuccess);
+  onPurchaseSuccessRef.current = options?.onPurchaseSuccess;
 
   const mockProducts = useMemo<MockProduct[]>(
     () => [
@@ -106,6 +145,18 @@ export function useSubscriptionIap() {
         });
 
         await RNIap.finishTransaction(purchase);
+
+        // L'achat est acquis dès que le serveur a validé le reçu ; sans cette
+        // resynchronisation, l'appelant continuerait d'afficher le catalogue et
+        // les limites du compte gratuit jusqu'au prochain démarrage. Son échec
+        // est journalisé sans être remonté : il ne doit pas faire passer un
+        // achat abouti pour une erreur de paiement.
+        try {
+          await onPurchaseSuccessRef.current?.();
+        } catch (refreshErr) {
+          logger.warn("subscription refresh after purchase error", refreshErr);
+        }
+
         setLoadingId(null);
         Alert.alert(t("subscription.purchaseSuccessTitle"), t("subscription.purchaseSuccessMessage"), [{ text: t("common.ok") }]);
       } catch (err) {
