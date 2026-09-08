@@ -1,3 +1,35 @@
+/**
+ * Fiche publique d'un autre utilisateur : son identité, ses statistiques de
+ * voyage, les séjours qu'il expose, et les actions possibles sur la relation.
+ *
+ * Besoin couvert : se faire une idée de quelqu'un — un inconnu croisé dans une
+ * suggestion, un membre d'un voyage partagé — puis décider d'engager la
+ * relation, de la rompre, ou de se protéger par un signalement ou un blocage.
+ *
+ * Position dans le parcours : atteint depuis FriendsScreen (carte d'ami ou de
+ * suggestion), depuis AddFriendScreen (résultat de recherche) et depuis la
+ * liste des membres d'un voyage. En sortie, TripPublicView pour un séjour
+ * exposé et InviteFriends pour convier l'intéressé à un voyage ; le retrait et
+ * le blocage referment l'écran, la fiche n'ayant plus de raison d'être.
+ *
+ * Données : tout passe par useFriendProfileActions, qui lit friendId et
+ * friendName dans les paramètres de route, charge la fiche via friendsApi,
+ * délègue l'établissement et la rupture du lien à FriendsContext, et adresse
+ * signalement et blocage à moderationApi. Le nom transmis par la navigation
+ * sert de repli tant que la fiche n'est pas revenue.
+ *
+ * Deux états de relation seulement sont distingués ici, par `isFriend` : amis,
+ * auquel cas la fiche s'ouvre aux voyages communs et à ceux réservés aux amis
+ * et propose l'invitation à un voyage ; sans lien, auquel cas seuls les voyages
+ * publics apparaissent et l'action principale devient l'envoi d'une demande.
+ * Une demande déjà envoyée ou déjà reçue n'est pas représentée : le serveur la
+ * signale au moment de l'envoi, par une erreur.
+ *
+ * États pris en charge : chargement (squelette sous une couverture déjà peuplée
+ * du nom transmis), profil fermé par son propriétaire (carte explicative, les
+ * actions restant accessibles), envoi de demande en cours (bouton neutralisé).
+ * Un échec de chargement est annoncé par une alerte et laisse la fiche vide.
+ */
 import React, { useState } from "react";
 import {
   View,
@@ -19,11 +51,23 @@ import TripSection from "../components/friendProfile/TripSection";
 import ProfileSkeleton from "../components/friendProfile/ProfileSkeleton";
 import ProfileActions from "../components/friendProfile/ProfileActions";
 import ReportSheet from "../components/moderation/ReportSheet";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Compose la fiche d'un autre utilisateur.
+ *
+ * Les paramètres de route — `friendId` et `friendName` — ne sont pas lus ici
+ * mais par useFriendProfileActions, seule la visibilité de la feuille de
+ * signalement restant un état local. Effets de bord notables — la fiche est
+ * chargée au montage et rechargée après une demande acceptée d'emblée ; le
+ * retrait comme le blocage ferment l'écran une fois confirmés.
+ */
 const FriendProfileScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { colors }  = useTheme();
   const insets      = useSafeAreaInsets();
+  // Repli sur l'anglais hors français : seules ces deux locales sont fournies,
+  // et un identifiant inconnu ferait échouer le formatage de la date.
   const locale      = i18n.language === "fr" ? "fr-FR" : "en-US";
   const [reportSheetVisible, setReportSheetVisible] = useState(false);
 
@@ -35,6 +79,8 @@ const FriendProfileScreen: React.FC = () => {
     goToTrip, navigateInvite, goBack,
   } = useFriendProfileActions();
 
+  // Les messages d'absence désignent la personne par son seul prénom, le nom
+  // complet répété à chaque section vide alourdissant la lecture.
   const firstName = (profile?.name || friendName).split(" ")[0];
 
   return (
@@ -55,9 +101,12 @@ const FriendProfileScreen: React.FC = () => {
 
           <BackButton variant="overlay" onPress={goBack} style={[styles.backBtn, { top: insets.top + 10 }]} />
 
+          {/* Le badge de relation attend la fin du chargement : isFriend vaut
+              faux tant que la fiche n'est pas revenue, l'afficher plus tôt
+              annoncerait un inconnu là où il peut s'agir d'un ami. */}
           {!loading && (
             <View style={[styles.amiBadge, { top: insets.top + 10 }, !isFriend && styles.amiBadgeStranger]}>
-              <Ionicons name={isFriend ? "checkmark" : "earth-outline"} size={15} color="#FFFFFF" />
+              <Ionicons name={isFriend ? "checkmark" : "earth-outline"} size={15} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={styles.amiBadgeText}>{isFriend ? t("friendProfile.badgeFriend") : t("friendProfile.badgePublic")}</Text>
             </View>
           )}
@@ -65,7 +114,8 @@ const FriendProfileScreen: React.FC = () => {
           <View style={styles.identity}>
             <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
               {profile?.avatar ? (
-                <Image source={{ uri: profile.avatar }} style={styles.avatarPhoto} />
+                /* Décorative : le nom du profil consulté est lu juste à côté. */
+                <Image source={{ uri: profile.avatar }} style={styles.avatarPhoto} {...DECORATIVE_ELEMENT_PROPS} />
               ) : (
                 <Text style={styles.avatarText}>{initials}</Text>
               )}
@@ -88,10 +138,15 @@ const FriendProfileScreen: React.FC = () => {
           {(() => {
             if (loading) return <ProfileSkeleton />;
 
+            // La comparaison stricte est nécessaire : un profil non encore
+            // chargé laisse le champ indéfini, ce qui ne doit pas être traité
+            // comme une fermeture explicite du profil par son propriétaire.
+            // Les actions restent proposées sous la carte : refuser l'accès à
+            // ses voyages n'empêche ni de solliciter ni de signaler.
             if (profile?.isPublicProfile === false) return ( // NOSONAR — distingue false de undefined (profil non chargé)
               <>
                 <View style={[styles.privateCard, { backgroundColor: colors.bgMid, borderColor: colors.border }]}>
-                  <Ionicons name="lock-closed" size={32} color={colors.textLight} />
+                  <Ionicons name="lock-closed" size={32} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={[styles.privateTitle, { color: colors.text }]}>{t("friendProfile.privateTitle")}</Text>
                   <Text style={[styles.privateSubtitle, { color: colors.textMid }]}>
                     {t("friendProfile.privateSubtitle", { name: firstName })}
@@ -111,6 +166,11 @@ const FriendProfileScreen: React.FC = () => {
               </>
             );
 
+            // Les trois sections découpent une même liste `sharedTrips`, dont
+            // le serveur a déjà retiré ce que la relation ne permet pas de
+            // voir. Les séjours « récents » sont ceux qui sont terminés, un
+            // voyage en cours relevant de l'actualité et non du souvenir ; la
+            // coupe à huit tient à la place disponible dans le carrousel.
             const recentTrips = (profile?.sharedTrips || [])
               .filter((t: any) => new Date(t.endDate) < new Date())
               .slice(0, 8);
@@ -134,6 +194,9 @@ const FriendProfileScreen: React.FC = () => {
                   ))}
                 </View>
 
+                {/* Voyages communs et voyages réservés aux amis ne sont
+                    montrés qu'aux amis : ces sections révèlent une proximité
+                    et un contenu que le lien seul autorise. */}
                 {isFriend && (
                   <TripSection
                     title={t("friendProfile.sectionCommonTrips")}
@@ -149,6 +212,8 @@ const FriendProfileScreen: React.FC = () => {
 
                 <TripSection
                   title={t("friendProfile.sectionRecentTrips")}
+                  // Sans lien d'amitié, cette section devient la première de la
+                  // page et n'a plus à se décoller de celle qui la précédait.
                   marginTop={isFriend ? 20 : 0}
                   trips={recentTrips}
                   emptyIcon="earth-outline"
@@ -204,6 +269,9 @@ const FriendProfileScreen: React.FC = () => {
         targetType="user"
         onClose={() => setReportSheetVisible(false)}
         onSubmit={async (reason) => {
+          // La feuille se referme avant l'envoi : le signalement n'a pas
+          // d'effet visible, garder la fenêtre ouverte laisserait croire
+          // qu'une décision se prend. Le hook annonce le résultat par alerte.
           setReportSheetVisible(false);
           await handleReport(reason);
         }}

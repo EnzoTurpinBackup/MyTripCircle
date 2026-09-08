@@ -1,3 +1,13 @@
+/**
+ * Politique de confidentialité : texte de référence sur le traitement des
+ * données personnelles.
+ *
+ * Atteinte sans être authentifié depuis le consentement du premier lancement et
+ * l'écran d'authentification, et une fois connecté depuis les réglages comme
+ * depuis la gestion des consentements. Ses onze sections viennent des fichiers
+ * i18n embarqués, ce qui la rend consultable hors connexion — condition pour
+ * qu'elle reste opposable —, et LegalScreen en assure la présentation.
+ */
 import React from "react";
 import { useTranslation } from "react-i18next";
 import LegalScreen from "../components/LegalScreen";

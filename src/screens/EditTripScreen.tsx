@@ -1,3 +1,34 @@
+/**
+ * Écran de modification d'un voyage existant : le seul endroit d'où l'on
+ * remanie l'ossature du séjour et son contenu en une seule passe.
+ *
+ * Besoin couvert : corriger ce qui a été saisi à la création — nom,
+ * destination, période, description, portée de partage — mais aussi faire
+ * passer le voyage du brouillon à l'état validé, changer sa couverture, gérer
+ * ses réservations et ses adresses, et le supprimer.
+ *
+ * Position dans le parcours : atteint depuis TripActions, lui-même ouvert par
+ * le crayon de l'en-tête de TripDetails. En sortie : TripDetails avec le
+ * drapeau de confirmation après enregistrement, InviteFriends pour la
+ * composition du groupe, AddressForm pour les adresses, et l'accueil après une
+ * suppression, la pile étant réinitialisée puisque l'écran de détail du voyage
+ * effacé n'a plus d'objet.
+ *
+ * Données : tout est porté par useEditTrip, qui charge la fiche, les
+ * réservations et les adresses via ApiService, puis écrit par les opérations de
+ * TripsContext (`updateTrip`, `deleteTrip`, créations et suppressions de
+ * réservations et d'adresses) pour que les autres onglets restent cohérents. Ce
+ * hook aplatit aussi l'état de useCalendarPicker, useTripBookings et
+ * useTripAddresses, d'où la taille de sa déstructuration.
+ *
+ * États pris en charge : chargement initial (squelette dédié), enregistrement
+ * en cours (bouton grisé, libellé remplacé par des points de suspension),
+ * hors-ligne (useOfflineDisabled neutralise l'enregistrement, le choix de
+ * photographie et la suppression), et permissions — la zone de suppression
+ * n'est montée que pour le propriétaire, les autres champs restant modifiables
+ * par un membre disposant du droit d'édition.
+ */
+
 import React, { useState } from "react";
 import {
   Alert,
@@ -44,6 +75,16 @@ import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 type EditTripRouteProp      = RouteProp<RootStackParamList, "EditTrip">;
 type EditTripNavigationProp = StackNavigationProp<RootStackParamList, "EditTrip">;
 
+/**
+ * Compose le formulaire de modification et branche ses sections sur useEditTrip.
+ *
+ * Aucune prop : le seul paramètre est `tripId`, lu dans la route ici pour la
+ * navigation vers les invitations et de nouveau par le hook. Effets de bord —
+ * chargement de la fiche et de son contenu au montage, resynchronisation des
+ * adresses à chaque prise de focus (elles se saisissent ailleurs), demande de
+ * la permission d'accès à la photothèque, recherche réseau d'une photographie
+ * quand la destination change, réinitialisation de la pile après suppression.
+ */
 const EditTripScreen: React.FC = () => {
   const navigation = useNavigation<EditTripNavigationProp>();
   const route      = useRoute<EditTripRouteProp>();
@@ -68,6 +109,8 @@ const EditTripScreen: React.FC = () => {
   const [showAddressPicker, setShowAddressPicker] = useState(false);
 
   const handleAddBookingPress = () => {
+    // Rien à reprendre ailleurs : le choix « créer ou copier » se réduirait à
+    // une seule branche, on ouvre donc directement le formulaire.
     if (!otherBookings.length) {
       handleAddBooking();
       return;
@@ -87,16 +130,27 @@ const EditTripScreen: React.FC = () => {
     ]);
   };
 
+  // Mois et initiales de jours tiennent chacun en une seule clé de traduction
+  // séparée par des virgules : le traducteur garde ainsi la maîtrise de l'ordre
+  // des jours, qui varie selon la convention de la langue.
   const MONTHS = t("editTrip.monthNames").split(",");
   const DAYS   = t("editTrip.dayInitials").split(",");
+  // iOS remonte la vue au-dessus du clavier, Android redimensionne la fenêtre :
+  // la même valeur sur les deux plateformes laisse un décalage résiduel.
   const kvaBehavior = Platform.OS === "ios" ? "padding" : "height";
 
+  // Options déclarées dans le composant : leurs libellés dépendent de la langue
+  // et leurs teintes du thème, deux valeurs qui changent en cours d'exécution.
+  // L'ordre va du plus restreint au plus ouvert, pour qu'élargir la diffusion
+  // reste un geste délibéré.
   const visibilityOptions: RadioOption<"private" | "friends" | "public">[] = [
     { value: "private", label: t("editTrip.visibilityPrivate"), desc: t("editTrip.visibilityPrivateDesc"), emoji: "🔒", selBg: colors.terraLight, selColor: colors.terra, dotColor: colors.terra },
     { value: "friends", label: t("editTrip.visibilityFriends"), desc: t("editTrip.visibilityFriendsDesc"), emoji: "👥", selBg: "#DCF0F5", selColor: "#5A8FAA", dotColor: "#5A8FAA" },
     { value: "public",  label: t("editTrip.visibilityPublic"),  desc: t("editTrip.visibilityPublicDesc"),  emoji: "🌐", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
   ];
 
+  // Choix réversible, là où la bannière de TripDetails ne propose que la
+  // validation : un voyage validé par erreur peut revenir au brouillon.
   const statusOptions: RadioOption<"draft" | "validated">[] = [
     { value: "draft",     label: t("editTrip.statusDraft"),     desc: t("editTrip.statusDraftDesc"),     emoji: "📝", selBg: colors.bgMid, selColor: colors.textMid, dotColor: colors.textMid },
     { value: "validated", label: t("editTrip.statusValidated"), desc: t("editTrip.statusValidatedDesc"), emoji: "✅", selBg: "#E2EDD9", selColor: "#6B8C5A", dotColor: "#6B8C5A" },
@@ -110,6 +164,10 @@ const EditTripScreen: React.FC = () => {
       <SafeAreaView style={[s.safeArea, { backgroundColor: colors.bgLight }]} edges={["top"]}>
 
         {/* ── Header ── */}
+        {/* Le retour passe par `handleCancel` et non par `goBack` : quitter
+            perdrait les modifications non enregistrées, d'où la confirmation.
+            La pastille d'enregistrement perd son ombre une fois neutralisée,
+            sans quoi elle se détacherait encore comme une action disponible. */}
         <View style={[s.header, { backgroundColor: colors.bgLight, borderBottomColor: colors.border }]}>
           <BackButton onPress={handleCancel} />
           <Text style={[s.headerTitle, { color: colors.text }]}>{t("editTrip.screenTitle")}</Text>
@@ -118,6 +176,9 @@ const EditTripScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Le calendrier s'insère dans le flux plutôt que dans une modale :
+            faute de fond assombri qui signalerait qu'il faut en sortir, tout
+            toucher extérieur le referme, comme la prise de focus d'un champ. */}
         <TouchableWithoutFeedback onPress={closeCalendar}>
           <ScrollView style={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
@@ -125,10 +186,15 @@ const EditTripScreen: React.FC = () => {
             <TouchableOpacity style={[s.cover, offlineStyle]} onPress={handlePickCoverPhoto} disabled={offlineDisabled} activeOpacity={0.9}>
               {formData.coverImage ? (
                 <>
-                  <Image source={{ uri: formData.coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+                  {/* Informative : signale qu'une couverture est déjà en place, ce que le bouton « changer » ne dit pas. */}
+                  <Image source={{ uri: formData.coverImage }} style={StyleSheet.absoluteFillObject} resizeMode="cover" accessibilityLabel={t("editTrip.a11y.currentCover")} />
+                  {/* Dégradé assombrissant : la photographie est arbitraire, le
+                      bouton posé dessus doit rester lisible quoi qu'il arrive. */}
                   <LinearGradient colors={["transparent", "rgba(15,8,2,0.55)"]} style={StyleSheet.absoluteFillObject} start={{ x: 0, y: 0.3 }} end={{ x: 0, y: 1 }} />
                 </>
               ) : (
+                /* Sans photographie, un aplat sombre plutôt qu'un vide : la zone
+                   se lit comme un emplacement à remplir, non comme un défaut. */
                 <LinearGradient colors={["#3A3020", "#1E1A10"]} style={StyleSheet.absoluteFillObject} />
               )}
               <View style={[s.coverBtn, { backgroundColor: isDark ? "rgba(30,30,30,0.85)" : "rgba(255,255,255,0.90)" }]}>
@@ -291,6 +357,10 @@ const EditTripScreen: React.FC = () => {
               />
 
               {/* ── Zone dangereuse ── */}
+              {/* Seul le propriétaire peut supprimer le voyage : un éditeur en
+                  modifie le contenu mais ne dispose pas du séjour des autres.
+                  `isOwner` vient de la comparaison faite par useEditTrip, et le
+                  serveur revérifie l'opération de toute façon. */}
               {isOwner && (
                 <EditTripDangerZone
                   dangerLight={colors.dangerLight}
@@ -306,6 +376,9 @@ const EditTripScreen: React.FC = () => {
         </TouchableWithoutFeedback>
       </SafeAreaView>
 
+      {/* Modales montées hors du SafeAreaView pour couvrir l'écran entier. Un
+          index d'édition nul distingue l'ajout de la modification : une
+          réservation pas encore enregistrée n'a pas d'identifiant à comparer. */}
       <BookingForm
         visible={showBookingForm}
         onClose={closeBookingForm}

@@ -217,7 +217,10 @@ export type RootStackParamList = {
   ConsentManagement: undefined;
   CalendarExport: undefined;
   ChangePassword: undefined;
-  ForgotPassword: { token?: string };
+  // Le nom du paramètre suit celui du lien émis par le serveur
+  // (`mytripcircle://reset-password?code=…`) et déclaré dans le `parse` du
+  // navigateur : toute divergence rend le deep link inopérant en silence.
+  ForgotPassword: { code?: string };
   HelpSupport: undefined;
   Subscription: undefined;
   Terms: undefined;

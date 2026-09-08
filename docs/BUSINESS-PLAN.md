@@ -176,7 +176,9 @@
 
 ### Modèle de Paiement Mobile (IAP)
 
-Les abonnements sont gérés via les stores natifs (**App Store Connect** et **Google Play Billing**) — c'est une obligation légale sur iOS et la norme sur Android.
+Ce document est prospectif : il décrit un modèle économique envisagé, pas un état de fait. À ce jour, l'application n'est publiée sur aucun magasin et aucune transaction n'a été encaissée.
+
+Les abonnements seraient gérés via les stores natifs (**App Store Connect** et **Google Play Billing**) — c'est une obligation sur iOS et la norme sur Android.
 
 **Impact sur la marge :**
 
@@ -278,7 +280,7 @@ Les abonnements sont gérés via les stores natifs (**App Store Connect** et **G
 
 #### Phase 1 : Préparation (Mois 1-2)
 - [x] Implémentation du système d'abonnements
-- [x] Intégration des paiements via IAP (App Store / Google Play)
+- [x] Intégration du code de paiement IAP iOS (StoreKit + validation du reçu côté serveur) — non éprouvé contre l'App Store ; Google Play non implémenté
 - [x] Développement de la version freemium (limites par plan)
 - [ ] Dashboard analytics pour suivre les conversions
 - [ ] Finaliser l'export PDF des itinéraires
@@ -448,7 +450,7 @@ MyTripCircle a un fort potentiel de monétisation grâce à :
 
 **Prochaines Étapes Immédiates :**
 1. ~~Implémenter le système d'abonnements~~ ✅ Fait
-2. ~~Intégrer les paiements~~ ✅ Fait (IAP App Store / Google Play)
+2. Intégrer les paiements : code IAP iOS écrit et testé ; restent à ouvrir un compte Apple Developer et à l'éprouver contre l'App Store
 3. ~~Développer les limites freemium~~ ✅ Fait
 4. Finaliser l'export PDF des itinéraires
 5. Implémenter les templates de voyages et la gestion de budget

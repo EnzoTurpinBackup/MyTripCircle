@@ -6,6 +6,7 @@ import { RADIUS } from "../../theme";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { timeAgo, iconForStatus, titleForInvitation, subtitleForInvitation } from "../../utils/notificationHelpers";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 export interface NotifItemProps {
   invitation: any;
@@ -58,7 +59,7 @@ const NotifItem: React.FC<NotifItemProps> = ({
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons name="checkmark" size={15} color="#FFFFFF" style={{ marginRight: 4 }} />
+                  <Ionicons name="checkmark" size={15} color="#FFFFFF" style={{ marginRight: 4 }} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={styles.acceptText}>{t("notifications.accept")}</Text>
                 </>
               )}
@@ -69,7 +70,7 @@ const NotifItem: React.FC<NotifItemProps> = ({
               disabled={responding}
               activeOpacity={0.8}
             >
-              <Ionicons name="close" size={15} color={colors.textMid} style={{ marginRight: 4 }} />
+              <Ionicons name="close" size={15} color={colors.textMid} style={{ marginRight: 4 }} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[styles.declineText, { color: colors.textMid }]}>{t("notifications.decline")}</Text>
             </TouchableOpacity>
           </View>

@@ -6,6 +6,7 @@ import { Address } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
 import ItemActionSheet from "../ItemActionSheet";
 import { tabSharedStyles as s } from "./tabSharedStyles";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const addressStripeColor = (type: string): string => {
   switch (type) {
@@ -88,7 +89,7 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
           <Text style={[s.emptyText, { color: colors.textMid }]}>{t("tripDetails.noAddresses")}</Text>
           {canAdd && onAddAddress && (
             <TouchableOpacity style={[s.addBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddAddress} activeOpacity={0.8}>
-              <Ionicons name="add" size={18} color={colors.textMid} />
+              <Ionicons name="add" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addAddress")}</Text>
             </TouchableOpacity>
           )}
@@ -101,7 +102,7 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
     <View style={s.tabContent}>
       {canAdd && onAddAddress && (
         <TouchableOpacity style={[s.addBtnTop, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onAddAddress} activeOpacity={0.8}>
-          <Ionicons name="add-circle-outline" size={18} color={colors.textMid} />
+          <Ionicons name="add-circle-outline" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.addBtnText, { color: colors.textMid }]}>{t("tripDetails.addAddress")}</Text>
         </TouchableOpacity>
       )}
@@ -117,13 +118,13 @@ const AddressesTab: React.FC<Props> = ({ addresses, onEditAddress, onAddAddress,
           >
             <View style={[s.listStripe, { backgroundColor: stripe }]} />
             <View style={[s.listIconWrap, { backgroundColor: iconBg }]}>
-              <Ionicons name={addressIconName(address.type)} size={22} color={stripe} />
+              <Ionicons name={addressIconName(address.type)} size={22} color={stripe} {...DECORATIVE_ELEMENT_PROPS} />
             </View>
             <View style={s.listInfo}>
               <Text style={[s.listTitle, { color: colors.text }]} numberOfLines={1}>{address.name}</Text>
               <Text style={[s.listSub, { color: colors.textLight }]} numberOfLines={1}>{address.address}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+            <Ionicons name="chevron-forward" size={20} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
           </TouchableOpacity>
         );
       })}

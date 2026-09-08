@@ -1,3 +1,36 @@
+/**
+ * Écran de composition du groupe d'un voyage : qui en fait déjà partie, qui a
+ * été convié sans avoir répondu, et comment inviter d'autres personnes.
+ *
+ * Besoin couvert : réunir autour d'un séjour des proches qui utilisent déjà
+ * l'application comme des personnes extérieures, puis administrer le groupe —
+ * retirer un participant, transmettre l'organisation, revenir sur une
+ * invitation restée sans réponse.
+ *
+ * Position dans le parcours : atteint depuis TripDetails, TripActions,
+ * TripMembers et EditTrip, toujours avec l'identifiant du voyage. En sortie,
+ * FriendProfile depuis la fiche d'un membre, et le retour à l'écran précédent —
+ * y compris immédiatement, lorsque les droits d'invitation font défaut.
+ *
+ * Données : tout passe par useInviteFriends, qui compose le voyage et ses
+ * collaborateurs (tripsApi), les invitations nominatives en attente
+ * (usePendingInvitations), le lien partageable et son renouvellement
+ * (useInvitationLink), l'envoi d'un lot d'invitations (useSendInvitations) et
+ * les actions sur les membres (useTripMembers). Les noms et avatars des
+ * participants viennent de la liste d'amis de FriendsContext : un membre
+ * étranger au cercle n'affiche donc qu'un libellé générique.
+ *
+ * L'invitation à un voyage est distincte de la demande d'amitié : elle accorde
+ * des droits sur un séjour précis et ne noue aucun lien social durable. Les
+ * invités reçoivent le rôle d'éditeur sans droit d'inviter à leur tour.
+ *
+ * États pris en charge : chargement (squelette reprenant la structure de
+ * l'écran), action en cours (voile plein écran), lien non encore émis (libellé
+ * d'attente, partage neutralisé), hors-ligne (invitation, partage et
+ * renouvellement neutralisés), droits insuffisants (alerte puis retour). Un
+ * échec de chargement du voyage alerte et laisse l'écran vide ; un échec de
+ * chargement du lien reste silencieux, les autres modes restant utilisables.
+ */
 import React from "react";
 import {
   View,
@@ -24,12 +57,30 @@ import InvitePanelSheet from "../components/inviteFriends/InvitePanelSheet";
 import { F } from "../theme/fonts";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
+/**
+ * Nombre de jours restants avant l'expiration du lien d'invitation. L'arrondi
+ * se fait au jour supérieur et le résultat est borné à zéro : une échéance déjà
+ * passée doit se lire « expire aujourd'hui » plutôt qu'afficher un compte
+ * négatif, l'expiration réelle étant de toute façon décidée par le serveur.
+ */
 const daysUntil = (date: Date) =>
   Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86400000));
 
 type ScreenRouteProp = RouteProp<RootStackParamList, "InviteFriends">;
 type ScreenNavProp = StackNavigationProp<RootStackParamList, "InviteFriends">;
 
+/**
+ * Compose l'écran d'administration du groupe d'un voyage.
+ *
+ * @param route.params.tripId Voyage dont on gère les participants ; seul
+ * paramètre, il conditionne l'intégralité du contenu.
+ *
+ * Effets de bord notables — chargement du voyage, des invitations en attente et
+ * du lien partageable au montage ; ouverture de la feuille de partage du
+ * système lors du partage du lien ; émission d'un nouveau lien, qui invalide le
+ * précédent ; retour forcé à l'écran précédent si le compte n'a pas le droit
+ * d'inviter sur ce voyage.
+ */
 const InviteFriendsScreen: React.FC = () => {
   const route = useRoute<ScreenRouteProp>();
   const navigation = useNavigation<ScreenNavProp>();
@@ -77,6 +128,9 @@ const InviteFriendsScreen: React.FC = () => {
     handleSendInvitations,
   } = useInviteFriends(tripId);
 
+  // Le squelette reproduit la structure définitive — en-tête, carte de voyage,
+  // lien, puis lignes de membres — pour que l'arrivée des données ne
+  // réorganise pas la page sous les yeux de l'utilisateur.
   if (loading) {
     return (
       <SafeAreaView style={[s.safe, { backgroundColor: colors.bgLight }]} edges={["top", "left", "right"]}>
@@ -148,16 +202,23 @@ const InviteFriendsScreen: React.FC = () => {
               style={[s.linkUrl, { color: colors.textMid, backgroundColor: colors.surface }]}
               numberOfLines={1}
             >
+              {/* Un libellé d'attente occupe la place du lien : la carte garde
+                  sa hauteur, et l'utilisateur comprend que le lien arrive. */}
               {invitationLink || t("inviteFriends.linkGenerating")}
             </Text>
             <TouchableOpacity
               style={[s.copyBtn, { backgroundColor: colors.terra }, offlineStyle]}
               onPress={handleShareLink}
+              // Partager avant l'arrivée du lien enverrait un message vide au
+              // destinataire, sans moyen de s'en apercevoir.
               disabled={!invitationLink || offlineDisabled}
             >
               <Text style={s.copyBtnTxt}>{t("inviteFriends.linkShare")}</Text>
             </TouchableOpacity>
           </View>
+          {/* L'échéance et le renouvellement n'apparaissent qu'une fois le lien
+              obtenu : proposer de renouveler un lien inexistant n'aurait pas
+              de sens, et le renouvellement invalide le lien déjà transmis. */}
           {linkExpiry && (
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
               <Text style={[s.expiryTxt, { color: colors.terra }]}>
@@ -177,6 +238,9 @@ const InviteFriendsScreen: React.FC = () => {
           )}
         </View>
 
+        {/* Le propriétaire a sa propre section : il est le seul à pouvoir
+            retirer un participant ou transmettre l'organisation, d'où le
+            drapeau isOwner porté par chaque ligne. */}
         {owner && (
           <>
             <Text style={[s.sec, { color: colors.textMid }]}>
@@ -214,6 +278,8 @@ const InviteFriendsScreen: React.FC = () => {
           </>
         )}
 
+        {/* Second accès au panneau d'invitation : après avoir parcouru les
+            membres, l'utilisateur n'a pas à remonter jusqu'à l'en-tête. */}
         <TouchableOpacity
           style={[s.addBtn, { backgroundColor: colors.bg, borderColor: colors.border }]}
           onPress={openInvitePanel}
@@ -227,12 +293,18 @@ const InviteFriendsScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
+      {/* Voile bloquant plutôt qu'indicateur local : ces actions modifient la
+          composition du groupe, un second geste pendant l'opération porterait
+          sur une liste déjà obsolète. */}
       {actionLoading && (
         <View style={s.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.terra} />
         </View>
       )}
 
+      {/* Les deux feuilles ne sont montées que lorsqu'elles servent : leurs
+          valeurs animées repartent ainsi de leur position fermée à chaque
+          ouverture, sans avoir à les réinitialiser. */}
       {selectedMember && (
         <MemberActionSheet
           member={selectedMember}

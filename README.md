@@ -14,7 +14,7 @@ Application mobile collaborative de planification de voyages entre amis, constru
 ### Réservations
 
 - Gérer vols, trains, hôtels, restaurants et activités
-- Scanner des billets (QR/code-barres + OCR via l'API Anthropic Claude)
+- Scanner des billets (lecture du code-barres BCBP via ML Kit, sur l'appareil) — _OCR par IA pour les billets sans code-barres : prévu, non activé_
 - Suivi du statut (confirmé, en attente, annulé)
 
 ### Idées & Itinéraires IA
@@ -110,7 +110,7 @@ MyTripCircle/
 
 ### Prérequis
 
-- Node.js ≥ 18
+- Node.js ≥ 22
 - npm
 - Expo CLI (`npx expo`)
 - Instance MongoDB (locale ou Atlas)
@@ -183,7 +183,76 @@ MyTripCircle/
 | `npm run server` | Lancer le backend Express |
 | `npm run ios` | Build et lancement iOS |
 | `npm run android` | Build et lancement Android |
-| `npm run seed` | Alimenter la base avec des données de test |
+| `npm test` | Lancer les tests (client, serveur, scripts) |
+| `npm run seed` | Alimenter la base avec le jeu de démonstration |
+| `npm run test-db` | Vérifier la connexion à MongoDB et l'état de la base |
+
+## Base de données — vérification et jeu de démonstration
+
+Deux commandes couvrent la mise en route d'une base neuve. Elles se lancent
+depuis la racine du dépôt, sans dépendance supplémentaire à installer.
+
+### Variables d'environnement requises
+
+| Variable | Utilisée par | Rôle |
+|---|---|---|
+| `MONGODB_URI` | `test-db`, `seed` | Chaîne de connexion (`mongodb://` ou `mongodb+srv://`) |
+| `DB_NAME` | `test-db`, `seed` | Nom de la base ; `mytripcircle` par défaut |
+| `ENCRYPTION_KEY` | `seed` | Clé AES-256 (64 caractères hexadécimaux) — les données personnelles sont chiffrées en base |
+| `HMAC_KEY` | `seed` | Clé HMAC (64 caractères hexadécimaux) — empreintes de recherche |
+
+Toutes figurent dans `.env.example`. Une commande lancée sans ces variables
+s'arrête immédiatement en les nommant, sans tenter de se connecter.
+
+### Ordre de mise en route
+
+```bash
+npm run server   # premier démarrage : crée les index et les validateurs
+npm run seed     # écrit le jeu de démonstration
+npm run test-db  # vérifie connexion, collections et index critiques
+```
+
+### `npm run test-db` — test de connexion
+
+Ouvre la connexion, envoie un `ping`, liste les collections avec leur nombre de
+documents, puis vérifie la présence des index critiques (unicité de
+`users.emailHash`, index TTL portant les durées de conservation). Sort en code
+`0` si tout est vérifié, `1` sinon — connexion impossible, variable manquante
+ou index absent — avec le message de correction correspondant. Aucun contenu de
+document n'est affiché, et la chaîne de connexion est journalisée sans ses
+identifiants.
+
+### `npm run seed` — alimentation initiale
+
+Écrit un jeu de démonstration de 15 documents : 3 comptes vérifiés, 2 voyages
+(dont un partagé avec un collaborateur), 4 réservations couvrant les quatre
+types gérés, 3 adresses, la relation d'amitié réciproque et un abonnement
+premium.
+
+| Option | Effet |
+|---|---|
+| _(aucune)_ | Écrit le jeu ; refuse si la base contient des documents étrangers |
+| `--force` | Écrit malgré la présence d'autres documents (aucun n'est supprimé) |
+| `--clean` | Retire le jeu de démonstration, et lui seul |
+
+Le script est **idempotent** : chaque document porte un identifiant figé, une
+seconde exécution met à jour les mêmes documents au lieu d'en créer d'autres.
+Il refuse de s'exécuter sur une base contenant des données qu'il n'a pas
+écrites, ainsi que lorsque `NODE_ENV=production`, sauf `--force` explicite.
+
+Les comptes créés utilisent le domaine `example.com` (réservé à la
+documentation par la RFC 2606) et des numéros de la plage `+3363998xxxx`
+(réservée à la fiction par l'ARCEP) : **aucune donnée personnelle réelle** ne
+figure dans le jeu, et aucun secret n'y est écrit en dur.
+
+| Compte | Rôle dans le jeu |
+|---|---|
+| `alice.demo@example.com` | Propriétaire des deux voyages, abonnement premium |
+| `bruno.demo@example.com` | Collaborateur du voyage « Week-end à Porto » |
+| `chloe.demo@example.com` | Compte sans voyage, offre gratuite |
+
+Mot de passe commun : `Demo!Passw0rd` — valeur de démonstration, sans usage hors
+d'une base locale.
 
 ## Navigation
 

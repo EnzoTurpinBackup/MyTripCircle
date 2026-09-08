@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Trip } from "../../types";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const formatShortDate = (date: Date, monthsShort: string[]): string => {
   const d = new Date(date);
@@ -27,7 +28,8 @@ const TripMiniCard: React.FC<Props> = ({ trip, photoUri, onPress }) => {
       onPress={onPress}
       activeOpacity={0.85}
     >
-      <Image source={{ uri: photoUri }} style={styles.miniPhoto} resizeMode="cover" />
+      {/* Décorative : le titre et les dates du voyage suivent dans la même carte. */}
+      <Image source={{ uri: photoUri }} style={styles.miniPhoto} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
       <View style={styles.miniBottom}>
         <Text style={[styles.miniName, { color: colors.text }]} numberOfLines={1}>{trip.title}</Text>
         <Text style={[styles.miniDate, { color: colors.textLight }]}>

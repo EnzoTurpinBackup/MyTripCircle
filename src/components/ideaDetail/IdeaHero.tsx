@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { F } from "../../theme/fonts";
 import BackButton from "../ui/BackButton";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const HERO_H = SCREEN_H * 0.46;
@@ -32,10 +33,12 @@ const IdeaHero: React.FC<Props> = ({ ideaId, name, country, onBack }) => {
   const { top: insetTop } = useSafeAreaInsets();
   return (
     <View style={s.heroContainer}>
+      {/* Décorative : le nom et le pays de la destination sont lus en dessous. */}
       <Image
         source={{ uri: DESTINATION_IMAGES[ideaId] }}
         style={s.heroImage}
         resizeMode="cover"
+        {...DECORATIVE_ELEMENT_PROPS}
       />
       <LinearGradient
         colors={["rgba(0,0,0,0.25)", "transparent", "rgba(15,8,2,0.65)"]}

@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, RADIUS, DISABLED_OPACITY } from "../theme";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 // Design-system tokens (invariants entre thèmes)
 const TERRA        = COLORS.terra;       // bordure du bouton outline (contraste >= 3:1, OK clair & sombre)
@@ -80,6 +81,7 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
               size={iconSize}
               color={iconColor}
               style={styles.iconLeft}
+              {...DECORATIVE_ELEMENT_PROPS}
             />
           )}
           <Text
@@ -99,6 +101,7 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
               size={iconSize}
               color={iconColor}
               style={styles.iconRight}
+              {...DECORATIVE_ELEMENT_PROPS}
             />
           )}
         </>

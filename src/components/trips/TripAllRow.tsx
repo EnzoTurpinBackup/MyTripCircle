@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { Trip } from "../../types";
 import { RADIUS } from "../../theme";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const formatShortDate = (date: Date, monthsShort: string[]): string => {
   const d = new Date(date);
@@ -29,14 +30,15 @@ const TripAllRow: React.FC<Props> = ({ trip, photoUri, onPress }) => {
       onPress={onPress}
       activeOpacity={0.85}
     >
-      <Image source={{ uri: photoUri }} style={styles.allTripPhoto} resizeMode="cover" />
+      {/* Décorative : le titre et la destination du voyage suivent dans la même ligne. */}
+      <Image source={{ uri: photoUri }} style={styles.allTripPhoto} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
       <View style={styles.allTripInfo}>
         <Text style={[styles.allTripName, { color: colors.text }]} numberOfLines={1}>{trip.title}</Text>
         <Text style={[styles.allTripMeta, { color: colors.textMid }]} numberOfLines={1}>
           📍 {trip.destination} · {formatShortDate(trip.startDate, monthsShort)}–{formatShortDate(trip.endDate, monthsShort)}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={14} color={colors.textLight} />
+      <Ionicons name="chevron-forward" size={14} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
     </TouchableOpacity>
   );
 };

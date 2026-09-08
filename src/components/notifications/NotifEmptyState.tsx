@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const NotifEmptyState: React.FC = () => {
   const { t } = useTranslation();
@@ -11,7 +12,7 @@ const NotifEmptyState: React.FC = () => {
   return (
     <View style={styles.emptyWrap}>
       <View style={[styles.emptyIconBox, { backgroundColor: colors.bgMid }]}>
-        <Ionicons name="notifications-off-outline" size={40} color={colors.textLight} />
+        <Ionicons name="notifications-off-outline" size={40} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("notifications.allRead")}</Text>
       <Text style={[styles.emptySub, { color: colors.textMid }]}>{t("notifications.allReadMessage")}</Text>

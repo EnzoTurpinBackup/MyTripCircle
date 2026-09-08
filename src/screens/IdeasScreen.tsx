@@ -1,3 +1,30 @@
+/**
+ * Écran d'inspiration, troisième onglet de l'application.
+ *
+ * Besoin couvert : trouver où partir quand rien n'est encore décidé. Deux voies
+ * cohabitent : parcourir un catalogue de destinations éditorialisées, ou
+ * décrire une ville et une durée pour obtenir un programme jour par jour,
+ * transformable en voyage complet d'un seul geste.
+ *
+ * Position dans le parcours : onglet Ideas de MainTabs, atteint par la barre
+ * d'onglets ou par balayage depuis Bookings ou Addresses. En sortie, IdeaDetail
+ * en touchant une destination du catalogue, et TripDetails lorsqu'un programme
+ * généré est converti en voyage.
+ *
+ * Données : useIdeas assemble le catalogue à partir d'une liste constante de
+ * destinations — seules la catégorie et l'illustration y figurent, les noms et
+ * pays venant des fichiers de traduction. La génération du programme est
+ * confiée au serveur par itineraryApi, qui conserve la clé du service tiers et
+ * mutualise son cache ; la conversion en voyage passe par createTrip,
+ * createBooking et createAddress de TripsContext, chaque étape interrogeant
+ * PlacesService pour obtenir une adresse réelle.
+ *
+ * États pris en charge : recherche sans résultat (message dans la grille),
+ * génération en cours et création du voyage en cours (indicateurs dans la
+ * fenêtre), quota quotidien de génération épuisé et service non configuré
+ * (alertes distinctes d'une panne ordinaire). Le catalogue étant local, l'écran
+ * n'a ni état de chargement ni état vide.
+ */
 import React from "react";
 import {
   View,
@@ -18,11 +45,24 @@ import IdeaCard from "../components/ideas/IdeaCard";
 import ItineraryModal from "../components/ideas/ItineraryModal";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Compose la vue d'inspiration.
+ *
+ * Monté par le navigateur d'onglets, l'écran ne reçoit aucune prop de route :
+ * recherche, filtre et état de la fenêtre de génération viennent tous de
+ * useIdeas. Effets de bord notables — appel au service de génération
+ * d'itinéraire, puis, à la validation, création en chaîne d'un voyage, de ses
+ * réservations et de ses adresses, suivie d'une navigation vers le voyage créé.
+ */
 const IdeasScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  // Réserve pour la barre d'onglets flottante : sans elle, la dernière rangée
+  // de la grille resterait masquée. Le plancher de 12 points préserve une marge
+  // sur les appareils sans encoche, où l'inset bas vaut zéro.
   const scrollPaddingBottom = 100 + Math.max(insets.bottom, 12);
   const {
     search,
@@ -53,6 +93,8 @@ const IdeasScreen: React.FC = () => {
   } = useIdeas();
 
   return (
+    // L'index 2 est le rang de l'onglet Ideas dans MainTabs : il détermine vers
+    // quels onglets voisins le balayage horizontal renvoie.
     <SwipeToNavigate currentIndex={2} totalTabs={5}>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
@@ -62,6 +104,9 @@ const IdeasScreen: React.FC = () => {
             <Text style={[styles.headerEyebrow, { color: colors.textLight }]}>{t("ideas.subtitle")}</Text>
             <Text style={[styles.headerTitle, { color: colors.text }]}>{t("ideas.title")}</Text>
           </View>
+          {/* Porte d'entrée de la génération assistée. L'ouverture repart d'un
+              état vierge : ville, durée et programme précédents sont effacés,
+              une fenêtre rouverte sur un résultat ancien prêtant à confusion. */}
           <TouchableOpacity
             style={[styles.sparkleBtn, { backgroundColor: colors.terraLight }]}
             onPress={openModal}
@@ -72,7 +117,7 @@ const IdeasScreen: React.FC = () => {
         </View>
 
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="search" size={18} color={colors.textLight} />
+          <Ionicons name="search" size={18} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder={t("ideas.searchPlaceholder")}
@@ -82,7 +127,12 @@ const IdeasScreen: React.FC = () => {
             returnKeyType="search"
           />
           {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={() => setSearch("")}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.clearSearch")}
+            >
               <Ionicons name="close-circle" size={18} color={colors.textLight} />
             </TouchableOpacity>
           )}
@@ -121,9 +171,15 @@ const IdeasScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           numColumns={2}
           style={{ flex: 1 }}
+          // L'index est transmis à la fiche pour qu'elle sache si elle occupe la
+          // colonne de gauche ou celle de droite et décale sa marge en
+          // conséquence : la grille elle-même n'a pas d'espacement entre colonnes.
           renderItem={({ item, index }) => <IdeaCard item={item} index={index} />}
           contentContainerStyle={[styles.grid, { paddingBottom: scrollPaddingBottom }]}
           showsVerticalScrollIndicator={false}
+          // Le catalogue étant constant, la grille ne peut être vide que du fait
+          // de la recherche ou du filtre : le message porte donc sur l'absence
+          // de résultat, et non sur un carnet d'idées à constituer.
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("ideas.noResults")}</Text>
@@ -141,6 +197,9 @@ const IdeasScreen: React.FC = () => {
           loading={loading}
           itinerary={itinerary}
           showCreateStep={showCreateStep}
+          // La date de départ est ramenée au jour courant au moment d'ouvrir
+          // l'étape de création : sans cela, une date choisie lors d'une
+          // génération précédente, éventuellement passée, serait reconduite.
           onShowCreateStep={() => { setStartDate(new Date()); setShowCreateStep(true); }}
           onBackFromCreate={() => setShowCreateStep(false)}
           startDate={startDate}

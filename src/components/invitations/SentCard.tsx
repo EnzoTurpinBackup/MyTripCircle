@@ -7,6 +7,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { cardStyles } from "./cardStyles";
 import { getBannerGradient, formatRelative, formatDateRange, tripDuration } from "../../utils/invitationUtils";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface SentProps {
   invitation: any;
@@ -52,14 +53,14 @@ const SentCard: React.FC<SentProps> = ({ invitation: inv, disabled, onViewTrip, 
   } else if (status === "expired") {
     actionEl = (
       <View style={cardStyles.expiredRow}>
-        <Ionicons name="hourglass-outline" size={16} color={colors.textLight} />
+        <Ionicons name="hourglass-outline" size={16} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[cardStyles.expiredText, { color: colors.textLight }]}>{t("invitation.expiredLabel")}</Text>
       </View>
     );
   } else if (status === "pending") {
     actionEl = (
       <TouchableOpacity style={[cardStyles.cancelInviteBtn, { backgroundColor: colors.dangerLight }, disabled && { opacity: 0.4 }]} onPress={onCancel} disabled={disabled} activeOpacity={0.85}>
-        <Ionicons name="close-outline" size={18} color={colors.danger} />
+        <Ionicons name="close-outline" size={18} color={colors.danger} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[cardStyles.cancelInviteText, { color: colors.danger }]}>{t("invitation.cancelInviteBtn")}</Text>
       </TouchableOpacity>
     );

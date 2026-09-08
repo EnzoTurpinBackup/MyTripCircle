@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ApiService from "../services/ApiService";
 
+/**
+ * Vue unifiée d'un participant à un voyage, qu'il ait déjà rejoint le groupe ou
+ * qu'il soit seulement invité. Ce modèle commun permet à l'écran des membres de
+ * rendre les deux populations avec le même composant.
+ */
 export interface MemberInfo {
   userId: string;
   name: string;
@@ -13,6 +18,28 @@ export interface MemberInfo {
   invitationId?: string;
 }
 
+/**
+ * Reconstitue la composition d'un voyage à partir de sources séparées : le
+ * voyage ne porte que des identifiants de collaborateurs, les profils vivent
+ * ailleurs, et les personnes invitées mais pas encore inscrites n'existent que
+ * sous forme d'invitations.
+ *
+ * @param tripId Voyage dont on établit la liste des membres.
+ * @param userId Utilisateur connecté, dont on lit les invitations émises pour
+ * en déduire les membres en attente.
+ * @returns Le titre du voyage, le propriétaire, les membres actifs et en
+ * attente, le lien d'invitation et son expiration avec leurs accesseurs, les
+ * indicateurs de chargement, et les commandes de rechargement.
+ *
+ * @remarks Le voyage et les invitations sont demandés en parallèle, ces deux
+ * appels étant indépendants. Les chargements accessoires — profils, lien
+ * d'invitation — sont isolés dans leur propre traitement d'erreur : leur échec
+ * dégrade l'affichage sans priver l'écran de sa liste. Un membre sans profil
+ * connu est présenté sous son identifiant, faute de mieux. Deux indicateurs de
+ * chargement coexistent afin de distinguer l'ouverture de l'écran d'un
+ * rafraîchissement déclenché par l'utilisateur, qui ne doit pas masquer la
+ * liste déjà affichée.
+ */
 export function useTripMembersData(tripId: string, userId: string | undefined) {
   const { t } = useTranslation();
   const [tripTitle, setTripTitle] = useState("");

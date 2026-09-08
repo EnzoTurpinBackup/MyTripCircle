@@ -15,6 +15,11 @@ import { useCurrentLocation } from "./useCurrentLocation";
 type AddressFormRouteProp = RouteProp<RootStackParamList, "AddressForm">;
 type AddressFormNavigationProp = StackNavigationProp<RootStackParamList, "AddressForm">;
 
+/**
+ * Catégories d'adresse proposées à la saisie, dans l'ordre d'affichage du
+ * sélecteur. Cet ordre suit la fréquence d'usage observée plutôt que l'ordre
+ * alphabétique.
+ */
 export const ADDRESS_TYPES: Address["type"][] = [
   "hotel",
   "restaurant",
@@ -23,6 +28,15 @@ export const ADDRESS_TYPES: Address["type"][] = [
   "other",
 ];
 
+/**
+ * Associe une catégorie d'adresse au nom de son icône, afin que le formulaire,
+ * la liste et les marqueurs de carte représentent un même type de la même
+ * manière.
+ *
+ * @param type Catégorie de l'adresse.
+ * @returns Le nom de l'icône, directement exploitable par le jeu d'icônes du
+ * projet ; le repère générique de lieu sert de valeur de repli.
+ */
 export const getTypeIcon = (type: Address["type"]): string => {
   switch (type) {
     case "hotel":      return "bed";
@@ -33,6 +47,25 @@ export const getTypeIcon = (type: Address["type"]): string => {
   }
 };
 
+/**
+ * Pilote l'écran plein de saisie d'une adresse, en création comme en
+ * modification : préremplissage, complétion assistée, mise en forme du
+ * téléphone et enregistrement.
+ *
+ * @returns Les champs du formulaire, la note issue du service de lieux, les
+ * indicateurs d'initialisation et d'attente, les suggestions, l'adresse
+ * existante et le titre d'écran adapté au mode, les gestionnaires de saisie, de
+ * sélection d'une suggestion et de soumission, ainsi que l'objet de navigation.
+ *
+ * @remarks Le mode est déduit des paramètres de route : la présence d'un
+ * identifiant d'adresse vaut modification. Le préremplissage attend la fin du
+ * chargement du contexte et n'a lieu qu'une seule fois, sans quoi il écraserait
+ * la saisie en cours à chaque actualisation de la liste d'adresses. La
+ * recherche de suggestions est différée après la dernière frappe et la requête
+ * précédente abandonnée, pour ne pas émettre un appel par caractère. Le
+ * téléphone est reformaté à la volée et tronqué au format national ; les champs
+ * facultatifs vides sont omis de la charge plutôt qu'envoyés vides.
+ */
 export const useAddressForm = () => {
   const route = useRoute<AddressFormRouteProp>();
   const navigation = useNavigation<AddressFormNavigationProp>();

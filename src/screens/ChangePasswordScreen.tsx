@@ -1,3 +1,24 @@
+/**
+ * Écran de changement de mot de passe pour un utilisateur déjà connecté.
+ *
+ * Besoin couvert : remplacer volontairement son mot de passe — par hygiène, ou après
+ * l'avoir communiqué — sans passer par la procédure d'oubli, qui suppose l'accès à la
+ * boîte de courriel. L'ancien mot de passe est exigé : la session seule ne suffit pas
+ * à autoriser le changement, un appareil laissé déverrouillé permettrait sinon de
+ * verrouiller le compte de son propriétaire.
+ *
+ * Position dans le parcours : atteint depuis EditProfileScreen, dans MainStack, et
+ * n'est donc accessible qu'authentifié. Il n'a pas d'écran de sortie propre : la
+ * réussite comme l'abandon ramènent à l'écran précédent.
+ *
+ * Données : `changePassword` d'AuthContext porte l'appel au serveur ; `useOfflineDisabled`
+ * fournit l'état du réseau. Rien n'est lu au montage, les trois champs partent vides.
+ *
+ * États pris en charge : enregistrement en cours (libellé d'attente et bouton
+ * neutralisé), hors ligne (bouton neutralisé et grisé, l'opération exigeant le
+ * serveur), refus ou panne (boîte de dialogue unique, sans détail), succès (boîte de
+ * confirmation, champs vidés, retour arrière).
+ */
 import React, { useState } from "react";
 import {
   View,
@@ -18,6 +39,7 @@ import { F } from "../theme/fonts";
 import { useTheme, AppColors } from "../contexts/ThemeContext";
 import BackButton from "../components/ui/BackButton";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 // ─── Labelled password input ──────────────────────────────────────────────────
 interface PasswordInputProps {
@@ -28,6 +50,20 @@ interface PasswordInputProps {
   colors: AppColors;
 }
 
+/**
+ * Champ de mot de passe étiqueté, avec bascule d'affichage.
+ *
+ * Défini ici plutôt que partagé : les trois champs de cet écran sont identiques et
+ * n'ont pas d'équivalent ailleurs, les autres formulaires disposant de leurs propres
+ * composants de saisie.
+ *
+ * @param label Intitulé affiché au-dessus de la valeur.
+ * @param value Contenu courant du champ, tenu par l'écran.
+ * @param onChangeText Rappel de saisie.
+ * @param placeholder Texte d'invite affiché quand le champ est vide.
+ * @param colors Palette active, transmise plutôt que relue afin que les trois champs
+ * partagent exactement celle de l'écran.
+ */
 const PasswordInput: React.FC<PasswordInputProps> = ({
   label,
   value,
@@ -35,6 +71,9 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   placeholder,
   colors,
 }) => {
+  const { t } = useTranslation();
+  // La visibilité est locale à chaque champ : dévoiler le mot de passe actuel ne doit
+  // pas dévoiler le nouveau, que l'on saisit souvent sous le regard d'autrui.
   const [show, setShow] = useState(false);
   return (
     <View style={inputStyles.wrapper}>
@@ -50,7 +89,12 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
             secureTextEntry={!show}
             autoCapitalize="none"
           />
-          <TouchableOpacity onPress={() => setShow(!show)} style={inputStyles.eye}>
+          <TouchableOpacity
+            onPress={() => setShow(!show)}
+            style={inputStyles.eye}
+            accessibilityRole="button"
+            accessibilityLabel={show ? t("common.a11y.hidePassword") : t("common.a11y.showPassword")}
+          >
             <Ionicons
               name={show ? "eye-outline" : "eye-off-outline"}
               size={18}
@@ -88,6 +132,15 @@ const inputStyles = StyleSheet.create({
 });
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
+/**
+ * Compose le formulaire de changement de mot de passe.
+ *
+ * Le composant ne reçoit aucune prop : il est empilé sans paramètre depuis les
+ * réglages du profil, et son état se réduit aux trois champs saisis.
+ *
+ * Effets de bord : un appel au serveur par `changePassword`, et un retour arrière
+ * après confirmation. La session n'est pas renouvelée — le serveur la maintient.
+ */
 const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
@@ -106,6 +159,9 @@ const ChangePasswordScreen: React.FC = () => {
     }
 
     // min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character
+    // La règle reprend celle du serveur pour refuser sur place ce qu'il refuserait de
+    // toute façon ; elle ne s'applique qu'au nouveau mot de passe, l'ancien pouvant
+    // dater d'une politique antérieure et devant rester saisissable tel quel.
     const strongPasswordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!strongPasswordRegex.test(newPassword)) {
@@ -118,6 +174,8 @@ const ChangePasswordScreen: React.FC = () => {
       return;
     }
 
+    // Reconduire le mot de passe existant viderait la démarche de son sens : le
+    // changement est presque toujours motivé par un soupçon de divulgation.
     if (currentPassword === newPassword) {
       Alert.alert(
         t("common.error"),
@@ -137,11 +195,16 @@ const ChangePasswordScreen: React.FC = () => {
         t("changePassword.successTitle"),
         t("changePassword.successMessage"),
       );
+      // Les champs sont vidés avant de quitter l'écran : la pile peut le conserver en
+      // mémoire, et trois mots de passe en clair n'ont pas à y survivre.
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       navigation.goBack();
     } else {
+      // Le contexte ne renvoie qu'un booléen : distinguer « mot de passe actuel faux »
+      // de « nouveau mot de passe refusé » ferait de cet écran un moyen de tester le
+      // mot de passe existant. Le message reste donc volontairement indifférencié.
       Alert.alert(t("common.error"), t("changePassword.errorMessage"));
     }
   };
@@ -190,6 +253,9 @@ const ChangePasswordScreen: React.FC = () => {
           />
 
           {/* Save button */}
+          {/* Le bouton est neutralisé hors connexion plutôt que masqué : l'opération
+              exige le serveur, et laisser l'utilisateur composer trois champs pour
+              essuyer un échec réseau serait plus déroutant qu'un bouton grisé. */}
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: colors.terra, shadowColor: colors.terra }, (loading || offlineDisabled) && styles.primaryButtonDisabled, offlineStyle]}
             onPress={handleSubmit}
@@ -201,6 +267,7 @@ const ChangePasswordScreen: React.FC = () => {
               size={18}
               color="#FFFFFF"
               style={{ marginRight: 8 }}
+              {...DECORATIVE_ELEMENT_PROPS}
             />
             <Text style={styles.primaryButtonText}>
               {loading

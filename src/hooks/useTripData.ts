@@ -10,6 +10,30 @@ import { parseApiError } from "../utils/i18n";
 
 type NavigationProp = StackNavigationProp<RootStackParamList, "TripDetails">;
 
+/**
+ * Charge le contenu complet d'un voyage — sa fiche, ses réservations et ses
+ * adresses — et porte les actions qui le modifient depuis l'écran de détail.
+ *
+ * @param tripId Voyage consulté.
+ * @returns Le voyage et ses collections, l'indicateur de chargement, l'état du
+ * formulaire de réservation, `loadTripData`, les gestionnaires d'ajout, de
+ * copie, de modification, de suppression et de validation, ainsi que
+ * `otherBookings` et `otherAddresses`, éléments des autres voyages proposés à
+ * la copie.
+ *
+ * @remarks Les données déjà présentes dans le contexte sont affichées
+ * immédiatement avant l'appel réseau : l'écran est ainsi consultable sans
+ * délai, et hors connexion il le reste puisqu'un échec de chargement laisse ces
+ * données en place au lieu de vider l'écran. Les trois appels partent en
+ * parallèle, et l'absence de réservations ou d'adresses est traitée comme une
+ * collection vide plutôt que comme une erreur. Les réponses du serveur sont
+ * normalisées ici : dates converties, valeurs manquantes complétées, et
+ * collaborateurs acceptés sous leurs deux formes historiques, simple
+ * identifiant ou objet complet. La copie d'une réservation écarte ses pièces
+ * jointes, celles-ci restant attachées à l'original. La validation ramène à
+ * l'accueil en réinitialisant la pile de navigation, le voyage changeant alors
+ * de nature.
+ */
 export function useTripData(tripId: string) {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();

@@ -170,6 +170,9 @@ const trips = {
     screenTitle: "Modifier le voyage",
     saveButton: "Sauvegarder",
     changeCoverPhoto: "Changer la photo de couverture",
+    a11y: {
+      currentCover: "Photo de couverture actuelle du voyage",
+    },
     tripNameLabel: "Nom du voyage",
     tripNamePlaceholder: "Mon super voyage...",
     mainDestination: "Destination principale",

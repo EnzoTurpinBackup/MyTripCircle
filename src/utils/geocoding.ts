@@ -14,6 +14,17 @@ const cacheKey = (address: string, city: string, country: string): string =>
  * - undefined → non encore géocodé (requête réseau nécessaire)
  * - null → géocodage tenté mais sans résultat
  * - GeoCoords → coordonnées disponibles
+ *
+ * Cette distinction à trois états est le point sensible de la fonction : `null` et
+ * `undefined` ont ici des sens opposés. Confondre les deux ferait relancer indéfiniment le
+ * géocodage d'adresses dont on sait déjà qu'elles n'aboutissent pas — précisément les plus
+ * coûteuses, puisqu'elles émettent deux requêtes.
+ *
+ * @param address Ligne d'adresse.
+ * @param city Ville.
+ * @param country Pays.
+ * @returns Les coordonnées, `null` si le géocodage a déjà échoué, `undefined` s'il n'a pas
+ * encore été tenté.
  */
 export const getCached = (
   address: string,
@@ -55,6 +66,22 @@ const _fetchNominatim = async (query: string): Promise<GeoCoords | null> => {
  * Résultats mis en cache pour la session.
  * NOTE : Respecter la limite Nominatim côté appelant (max 1 req/s).
  * Cette fonction peut émettre 2 requêtes si la première échoue.
+ *
+ * Le repli sur ville et pays existe parce que Nominatim est strict sur les numéros et les
+ * types de voie : une adresse exacte mais mal orthographiée ne rend rien, alors que la ville
+ * seule suffit à centrer la carte, ce qui est le besoin réel. La temporisation d'une seconde
+ * entre les deux essais respecte la limite d'usage du service public.
+ *
+ * L'échec est mémorisé au même titre que le succès : sans cela, une adresse qui n'aboutit
+ * pas relancerait deux requêtes à chaque affichage de la carte.
+ *
+ * @param address Ligne d'adresse ; peut être vide, le repli prend alors le relais.
+ * @param city Ville — le second essai n'a lieu que si ville et pays sont tous deux fournis.
+ * @param country Pays.
+ * @returns Les coordonnées, ou `null` si aucun des deux essais n'aboutit. Une erreur réseau
+ * est traitée comme une absence de résultat et mémorisée comme telle : une adresse géocodée
+ * pendant une coupure restera sans coordonnées jusqu'au redémarrage de l'application, le
+ * cache ne vivant que le temps de la session.
  */
 export const geocodeAddress = async (
   address: string,

@@ -1,3 +1,27 @@
+/**
+ * Écran de l'onglet « Profil » : identité du compte, mesure de ce qu'il
+ * contient, et point d'entrée vers tout ce qui ne relève pas d'un voyage
+ * particulier.
+ *
+ * Besoin couvert : vérifier d'un coup d'œil qui l'on est aux yeux des autres
+ * membres — nom, photo, profil ouvert ou fermé — puis atteindre en un geste les
+ * réglages, les amis, les invitations reçues, l'abonnement et la déconnexion.
+ *
+ * Position dans le parcours : cinquième et dernier onglet de MainTabs, atteint
+ * par la barre d'onglets ou par balayage depuis « Adresses ». En sortie,
+ * EditProfile, Friends, Invitation, Notifications, Settings, HelpSupport,
+ * Subscription, et CalendarExport pour les seuls comptes payants.
+ *
+ * Données : l'identité et la déconnexion viennent d'AuthContext, les invitations
+ * non lues de NotificationContext, les décomptes de voyages, de réservations et
+ * d'adresses de TripsContext, celui des amis de FriendsContext, et le droit
+ * d'accès aux fonctions payantes de SubscriptionContext.
+ *
+ * États pris en charge : chargement, sous la forme d'un squelette reproduisant
+ * la mise en page, tant qu'aucune des deux collections mesurées n'est arrivée.
+ * L'écran ne traite ni erreur ni perte de réseau : les contextes conservent leur
+ * dernier état connu, et rien n'écrit ici hormis la déconnexion.
+ */
 import React from "react";
 import {
   View,
@@ -27,9 +51,22 @@ import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import SkeletonBox from "../components/SkeletonBox";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Hauteur de la bannière. Elle est partagée entre le squelette de chargement et
+ * la vue réelle pour que le passage de l'un à l'autre ne décale pas le contenu.
+ */
 const COVER_H = 210;
 
+/**
+ * Compose la vue du compte.
+ *
+ * Monté par le navigateur d'onglets, l'écran ne reçoit aucune prop de route :
+ * son contenu est intégralement lu dans les contextes. Seul effet de bord — la
+ * déconnexion, qui purge la session et fait basculer le navigateur racine vers
+ * la pile d'authentification.
+ */
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
@@ -40,8 +77,13 @@ const ProfileScreen: React.FC = () => {
   const { colors } = useTheme();
   const { isPremium } = useSubscription();
   const insets = useSafeAreaInsets();
+  // Réserve pour la barre d'onglets flottante, faute de quoi la commande de
+  // déconnexion, dernier élément de la page, resterait sous elle.
   const scrollPaddingBottom = 100 + Math.max(insets.bottom, 12);
 
+  // Confirmation exigée bien que la déconnexion soit réversible : elle vide les
+  // caches locaux, et une reconnexion sans réseau laisserait l'utilisateur sans
+  // ses voyages en pleine mobilité.
   const handleLogout = () => {
     Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
       { text: t("common.cancel"), style: "cancel" },
@@ -49,9 +91,16 @@ const ProfileScreen: React.FC = () => {
     ]);
   };
 
+  // Repli sur les initiales quand aucune photo n'a été déposée. La couleur est
+  // dérivée du nom : chaque compte garde la sienne d'une session à l'autre sans
+  // qu'elle ait à être stockée.
   const initials = getInitials(user?.name || "");
   const avatarColor = getAvatarColor(user?.name || "");
 
+  // Conjonction et non disjonction : le squelette n'est montré que tant que rien
+  // n'est connu. Dès qu'une des deux collections est arrivée, la page réelle
+  // s'affiche et les compteurs encore en attente se contentent d'un caractère de
+  // suspension, ce qui évite de masquer l'écran entier pour un décompte.
   if (tripsLoading && friendsLoading) {
     return (
       <SwipeToNavigate currentIndex={4} totalTabs={5}>
@@ -103,10 +152,12 @@ const ProfileScreen: React.FC = () => {
         >
           {/* ── Cover ── */}
           <View style={styles.cover}>
+            {/* Décorative : illustration de bannière, sans lien avec le contenu du profil. */}
             <Image
               source={{ uri: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80&fit=crop" }}
               style={StyleSheet.absoluteFill as StyleProp<ImageStyle>}
               resizeMode="cover"
+              {...DECORATIVE_ELEMENT_PROPS}
             />
             <LinearGradient
               colors={["rgba(8,4,0,0.2)", "rgba(8,4,0,0.58)"]}
@@ -117,7 +168,8 @@ const ProfileScreen: React.FC = () => {
               {/* Avatar */}
               <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
                 {user?.avatar ? (
-                  <Image source={{ uri: user.avatar }} style={styles.avatarPhoto} />
+                  /* Décorative : le nom et l'e-mail du compte sont lus juste à côté. */
+                  <Image source={{ uri: user.avatar }} style={styles.avatarPhoto} {...DECORATIVE_ELEMENT_PROPS} />
                 ) : (
                   <Text style={styles.avatarText}>{initials}</Text>
                 )}
@@ -127,9 +179,12 @@ const ProfileScreen: React.FC = () => {
               <View style={{ flex: 1 }}>
                 <Text style={styles.profileName}>{user?.name}</Text>
                 <Text style={styles.profileEmail}>{user?.email}</Text>
+                {/* La mention n'apparaît que pour un profil fermé : c'est l'état
+                    restrictif qui mérite d'être rappelé, l'ouverture étant le
+                    comportement attendu par défaut d'un réseau d'amis. */}
                 {!user?.isPublicProfile && (
                   <View style={styles.privatePill}>
-                    <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.7)" style={{ marginRight: 4 }} />
+                    <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.7)" style={{ marginRight: 4 }} {...DECORATIVE_ELEMENT_PROPS} />
                     <Text style={styles.privatePillText}>{t("profile.privateLabel")}</Text>
                   </View>
                 )}
@@ -209,6 +264,9 @@ const ProfileScreen: React.FC = () => {
                 onPress={() => navigation.navigate("HelpSupport")}
               />
               <Divider />
+              {/* Masqué hors abonnement plutôt que grisé : le serveur refuse le
+                  flux à un compte non payant, l'entrée ne mènerait qu'à une
+                  impasse, et l'offre figure juste en dessous. */}
               {isPremium() && (
                 <>
                   <Divider />
@@ -221,6 +279,9 @@ const ProfileScreen: React.FC = () => {
                 </>
               )}
               <Divider />
+              {/* Une seule entrée pour deux intentions : l'écran d'abonnement
+                  bascule sur le même critère, l'intitulé annonce donc ce qui y
+                  sera trouvé. */}
               <Row
                 icon="card-outline"
                 label={isPremium() ? t("subscription.manageButton") : t("profile.subscribe")}
@@ -232,7 +293,12 @@ const ProfileScreen: React.FC = () => {
 
           {/* ── Mes voyages publics ── */}
           {(() => {
+            // Ces voyages ne sont exposés à des tiers que si le profil est
+            // ouvert ; les récapituler autrement suggérerait une visibilité
+            // qui n'existe pas.
             if (!user?.isPublicProfile) return null;
+            // Deux formes coexistent en base : `visibility`, introduit ensuite,
+            // et l'ancien booléen, qui ne fait foi qu'à défaut du premier.
             const publicTrips = trips.filter((t: any) => t.visibility === "public" || (t.isPublic && !t.visibility));
             if (!publicTrips.length) return null;
             return (
@@ -242,7 +308,7 @@ const ProfileScreen: React.FC = () => {
                   {publicTrips.map((trip: any) => (
                     <View key={trip.id || trip._id} style={[styles.tripCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                       <View style={styles.tripCardLeft}>
-                        <Ionicons name="earth-outline" size={18} color={colors.terra} style={{ marginTop: 1 }} />
+                        <Ionicons name="earth-outline" size={18} color={colors.terra} style={{ marginTop: 1 }} {...DECORATIVE_ELEMENT_PROPS} />
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.tripCardTitle, { color: colors.text }]} numberOfLines={1}>{trip.title}</Text>
                           {trip.destination ? (
@@ -262,7 +328,7 @@ const ProfileScreen: React.FC = () => {
 
           {/* ── Déconnexion ── */}
           <TouchableOpacity style={[styles.logoutRow, { backgroundColor: colors.dangerLight, borderColor: colors.danger + "40" }]} onPress={handleLogout} activeOpacity={0.8}>
-            <Ionicons name="log-out-outline" size={22} color={colors.danger} style={{ marginRight: 12 }} />
+            <Ionicons name="log-out-outline" size={22} color={colors.danger} style={{ marginRight: 12 }} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.logoutText, { color: colors.danger }]}>{t("profile.logout")}</Text>
           </TouchableOpacity>
 
@@ -284,8 +350,16 @@ interface RowProps {
   onPress: () => void;
 }
 
+/**
+ * Ligne de réglage : icône, intitulé, valeur ou pastille de décompte, chevron
+ * d'accès. `badge` est omis plutôt que mis à zéro, une pastille vide n'ayant
+ * rien à signaler ; `danger` marque une action destructrice et `tinted` une
+ * entrée relevant de l'offre payante.
+ */
 const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, onPress }) => {
   const { colors } = useTheme();
+  // Le rouge de l'action destructrice l'emporte sur la teinte de l'offre
+  // payante : les deux ne se cumulent pas, et l'avertissement prime.
   const iconColorFallback = tinted ? colors.terra : colors.textMid;
   const iconColor = danger ? colors.danger : iconColorFallback;
   return (
@@ -295,6 +369,7 @@ const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, on
         size={22}
         color={iconColor}
         style={styles.rowIcon}
+        {...DECORATIVE_ELEMENT_PROPS}
       />
       <Text style={[styles.rowLabel, { color: colors.text }, danger && { color: colors.danger }, tinted && { color: colors.terra }]}>
         {label}
@@ -306,12 +381,16 @@ const Row: React.FC<RowProps> = ({ icon, label, value, badge, danger, tinted, on
             <Text style={[styles.badgeText, { color: colors.terra }]}>{badge}</Text>
           </View>
         )}
-        <Ionicons name="chevron-forward" size={16} color={colors.bgDark} />
+        <Ionicons name="chevron-forward" size={16} color={colors.bgDark} {...DECORATIVE_ELEMENT_PROPS} />
       </View>
     </TouchableOpacity>
   );
 };
 
+/**
+ * Séparateur entre deux lignes. Il emprunte la couleur du fond de page, et non
+ * celle des bordures : la carte paraît entaillée plutôt que rayée.
+ */
 const Divider = () => {
   const { colors } = useTheme();
   return <View style={[styles.divider, { backgroundColor: colors.bg }]} />;

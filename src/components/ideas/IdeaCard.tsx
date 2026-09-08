@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 export const CARD_W = (SCREEN_W - 24 * 2 - 12) / 2;
@@ -32,7 +33,8 @@ const IdeaCard: React.FC<Props> = ({ item, index }) => {
       onPress={() => navigation.navigate("IdeaDetail", { ideaId: item.id })}
       activeOpacity={0.88}
     >
-      <Image source={{ uri: item.image }} style={styles.cardImg} resizeMode="cover" />
+      {/* Décorative : le nom et le pays de la destination sont lus en dessous. */}
+      <Image source={{ uri: item.image }} style={styles.cardImg} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
       <LinearGradient
         colors={["transparent", "rgba(15,8,2,0.75)"]}
         style={styles.cardGradient}

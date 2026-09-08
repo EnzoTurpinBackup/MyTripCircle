@@ -1,3 +1,13 @@
+/**
+ * Conditions générales d'utilisation du service.
+ *
+ * Consultables sans être authentifié : la route est déclarée dans la pile racine
+ * hors de la barrière de session, et l'écran est atteint depuis le consentement
+ * du premier lancement comme depuis le pied de l'écran d'authentification. Les
+ * dix sections sont lues dans les fichiers i18n embarqués — le texte reste donc
+ * disponible hors connexion — et leur mise en page revient au composant partagé
+ * LegalScreen, commun aux trois pages légales.
+ */
 import React from "react";
 import { useTranslation } from "react-i18next";
 import LegalScreen from "../components/LegalScreen";
