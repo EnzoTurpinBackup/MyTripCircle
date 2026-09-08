@@ -33,6 +33,22 @@ describe('getBookingTypeColors', () => {
   it('should return null for unknown type', () => {
     expect(getBookingTypeColors('unknown' as any)).toBeNull();
   });
+
+  // Variante sombre : mêmes teintes de bande, fonds passés en rgba pour rester
+  // lisibles sur un fond foncé.
+  it.each([
+    ['flight', { stripe: '#5A8FAA', bg: 'rgba(90,143,170,0.22)' }],
+    ['hotel', { stripe: '#6B8C5A', bg: 'rgba(107,140,90,0.22)' }],
+    ['train', { stripe: '#C4714A', bg: 'rgba(196,113,74,0.22)' }],
+    ['restaurant', { stripe: '#C4714A', bg: 'rgba(196,113,74,0.22)' }],
+    ['activity', { stripe: '#8B70C0', bg: 'rgba(139,112,192,0.22)' }],
+  ])('should return the dark colors for the %s type when the dark theme is active', (type, expected) => {
+    expect(getBookingTypeColors(type as any, true)).toEqual(expected);
+  });
+
+  it('should return null for unknown type when the dark theme is active', () => {
+    expect(getBookingTypeColors('unknown' as any, true)).toBeNull();
+  });
 });
 
 describe('getBookingStatusColors', () => {
@@ -44,6 +60,18 @@ describe('getBookingStatusColors', () => {
 
   it('should return null for unknown status', () => {
     expect(getBookingStatusColors('unknown' as any)).toBeNull();
+  });
+
+  it.each([
+    ['confirmed', { color: '#7BC88A', bg: 'rgba(107,200,138,0.22)' }],
+    ['pending', { color: '#E8B870', bg: 'rgba(232,184,112,0.22)' }],
+    ['cancelled', { color: '#E08080', bg: 'rgba(224,128,128,0.22)' }],
+  ])('should return the dark colors for the %s status when the dark theme is active', (status, expected) => {
+    expect(getBookingStatusColors(status as any, true)).toEqual(expected);
+  });
+
+  it('should return null for unknown status when the dark theme is active', () => {
+    expect(getBookingStatusColors('unknown' as any, true)).toBeNull();
   });
 });
 

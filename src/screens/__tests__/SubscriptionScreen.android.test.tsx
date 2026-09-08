@@ -3,18 +3,7 @@
 // depuis la suite principale, qui s'exécute sur la plateforme iOS par défaut de
 // jest-expo.
 
-jest.mock("react-native/Libraries/Utilities/Platform", () => {
-  const actual = jest.requireActual("react-native/Libraries/Utilities/Platform");
-  const base = actual.default ?? actual;
-  const android = {
-    ...base,
-    OS: "android",
-    select: (options: Record<string, unknown>) =>
-      "android" in options ? options.android : options.default,
-  };
-  return { __esModule: true, default: android, ...android };
-});
-
+import "./support/androidPlatform";
 import "./support/screenMocks";
 
 import React from "react";
