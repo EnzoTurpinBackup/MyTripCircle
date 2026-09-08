@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, StyleProp, ImageStyle,
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface TripSquareProps {
   trip: any;
@@ -14,7 +15,8 @@ const TripSquare: React.FC<TripSquareProps> = ({ trip, onPress }) => {
   return (
   <TouchableOpacity style={styles.wrap} onPress={onPress} activeOpacity={0.85}>
     {trip.coverImage ? (
-      <Image source={{ uri: trip.coverImage }} style={StyleSheet.absoluteFill as StyleProp<ImageStyle>} resizeMode="cover" />
+      /* Décorative : la destination du voyage est lue en superposition. */
+      <Image source={{ uri: trip.coverImage }} style={StyleSheet.absoluteFill as StyleProp<ImageStyle>} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
     ) : (
       <View style={[StyleSheet.absoluteFill as StyleProp<ViewStyle>, { backgroundColor: colors.textMid }]} />
     )}

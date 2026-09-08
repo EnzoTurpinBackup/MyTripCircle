@@ -32,6 +32,9 @@ const bookings = {
     scanFileOptionDesc: "Image saved on the device",
     scanHint: "Point your camera at the QR code or barcode",
     scanAnalysing: "Analysing image...",
+    a11y: {
+      ticketPreview: "Preview of the selected ticket",
+    },
     scanNoCodeFound: "No QR code or barcode detected in this image.",
     scanTryOther: "Try another option",
     scanFoundTitle: "Code detected!",

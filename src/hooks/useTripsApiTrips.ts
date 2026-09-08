@@ -8,6 +8,22 @@ interface TripsSetters {
   setBookings: React.Dispatch<React.SetStateAction<Booking[]>>;
 }
 
+/**
+ * Volet « voyages » de la façade d'accès distant : création, modification,
+ * validation et suppression, chacune suivie de la mise à jour de l'état du
+ * contexte pour que les listes affichées restent cohérentes.
+ *
+ * @param setters.setTrips Mise à jour de la liste des voyages du contexte.
+ * @param setters.setBookings Mise à jour des réservations, nécessaire ici parce
+ * que la suppression d'un voyage emporte les siennes.
+ * @returns Les quatre opérations sur un voyage.
+ *
+ * @remarks La validation n'est pas une opération distincte côté serveur mais
+ * un changement de statut : elle passe par `updateTrip`, ce qui lui fait
+ * bénéficier de la même mise à jour d'état. La suppression retire aussi
+ * localement les réservations rattachées, que le serveur supprime en cascade
+ * sans les énumérer dans sa réponse.
+ */
 export function useTripsApiTrips({ setTrips, setBookings }: TripsSetters) {
   const createTrip = useCallback(
     async (trip: Omit<Trip, "id" | "createdAt" | "updatedAt">): Promise<Trip> => {

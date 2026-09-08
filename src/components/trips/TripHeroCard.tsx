@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Trip } from "../../types";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -40,7 +41,8 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
   return (
     <>
       <TouchableOpacity style={styles.heroCard} onPress={onPress} activeOpacity={0.88}>
-        <Image source={{ uri: photoUri }} style={styles.heroImage} resizeMode="cover" />
+        {/* Décorative : le titre et la destination du voyage sont déjà lus juste en dessous. */}
+        <Image source={{ uri: photoUri }} style={styles.heroImage} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
         <LinearGradient
           colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.72)"]}
           start={{ x: 0, y: 0 }}
@@ -51,7 +53,7 @@ const TripHeroCard: React.FC<Props> = ({ trip, photoUri, daysUntil, onPress }) =
           <Text style={styles.heroStatusText}>{statusLabel}</Text>
         </View>
         <View style={styles.heroArrowBtn}>
-          <Ionicons name="arrow-forward-outline" size={16} color={colors.terraDark} />
+          <Ionicons name="arrow-forward-outline" size={16} color={colors.terraDark} {...DECORATIVE_ELEMENT_PROPS} />
         </View>
         <View style={styles.heroBottom}>
           <Text style={styles.heroTitle} numberOfLines={1}>{trip.title}</Text>

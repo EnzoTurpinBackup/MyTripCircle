@@ -1,3 +1,29 @@
+/**
+ * Écran du carnet d'adresses, quatrième onglet de l'application.
+ *
+ * Besoin couvert : rassembler les lieux repérés pour un séjour — hôtel,
+ * restaurants, activités, transports — et pouvoir les situer les uns par
+ * rapport aux autres. La liste répond à « qu'ai-je noté ? », l'aperçu
+ * cartographique à « où est-ce ? ».
+ *
+ * Position dans le parcours : onglet Addresses de MainTabs, atteint par la
+ * barre d'onglets ou par balayage depuis Ideas ou Profile. En sortie,
+ * AddressForm et FullMap. Toucher une fiche n'ouvre pas le détail mais une
+ * feuille d'actions proposant modification et suppression.
+ *
+ * Données : tout provient de useAddresses, qui lit la collection de
+ * TripsContext et la rafraîchit à chaque prise de focus, convertit les adresses
+ * textuelles en coordonnées via le géocodeur Nominatim, et calcule le cadrage
+ * de l'aperçu : la position de l'appareil si useCurrentLocation la connaît,
+ * sinon l'emprise des lieux déjà géocodés, sinon une vue large. L'état du
+ * réseau vient de useOfflineDisabled.
+ *
+ * États pris en charge : chargement (squelette), carnet vide et carnet filtré
+ * sans résultat (deux messages distincts), géocodage en cours (indicateur porté
+ * par l'aperçu), cartographie native absente (l'aperçu affiche un substitut, la
+ * liste reste entière), hors-ligne (créations neutralisées). Un échec de
+ * rafraîchissement est absorbé par TripsContext, qui conserve la collection.
+ */
 import React from "react";
 import {
   View,
@@ -19,7 +45,18 @@ import ItemActionSheet from "../components/ItemActionSheet";
 import { styles } from "../components/addresses/addressStyles";
 import SkeletonBox from "../components/SkeletonBox";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
+import { useAuth } from "../contexts/AuthContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Compose la vue du carnet d'adresses.
+ *
+ * Monté par le navigateur d'onglets, l'écran ne reçoit aucune prop de route :
+ * son état entier vient de useAddresses. Effets de bord notables — le hook
+ * redemande la collection à chaque prise de focus et géocode par le réseau les
+ * adresses dont la position est inconnue ; la suppression passe par une alerte
+ * système de confirmation.
+ */
 const AddressesScreen: React.FC = () => {
   const {
     t,
@@ -45,6 +82,9 @@ const AddressesScreen: React.FC = () => {
 
   const handleDeletePress = () => {
     if (!actionAddress) return;
+    // L'identifiant est capturé et la feuille refermée avant d'ouvrir l'alerte :
+    // sur iOS, deux surfaces modales superposées empêchent l'alerte de
+    // s'afficher, et la fermeture vide actionAddress avant la confirmation.
     const id = actionAddress.id;
     setActionAddress(null);
     Alert.alert(
@@ -62,11 +102,27 @@ const AddressesScreen: React.FC = () => {
   };
   const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+
+  // Même règle que sur la fiche de détail : une adresse rattachée à un voyage
+  // partagé est visible par tous ses membres mais ne se modifie que par celui
+  // qui l'a ajoutée. Sans ces deux drapeaux, ItemActionSheet retombe sur ses
+  // valeurs par défaut (true) et proposerait modification et suppression sur
+  // l'adresse d'un autre membre.
+  const isActionAddressOwner = actionAddress?.userId === user?.id;
+  // La barre d'onglets flotte au-dessus de la liste : sans cette réserve, la
+  // dernière adresse resterait masquée. Le plancher de 12 points préserve une
+  // marge sur les appareils sans encoche, où l'inset bas vaut zéro.
   const tabBarClearance = 78 + Math.max(insets.bottom, 12);
   const listPaddingBottom = tabBarClearance + 24;
 
+  // Le squelette reproduit la silhouette de l'écran chargé pour que l'arrivée
+  // des vraies données ne déplace pas la mise en page. Le défilement y est
+  // coupé : il n'y a rien à atteindre plus bas.
   if (loading) {
     return (
+      // L'index 3 correspond au rang de l'onglet Addresses dans MainTabs et
+      // détermine vers quels onglets voisins le balayage horizontal renvoie.
       <SwipeToNavigate currentIndex={3} totalTabs={5}>
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
           <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
@@ -134,11 +190,16 @@ const AddressesScreen: React.FC = () => {
                 {t("addresses.header")}
               </Text>
             </View>
+            {/* Créer suppose un appel serveur : hors ligne la commande est
+                grisée plutôt que masquée, l'en-tête gardant sa mise en page. */}
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: colors.terra }, offlineStyle]}
               onPress={handleAddAddress}
               disabled={offlineDisabled}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={t("addresses.addAddress")}
+              accessibilityState={{ disabled: offlineDisabled }}
             >
               <Ionicons name="add" size={24} color="#FFFFFF" />
             </TouchableOpacity>
@@ -151,6 +212,9 @@ const AddressesScreen: React.FC = () => {
             t={t}
           />
 
+          {/* L'aperçu reçoit la collection complète et non filteredAddresses :
+              il sert de repère géographique global et mène à FullMap, qui
+              reprend son propre filtrage à zéro. */}
           <AddressMapWidget
             addresses={addresses}
             mapCoords={mapCoords}
@@ -162,11 +226,13 @@ const AddressesScreen: React.FC = () => {
           {filteredAddresses.length === 0 ? (
             <View style={styles.emptyContainer}>
               <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
-                <Ionicons name="map-outline" size={52} color={colors.terra} />
+                <Ionicons name="map-outline" size={52} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
                 {t("addresses.emptyTitle")}
               </Text>
+              {/* Un filtre sans résultat nomme la catégorie concernée, pour que
+                  l'utilisateur comprenne que ses autres adresses subsistent. */}
               <Text style={[styles.emptySubtitle, { color: colors.textMid }]}>
                 {selectedFilter === "all"
                   ? t("addresses.emptyAll")
@@ -185,6 +251,7 @@ const AddressesScreen: React.FC = () => {
                   size={18}
                   color="#FFFFFF"
                   style={{ marginRight: 8 }}
+                  {...DECORATIVE_ELEMENT_PROPS}
                 />
                 <Text style={styles.createButtonText}>
                   {t("addresses.addAddress")}
@@ -210,6 +277,8 @@ const AddressesScreen: React.FC = () => {
           )}
         </View>
 
+        {/* Rendue hors du conteneur principal pour se superposer aussi bien à
+            la liste qu'à l'état vide. */}
         <ItemActionSheet
           visible={!!actionAddress}
           title={actionAddress?.name ?? ""}
@@ -217,6 +286,8 @@ const AddressesScreen: React.FC = () => {
           onClose={() => setActionAddress(null)}
           onEdit={handleEditAddress}
           onDelete={handleDeletePress}
+          canEdit={isActionAddressOwner}
+          canDelete={isActionAddressOwner}
         />
       </SafeAreaView>
     </SwipeToNavigate>

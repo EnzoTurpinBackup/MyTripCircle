@@ -9,6 +9,7 @@ import { getBookingTypeIcon, getBookingTypeColorsDetail, getBookingStatusColorsD
 import { Booking } from "../../types";
 import { F } from "../../theme/fonts";
 import { getCachedDestinationPhoto, getSyncCachedPhoto } from "../../utils/destinationPhoto";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const FALLBACK_PHOTOS = [
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
@@ -43,11 +44,13 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
 
   return (
     <View style={styles.heroCover}>
+      {/* Décorative : illustration d'ambiance, le titre et le statut sont lus en dessous. */}
       <Image
         source={{ uri: coverUri }}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
         onError={() => setCoverUri(fallbackPhoto)}
+        {...DECORATIVE_ELEMENT_PROPS}
       />
       <LinearGradient
         colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.70)"]}
@@ -65,7 +68,7 @@ const BookingHeroCover: React.FC<Props> = ({ booking, gradient, insetTop, onBack
       <View style={styles.heroBottom}>
         <View style={styles.heroBadgeRow}>
           <View style={[styles.heroBadge, { backgroundColor: typeC.bg }]}>
-            <Ionicons name={getBookingTypeIcon(booking.type) as keyof typeof Ionicons.glyphMap} size={13} color={typeC.stripe} />
+            <Ionicons name={getBookingTypeIcon(booking.type) as keyof typeof Ionicons.glyphMap} size={13} color={typeC.stripe} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.heroBadgeText, { color: typeC.stripe }]}>
               {t(`bookings.filters.${booking.type}`)}
             </Text>

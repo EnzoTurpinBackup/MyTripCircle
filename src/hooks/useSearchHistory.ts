@@ -11,6 +11,20 @@ interface UseSearchHistoryReturn {
   clearHistory: () => Promise<void>;
 }
 
+/**
+ * Conserve les dernières recherches d'amis pour les proposer de nouveau à
+ * l'ouverture de l'écran, la saisie d'un nom d'utilisateur au clavier mobile
+ * étant fastidieuse.
+ *
+ * @returns L'historique du plus récent au plus ancien, ainsi que les commandes
+ * d'ajout, de retrait d'une entrée et de purge complète.
+ *
+ * @remarks L'historique est borné et sans doublon : une recherche déjà connue
+ * est remontée en tête plutôt que dupliquée. Il est persisté en clair dans le
+ * stockage local, ce qui reste acceptable pour des termes de recherche, et
+ * l'utilisateur peut l'effacer. Le premier rendu part d'une liste vide, la
+ * lecture du stockage étant asynchrone.
+ */
 const useSearchHistory = (): UseSearchHistoryReturn => {
   const [history, setHistory] = useState<string[]>([]);
 

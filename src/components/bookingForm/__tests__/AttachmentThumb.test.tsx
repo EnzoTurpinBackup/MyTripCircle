@@ -42,7 +42,7 @@ describe("AttachmentThumb", () => {
 
       // Assert
       expect(queryImage()?.props.source).toEqual({ uri });
-      expect(screen.queryByText(/^icon:/)).toBeNull();
+      expect(screen.queryByText(/^icon:/, { includeHiddenElements: true })).toBeNull();
     }
   );
 
@@ -51,8 +51,10 @@ describe("AttachmentThumb", () => {
     renderThumb({ type: "image", uri: "https://cdn.example.com/ticket.png" });
 
     // Assert — l'URI distante ne peut pas être affichée en vignette locale
+    // Les pictogrammes décoratifs sont retirés de l'arbre d'accessibilité :
+    // les interroger suppose désormais d'inclure explicitement les éléments masqués.
     expect(queryImage()).toBeNull();
-    expect(screen.getByText("icon:image")).toBeTruthy();
+    expect(screen.getByText("icon:image", { includeHiddenElements: true })).toBeTruthy();
   });
 
   it("should render the document pictogram when the attachment is a pdf", () => {
@@ -61,6 +63,6 @@ describe("AttachmentThumb", () => {
 
     // Assert
     expect(queryImage()).toBeNull();
-    expect(screen.getByText("icon:document")).toBeTruthy();
+    expect(screen.getByText("icon:document", { includeHiddenElements: true })).toBeTruthy();
   });
 });

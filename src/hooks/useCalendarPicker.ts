@@ -7,6 +7,11 @@ interface UseCalendarPickerParams {
   onDatesChange: (start: Date, end: Date) => void;
 }
 
+/**
+ * Contrat du calendrier de période. Exporté parce qu'il entre dans le type de
+ * retour de l'écran de modification d'un voyage, qui aplatit cet état avec le
+ * sien.
+ */
 export interface UseCalendarPickerReturn {
   showCalendar: boolean;
   calendarPickingFor: "start" | "end";
@@ -19,6 +24,27 @@ export interface UseCalendarPickerReturn {
   goToNextMonth: () => void;
 }
 
+/**
+ * Pilote le calendrier de sélection d'une période de voyage. Les dates restent
+ * détenues par le formulaire appelant ; seuls le mois affiché et la borne en
+ * cours de choix sont gérés ici.
+ *
+ * @param params.startDate Date de début courante, qui sert de repère
+ * d'ouverture et de borne basse.
+ * @param params.endDate Date de fin courante.
+ * @param params.onDatesChange Notifie le formulaire de la nouvelle période
+ * complète à chaque sélection.
+ * @returns L'état d'ouverture du calendrier, la borne en cours de choix, le
+ * mois et l'année affichés, et les commandes d'ouverture, de fermeture, de
+ * sélection d'un jour et de navigation entre les mois.
+ *
+ * @remarks Le choix enchaîne les deux bornes : sélectionner un début bascule
+ * directement sur la fin, ce qui correspond à la manière dont on renseigne une
+ * période. Un ordre inversé est corrigé par permutation plutôt que refusé, une
+ * date de fin antérieure au début traduisant une intention de déplacer la
+ * période. Le clavier est refermé à l'ouverture, faute de quoi il masquerait le
+ * calendrier sur les petits écrans.
+ */
 const useCalendarPicker = ({
   startDate,
   endDate,

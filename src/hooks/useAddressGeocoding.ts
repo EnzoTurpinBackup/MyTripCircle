@@ -2,6 +2,24 @@ import { useState, useEffect, useRef } from "react";
 import { Address } from "../types";
 import { geocodeAddress, getCached, GeoCoords } from "../utils/geocoding";
 
+/**
+ * Convertit en coordonnées les adresses enregistrées sous forme textuelle, afin
+ * de pouvoir les placer sur la carte du voyage.
+ *
+ * @param addresses Adresses à positionner ; seules celles encore inconnues
+ * déclenchent un traitement.
+ * @returns `mapCoords`, table des coordonnées indexée par identifiant
+ * d'adresse, que l'appelant parcourt pour poser ses marqueurs, et
+ * `isGeocoding`, vrai tant que la file n'est pas épuisée.
+ *
+ * @remarks Les adresses sont traitées en série et espacées d'un peu plus d'une
+ * seconde, la politique d'usage de Nominatim limitant l'appelant à une requête
+ * par seconde ; les résultats déjà en cache court-circuitent cette attente. Une
+ * adresse déjà soumise n'est jamais resoumise, y compris après un rendu, ce qui
+ * évite de reconstituer la file à chaque changement de la liste. Les
+ * coordonnées arrivent progressivement : la carte se remplit au fil de l'eau
+ * plutôt qu'en une fois.
+ */
 export function useAddressGeocoding(addresses: Address[]) {
   const [mapCoords, setMapCoords]     = useState<Record<string, GeoCoords>>({});
   const [isGeocoding, setIsGeocoding] = useState(false);

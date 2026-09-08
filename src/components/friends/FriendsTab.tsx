@@ -13,6 +13,7 @@ import { Friend } from "../../types";
 import { F } from "../../theme/fonts";
 import { RADIUS, SHADOW } from "../../theme";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface FriendsTabProps {
   friends: Friend[];
@@ -46,7 +47,8 @@ const FriendsTab: React.FC<FriendsTabProps> = ({
     >
       <View style={[styles.avatar, { backgroundColor: getAvatarColor(item.name) }]}>
         {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatarPhoto} />
+          /* Décorative : le nom de l'ami est lu juste à côté. */
+          <Image source={{ uri: item.avatar }} style={styles.avatarPhoto} {...DECORATIVE_ELEMENT_PROPS} />
         ) : (
           <Text style={styles.avatarText}>{getInitials(item.name)}</Text>
         )}
@@ -59,7 +61,7 @@ const FriendsTab: React.FC<FriendsTabProps> = ({
             : item.email || item.phone || t("friends.tabs.friends", { count: 1 }).replace(/ \(.*\)/, "")}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+      <Ionicons name="chevron-forward" size={18} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
     </TouchableOpacity>
   );
 
@@ -72,7 +74,7 @@ const FriendsTab: React.FC<FriendsTabProps> = ({
         activeOpacity={0.85}
       >
         <View style={[styles.inviteBannerIcon, { backgroundColor: colors.surface }]}>
-          <Ionicons name="link-outline" size={20} color={colors.terra} />
+          <Ionicons name="link-outline" size={20} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
         </View>
         <View style={styles.inviteBannerText}>
           <Text style={[styles.inviteBannerTitle, { color: colors.terraDark }]}>{t("friends.shareInviteLink")}</Text>
@@ -80,11 +82,11 @@ const FriendsTab: React.FC<FriendsTabProps> = ({
             {sharingLink ? t("friends.generatingLink") : t("friends.shareInviteDescription")}
           </Text>
         </View>
-        <Ionicons name="share-outline" size={20} color={colors.textLight} />
+        <Ionicons name="share-outline" size={20} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
       </TouchableOpacity>
 
       <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Ionicons name="search" size={18} color={colors.textLight} />
+        <Ionicons name="search" size={18} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
         <TextInput
           style={[styles.searchInput, { color: colors.text }]}
           placeholder={t("friends.searchPlaceholder")}
@@ -98,7 +100,7 @@ const FriendsTab: React.FC<FriendsTabProps> = ({
       {friends.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
-            <Ionicons name="people-outline" size={40} color={colors.terra} />
+            <Ionicons name="people-outline" size={40} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("friends.emptyFriends")}</Text>
           <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.emptyFriendsSubtitle")}</Text>

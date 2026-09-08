@@ -154,3 +154,27 @@ describe("BookingsList — actions par ligne", () => {
     expect(onDelete).toHaveBeenCalledWith(0);
   });
 });
+
+describe("BookingsList — accessibilité", () => {
+  it("should name the edit button after the booking it acts on", () => {
+    renderList({ bookings: [makeBooking({ title: "Paris → Lima" })] });
+
+    expect(screen.getByLabelText("Edit Paris → Lima").props.accessibilityRole).toBe("button");
+  });
+
+  it("should name the delete button after the booking it acts on", () => {
+    renderList({ bookings: [makeBooking({ title: "Paris → Lima" })] });
+
+    expect(screen.getByLabelText("Delete Paris → Lima").props.accessibilityRole).toBe("button");
+  });
+
+  it("should hide the booking type pictogram, already described by the row text", () => {
+    renderList({ bookings: [makeBooking({ type: "flight" })] });
+
+    expect(screen.UNSAFE_getAllByProps({ name: "airplane" })[0].props).toMatchObject({
+      accessible: false,
+      accessibilityElementsHidden: true,
+      importantForAccessibility: "no",
+    });
+  });
+});

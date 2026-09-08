@@ -1,3 +1,35 @@
+/**
+ * Écran central du cercle d'amis : la liste des relations établies, les demandes
+ * en cours dans les deux sens, et les profils suggérés.
+ *
+ * Besoin couvert : savoir avec qui l'on voyage habituellement, traiter les
+ * demandes reçues sans les chercher ailleurs, et élargir le cercle — par une
+ * suggestion, ou par un lien personnel adressé à quelqu'un dont on ne connaît
+ * ni le compte ni l'adresse.
+ *
+ * Position dans le parcours : atteint depuis l'onglet Profil. En sortie,
+ * AddFriend pour une recherche nominative, FriendProfile pour une fiche, et
+ * FriendRequestConfirmation après l'envoi d'une demande à une suggestion.
+ *
+ * Données : tout vient de FriendsContext — amis, demandes et suggestions, et les
+ * actions d'envoi, de réponse, d'annulation et de rupture, qui rafraîchissent
+ * les listes concernées après chaque opération. L'identifiant du compte courant
+ * est lu dans AuthContext, seul moyen de séparer les demandes reçues des
+ * demandes émises dans la liste unique renvoyée par le serveur. Le lien
+ * d'invitation personnel est demandé à la volée par ApiService, sans être
+ * conservé.
+ *
+ * Trois états de relation cohabitent ici : aucune relation (onglet Suggestions),
+ * demande en attente — reçue, on peut l'accepter ou la refuser ; émise, on ne
+ * peut que l'annuler —, et amitié établie (onglet Amis). Le blocage se pilote
+ * depuis FriendProfile et se traduit ici par la seule disparition du compte.
+ *
+ * États pris en charge : chargement (squelette commun aux trois onglets), listes
+ * vides (message propre à chaque onglet), hors-ligne (l'accès à AddFriend est
+ * neutralisé). Les échecs d'action donnent lieu à une alerte ; un échec de
+ * rafraîchissement est absorbé par le contexte, qui laisse les listes
+ * précédentes en place plutôt que de vider l'écran.
+ */
 import React, { useState } from "react";
 import {
   View,
@@ -30,6 +62,16 @@ import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
 
 type Tab = "friends" | "requests" | "suggestions";
 
+/**
+ * Compose l'écran du cercle d'amis et distribue les trois onglets.
+ *
+ * L'écran est poussé sans paramètre de route : son état vient de FriendsContext
+ * et d'AuthContext, seuls l'onglet actif et la recherche textuelle sont locaux.
+ * Effets de bord notables — il redemande amis, demandes et suggestions à chaque
+ * prise de focus, sollicite l'émission d'un lien d'invitation personnel puis
+ * ouvre la feuille de partage du système, et déclenche les alertes de
+ * confirmation des actions destructrices.
+ */
 const FriendsScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
@@ -56,6 +98,8 @@ const FriendsScreen: React.FC = () => {
   const [sharingLink, setSharingLink] = useState(false);
 
   const handleTabChange = (tab: Tab) => {
+    // Les trois onglets n'ont ni la même hauteur ni le même nombre de lignes ;
+    // animer la transition évite le saut visuel d'un remplacement instantané.
     LayoutAnimation.configureNext({
       duration: 240,
       create: { type: "easeInEaseOut", property: "opacity" },
@@ -64,6 +108,10 @@ const FriendsScreen: React.FC = () => {
     setActiveTab(tab);
   };
 
+  // Rafraîchir à la prise de focus : une demande peut avoir été traitée depuis
+  // FriendProfile pendant que l'écran restait empilé. Le tableau de dépendances
+  // est vide à dessein — les trois fonctions sont recréées à chaque rendu du
+  // contexte et les inscrire relancerait l'effet en boucle.
   useFocusEffect(
     React.useCallback(() => {
       refreshFriendRequests();
@@ -72,12 +120,17 @@ const FriendsScreen: React.FC = () => {
     }, [])
   );
 
+  // Le serveur renvoie les demandes des deux sens dans une liste unique ; la
+  // comparaison à l'identifiant du compte courant est ce qui distingue une
+  // demande à traiter d'une demande dont on attend la réponse.
   const receivedRequests = friendRequests.filter(
     (r) => r.status === "pending" && r.senderId !== user?.id
   );
   const sentRequests = friendRequests.filter(
     (r) => r.status === "pending" && r.senderId === user?.id
   );
+  // Seules les demandes reçues alimentent la pastille de l'onglet : elle
+  // annonce un nombre de décisions à prendre, pas un volume d'échanges en cours.
   const totalPending = receivedRequests.length;
 
   const filteredFriends = friends.filter((f) =>
@@ -90,6 +143,9 @@ const FriendsScreen: React.FC = () => {
     try {
       setSending(true);
       const res = await sendFriendRequest({ recipientEmail: suggestion.email });
+      // autoAccepted est transmis tel quel : le destinataire avait déjà une
+      // demande en attente vers nous, l'amitié est donc nouée d'emblée et
+      // l'écran de confirmation doit l'annoncer ainsi, pas comme une attente.
       navigation.navigate("FriendRequestConfirmation", {
         recipientName: suggestion.name,
         recipientEmail: suggestion.email,
@@ -112,6 +168,9 @@ const FriendsScreen: React.FC = () => {
   };
 
   const handleCancelRequest = (request: FriendRequest) => {
+    // Une demande peut viser une adresse ou un numéro sans compte associé : on
+    // désigne le destinataire par ce que l'on connaît de lui, du plus parlant
+    // au moins parlant.
     const name = request.recipientName || request.recipientEmail || request.recipientPhone || t("common.unknown");
     Alert.alert(
       t("friends.cancelRequest"),
@@ -140,6 +199,8 @@ const FriendsScreen: React.FC = () => {
       await Share.share({ message: t("friends.shareMessage", { link }), title: "MyTripCircle" });
     } catch (error: unknown) {
       const raw = error instanceof Error ? error.message : "";
+      // Fermer la feuille de partage sans choisir de destinataire remonte comme
+      // un rejet ; ce n'est pas un échec et cela ne mérite pas d'alerte.
       if (raw !== "User did not share") {
         Alert.alert(t("common.error"), parseApiError(error) || t("friends.sendError"));
       }
@@ -159,6 +220,8 @@ const FriendsScreen: React.FC = () => {
           style: "destructive",
           onPress: async () => {
             try {
+              // friendId désigne le compte de l'ami, quand id identifie la
+              // ligne de relation ; c'est bien le compte que le serveur attend.
               await removeFriend(friend.friendId);
             } catch (error: unknown) {
               Alert.alert(t("common.error"), parseApiError(error) || t("friends.sendError"));
@@ -200,6 +263,9 @@ const FriendsScreen: React.FC = () => {
           onShareInviteLink={handleShareInviteLink}
           onSearchChange={setSearchQuery}
           onFriendPress={(friendId, friendName) => navigation.navigate("FriendProfile", { friendId, friendName })}
+          // La rupture est reléguée à l'appui long : le geste courant sur une
+          // carte reste l'ouverture de la fiche, et une action irréversible ne
+          // doit pas être atteignable par un simple effleurement.
           onFriendLongPress={handleRemoveFriend}
         />
       );

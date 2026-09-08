@@ -3,6 +3,11 @@ import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 
+/**
+ * Pièce jointe d'une réservation, désignée par son emplacement local tant
+ * qu'elle n'est pas téléversée. Le type distingue les deux rendus possibles :
+ * vignette pour une image, icône de document pour un PDF.
+ */
 export type Attachment = { uri: string; name: string; type: "image" | "pdf" };
 
 const excludeIndex = (index: number) => (_: Attachment, i: number): boolean => i !== index;
@@ -21,6 +26,24 @@ interface UseAttachmentManagerReturn {
   handleRemoveAttachment: (index: number) => void;
 }
 
+/**
+ * Gère les justificatifs joints à une réservation : ajout depuis la
+ * photothèque ou les fichiers, renommage et retrait. Un billet ou une
+ * confirmation d'hôtel doit rester consultable dans l'application, y compris
+ * hors connexion.
+ *
+ * @param t Fonction de traduction fournie par l'écran, les messages système
+ * devant suivre la langue choisie.
+ * @returns La liste des pièces jointes et son accesseur, l'état de la saisie de
+ * renommage, et les gestionnaires d'ajout, de renommage et de suppression.
+ *
+ * @remarks L'ajout d'un fichier unique ouvre aussitôt le renommage : un nom
+ * d'appareil photo ne dit rien du document, alors qu'un ajout multiple rendrait
+ * la sollicitation pénible. Le renommage ne porte que sur le radical,
+ * l'extension d'origine étant conservée pour que le fichier reste ouvrable. Les
+ * images sont recompressées à la sélection, les photos brutes des appareils
+ * récents étant trop lourdes pour un envoi en itinérance.
+ */
 const useAttachmentManager = (t: (key: string) => string): UseAttachmentManagerReturn => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [renamingIndex, setRenamingIndex] = useState<number | null>(null);

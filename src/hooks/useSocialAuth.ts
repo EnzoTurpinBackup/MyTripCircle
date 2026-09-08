@@ -11,6 +11,23 @@ interface UseSocialAuthReturn {
   handleAppleSignIn: () => Promise<void>;
 }
 
+/**
+ * Pilote la connexion par un compte Google ou Apple, qui dispense l'utilisateur
+ * de créer un mot de passe et de valider son adresse électronique.
+ *
+ * @param mode Indique au serveur s'il doit rattacher l'identité à un compte
+ * existant ou en créer un, la même identité pouvant servir aux deux parcours.
+ * @returns L'indicateur `isSocialSubmitting` pour neutraliser les boutons
+ * pendant l'échange, `handleGoogleToken` à appeler avec le jeton obtenu par le
+ * navigateur, et `handleAppleSignIn` qui déclenche lui-même la feuille native.
+ *
+ * @remarks Le parcours Google est en deux temps parce que l'ouverture du
+ * navigateur relève de l'écran appelant ; celui d'Apple est intégralement
+ * conduit ici, la feuille étant fournie par le système. L'abandon par
+ * l'utilisateur du dialogue Apple est distingué d'une véritable erreur et
+ * n'affiche aucun message. Apple ne transmet nom et adresse qu'à la première
+ * autorisation, d'où leur caractère facultatif.
+ */
 const useSocialAuth = (mode: "login" | "register" = "register"): UseSocialAuthReturn => {
   const [isSocialSubmitting, setIsSocialSubmitting] = useState(false);
   const { loginWithGoogle, loginWithApple } = useAuth();

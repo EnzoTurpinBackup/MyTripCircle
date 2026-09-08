@@ -27,6 +27,34 @@ const INITIAL_FORM = {
   notes: "",
 };
 
+/**
+ * Pilote la fenêtre de saisie d'une adresse, en création comme en
+ * modification : état des champs, complétion assistée, enrichissement depuis
+ * la fiche du lieu et animation d'apparition.
+ *
+ * @param options.visible Ouverture de la fenêtre, qui commande l'animation et
+ * la réinitialisation des champs.
+ * @param options.initialAddress Adresse à modifier ; son absence signifie une
+ * création.
+ * @param options.onSave Enregistrement effectif, confié à l'appelant, qui sait
+ * s'il faut créer ou mettre à jour.
+ * @param options.onClose Fermeture de la fenêtre après un enregistrement
+ * réussi.
+ * @returns Les champs du formulaire, la note et les suggestions issues du
+ * service de lieux, les indicateurs d'attente, la valeur animée de glissement,
+ * et les gestionnaires de saisie, de sélection d'une suggestion et
+ * d'enregistrement.
+ *
+ * @remarks Les champs sont réinitialisés à l'ouverture et non au démontage : la
+ * fenêtre reste montée entre deux usages, et sans cela la saisie précédente
+ * réapparaîtrait. La recherche de suggestions est différée de quelques
+ * centaines de millisecondes après la dernière frappe et la requête en cours
+ * est abandonnée, pour ne pas émettre un appel par caractère. Choisir une
+ * suggestion complète les champs encore vides sans écraser ce que
+ * l'utilisateur a déjà saisi. La note et la photographie du lieu sont
+ * conservées telles quelles : elles proviennent du service de lieux et ne sont
+ * pas modifiables à la main.
+ */
 export const useAddressFormModal = ({
   visible,
   initialAddress,

@@ -29,8 +29,25 @@ const parseDate = (date: Date | string | undefined, fallback: Date): Date => {
   return Number.isNaN(parsed.getTime()) ? fallback : parsed;
 };
 
+/**
+ * Indique si une réservation relève d'un déplacement, seul cas où les champs
+ * d'origine et de destination sont pertinents.
+ *
+ * @param type Nature de la réservation.
+ * @returns Vrai pour un vol ou un train ; l'appelant s'en sert pour afficher ou
+ * masquer les champs de trajet.
+ */
 export const isTransport = (type: Booking["type"]): boolean => type === "flight" || type === "train";
 
+/**
+ * Détermine si la réservation s'étend sur une période et réclame donc une date
+ * de fin : une nuitée d'hôtel comme un aller-retour, à la différence d'un
+ * trajet simple ou d'une activité ponctuelle.
+ *
+ * @param type Nature de la réservation.
+ * @param direction Sens du trajet, seulement significatif pour un transport.
+ * @returns Vrai lorsque le formulaire doit exiger une seconde date.
+ */
 export const needsEndDate = (type: Booking["type"], direction?: string): boolean =>
   type === "hotel" || (isTransport(type) && direction === "roundtrip");
 
@@ -55,6 +72,42 @@ function applyDirectionChange(next: any, prev: any, value: string): void {
   }
 }
 
+/**
+ * Pilote le formulaire de réservation, dont la forme varie fortement selon le
+ * type choisi : un vol demande un trajet et un sens, un hôtel une période, une
+ * activité une simple date. Rassemble aussi les pièces jointes, la complétion
+ * d'adresse et la lecture d'un billet.
+ *
+ * @param props.visible Ouverture du formulaire, qui commande sa
+ * réinitialisation.
+ * @param props.initialBooking Réservation à modifier ; son absence signifie une
+ * création.
+ * @param props.tripStartDate Date de début du voyage, prise comme date par
+ * défaut, une réservation étant presque toujours saisie pour la période du
+ * séjour.
+ * @param props.tripEndDate Date de fin du voyage, non exploitée à ce jour.
+ * @param props.preselectedTripId Voyage auquel rattacher la réservation.
+ * @param props.onSave Reçoit la réservation composée ; c'est l'appelant qui
+ * l'enregistre.
+ * @param props.onClose Ferme le formulaire après enregistrement.
+ * @returns Les champs et les erreurs par champ, l'état des quatre sélecteurs de
+ * date et d'heure ainsi que du lecteur de billet, les gestionnaires de saisie
+ * et d'enregistrement, et l'ensemble des valeurs déléguées aux hooks de pièces
+ * jointes et de complétion.
+ *
+ * @remarks Changer de type réajuste les champs devenus incohérents plutôt que
+ * de les laisser traîner : le sens du trajet disparaît hors transport, et la
+ * date de fin n'est instituée que lorsqu'elle a un sens. Pour un vol, le titre
+ * est composé automatiquement à partir du trajet et du sens, un intitulé saisi
+ * à la main étant rarement lisible dans la liste. Les pièces jointes circulent
+ * sous la forme d'une chaîne associant nom et emplacement, ce qui permet de
+ * conserver le nom donné par l'utilisateur sans structure de stockage dédiée.
+ * Les sélecteurs natifs sont refermés à la validation sur Android, la
+ * plateforme n'offrant pas de dialogue persistant, alors qu'iOS signale
+ * explicitement l'abandon. Une date de fin antérieure au début est refusée dès
+ * la saisie, et les champs facultatifs vides sont omis de la charge plutôt
+ * qu'envoyés vides.
+ */
 export function useBookingForm({
   visible,
   initialBooking,

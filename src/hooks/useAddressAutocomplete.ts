@@ -13,6 +13,21 @@ interface UseAddressAutocompleteReturn {
   handleSelectAddress: (suggestion: AddressSuggestion, onSelect: (description: string) => void) => void;
 }
 
+/**
+ * Propose des adresses au fil de la frappe afin d'éviter la saisie manuelle
+ * d'une adresse complète, source d'erreurs qui empêchent ensuite le géocodage.
+ * Le champ de saisie reste contrôlé par l'appelant : ce hook ne gère que la
+ * liste de suggestions qui l'accompagne.
+ *
+ * @returns Les suggestions courantes, l'indicateur `showAddressSuggestions`
+ * pilotant l'affichage de la liste, et les deux gestionnaires à brancher sur la
+ * frappe et sur le choix d'une suggestion.
+ *
+ * @remarks Les suggestions sont biaisées vers la position de l'appareil quand
+ * elle est disponible, les adresses recherchées étant le plus souvent proches.
+ * En l'absence de clé Google Places, la complétion se désactive silencieusement
+ * et la saisie libre reste possible : c'est un confort, jamais un prérequis.
+ */
 const useAddressAutocomplete = (): UseAddressAutocompleteReturn => {
   const currentLocation = useCurrentLocation();
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);

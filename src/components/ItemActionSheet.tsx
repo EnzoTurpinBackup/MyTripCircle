@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { F } from "../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 interface Props {
   visible: boolean;
@@ -37,12 +38,29 @@ const ItemActionSheet: React.FC<Props> = ({
 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <TouchableOpacity style={s.backdrop} activeOpacity={1} onPress={onClose} />
-      <View style={[s.sheet, { backgroundColor: colors.bgLight }]}>
+      {/* Voile de fermeture : raccourci tactile que le bouton « annuler » de la
+          feuille double déjà. L'annoncer n'ajouterait qu'un doublon avant le
+          contenu utile, et `accessibilityViewIsModal` l'exclut de toute façon. */}
+      <TouchableOpacity
+        style={s.backdrop}
+        activeOpacity={1}
+        onPress={onClose}
+        {...DECORATIVE_ELEMENT_PROPS}
+      />
+      {/* Le lecteur d'écran doit rester dans la feuille tant qu'elle est ouverte. */}
+      <View
+        style={[s.sheet, { backgroundColor: colors.bgLight }]}
+        accessibilityViewIsModal
+        accessibilityLabel={t("common.a11y.actionsFor", { item: title })}
+      >
         <View style={[s.handle, { backgroundColor: colors.border }]} />
 
         <View style={[s.header, { borderBottomColor: colors.border }]}>
-          <Text style={[s.title, { color: colors.text }]} numberOfLines={2}>
+          <Text
+            style={[s.title, { color: colors.text }]}
+            numberOfLines={2}
+            accessibilityRole="header"
+          >
             {title}
           </Text>
           {subtitle ? (
@@ -58,14 +76,17 @@ const ItemActionSheet: React.FC<Props> = ({
               style={[s.row, { backgroundColor: colors.bgMid }]}
               onPress={onEdit}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.editItem", { item: title })}
+              accessibilityState={{ disabled: false }}
             >
               <View style={[s.iconWrap, { backgroundColor: isDark ? "#1A2E35" : "#DCF0F5" }]}>
-                <Ionicons name="pencil-outline" size={22} color="#5A8FAA" />
+                <Ionicons name="pencil-outline" size={22} color="#5A8FAA" {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[s.rowLabel, { flex: 1, color: colors.text }]}>
                 {t("common.edit")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+              <Ionicons name="chevron-forward" size={20} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             </TouchableOpacity>
           )}
 
@@ -78,14 +99,17 @@ const ItemActionSheet: React.FC<Props> = ({
               ]}
               onPress={onDelete}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.deleteItem", { item: title })}
+              accessibilityState={{ disabled: false }}
             >
               <View style={[s.iconWrap, { backgroundColor: "rgba(192,64,64,0.12)" }]}>
-                <Ionicons name="trash-outline" size={22} color="#C04040" />
+                <Ionicons name="trash-outline" size={22} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[s.rowLabel, { flex: 1, color: "#C04040" }]}>
                 {t("common.delete")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#C04040" />
+              <Ionicons name="chevron-forward" size={20} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
             </TouchableOpacity>
           )}
         </View>
@@ -94,6 +118,9 @@ const ItemActionSheet: React.FC<Props> = ({
           style={[s.cancelBtn, { backgroundColor: colors.bgMid }]}
           onPress={onClose}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.cancel")}
+          accessibilityState={{ disabled: false }}
         >
           <Text style={[s.cancelText, { color: colors.textMid }]}>
             {t("common.cancel")}

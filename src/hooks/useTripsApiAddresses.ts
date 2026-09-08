@@ -7,6 +7,20 @@ interface AddressesSetters {
   setAddresses: React.Dispatch<React.SetStateAction<Address[]>>;
 }
 
+/**
+ * Volet « adresses » de la façade d'accès distant : chaque opération enchaîne
+ * l'appel au serveur et la mise à jour de la liste détenue par le contexte,
+ * pour que l'interface reflète le changement sans rechargement global.
+ *
+ * @param setters.setAddresses Mise à jour de la liste d'adresses du contexte.
+ * @returns Les trois opérations de création, modification et suppression.
+ *
+ * @remarks Les réponses brutes du serveur passent par `mapAddress` avant d'être
+ * stockées, la représentation persistée différant du modèle manipulé par
+ * l'interface. La création et la modification propagent l'erreur, l'écran
+ * devant conserver la saisie et pouvoir la resoumettre ; la suppression renvoie
+ * au contraire un booléen, son échec ne remettant en cause aucune saisie.
+ */
 export function useTripsApiAddresses({ setAddresses }: AddressesSetters) {
   const createAddress = useCallback(
     async (address: Omit<Address, "id" | "createdAt" | "updatedAt">): Promise<Address> => {

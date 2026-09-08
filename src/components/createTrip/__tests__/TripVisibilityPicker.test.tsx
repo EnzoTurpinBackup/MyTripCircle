@@ -76,7 +76,9 @@ describe("TripVisibilityPicker", () => {
     renderPicker();
 
     // Assert
-    expect(screen.getAllByText("icon:checkmark")).toHaveLength(1);
+    // Les pictogrammes décoratifs sont retirés de l'arbre d'accessibilité :
+    // les interroger suppose désormais d'inclure explicitement les éléments masqués.
+    expect(screen.getAllByText("icon:checkmark", { includeHiddenElements: true })).toHaveLength(1);
     expect(optionStyle(0).backgroundColor).toBe(lightColors.terraLight);
     expect(optionStyle(1).backgroundColor).toBe(lightColors.bgMid);
   });

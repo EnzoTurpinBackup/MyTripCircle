@@ -15,6 +15,7 @@ import { Booking, Address } from "../../types";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 // ─── Animation ─────────────────────────────────────────────────────────────────
 
@@ -118,7 +119,12 @@ export const ExistingBookingPicker: React.FC<BookingPickerProps> = ({
         <TouchableOpacity activeOpacity={1}>
           <View style={[s.header, { borderBottomColor: colors.border }]}>
             <Text style={[s.title, { color: colors.text }]}>{t("tripDetails.pickExistingBooking")}</Text>
-            <TouchableOpacity onPress={onClose} style={[s.closeBtn, { backgroundColor: colors.bgMid }]}>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[s.closeBtn, { backgroundColor: colors.bgMid }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.close")}
+            >
               <Ionicons name="close" size={20} color={colors.textMid} />
             </TouchableOpacity>
           </View>
@@ -142,7 +148,7 @@ export const ExistingBookingPicker: React.FC<BookingPickerProps> = ({
                     activeOpacity={0.75}
                   >
                     <View style={[s.iconWrap, { backgroundColor: color + "22" }]}>
-                      <Ionicons name={bookingIconName(item.type)} size={20} color={color} />
+                      <Ionicons name={bookingIconName(item.type)} size={20} color={color} {...DECORATIVE_ELEMENT_PROPS} />
                     </View>
                     <View style={s.info}>
                       <Text style={[s.itemTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
@@ -151,7 +157,7 @@ export const ExistingBookingPicker: React.FC<BookingPickerProps> = ({
                         {item.address ? ` · ${item.address}` : ""}
                       </Text>
                     </View>
-                    <Ionicons name="add-circle" size={24} color={color} />
+                    <Ionicons name="add-circle" size={24} color={color} {...DECORATIVE_ELEMENT_PROPS} />
                   </TouchableOpacity>
                 );
               }}
@@ -186,7 +192,12 @@ export const ExistingAddressPicker: React.FC<AddressPickerProps> = ({
         <TouchableOpacity activeOpacity={1}>
           <View style={[s.header, { borderBottomColor: colors.border }]}>
             <Text style={[s.title, { color: colors.text }]}>{t("tripDetails.pickExistingAddress")}</Text>
-            <TouchableOpacity onPress={onClose} style={[s.closeBtn, { backgroundColor: colors.bgMid }]}>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[s.closeBtn, { backgroundColor: colors.bgMid }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.close")}
+            >
               <Ionicons name="close" size={20} color={colors.textMid} />
             </TouchableOpacity>
           </View>
@@ -210,7 +221,7 @@ export const ExistingAddressPicker: React.FC<AddressPickerProps> = ({
                     activeOpacity={0.75}
                   >
                     <View style={[s.iconWrap, { backgroundColor: color + "22" }]}>
-                      <Ionicons name={addressIconName(item.type)} size={20} color={color} />
+                      <Ionicons name={addressIconName(item.type)} size={20} color={color} {...DECORATIVE_ELEMENT_PROPS} />
                     </View>
                     <View style={s.info}>
                       <Text style={[s.itemTitle, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
@@ -218,7 +229,7 @@ export const ExistingAddressPicker: React.FC<AddressPickerProps> = ({
                         {[item.city, item.country].filter(Boolean).join(", ")}
                       </Text>
                     </View>
-                    <Ionicons name="add-circle" size={24} color={color} />
+                    <Ionicons name="add-circle" size={24} color={color} {...DECORATIVE_ELEMENT_PROPS} />
                   </TouchableOpacity>
                 );
               }}

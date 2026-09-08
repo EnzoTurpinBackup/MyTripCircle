@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface EditTripMembersBtnProps {
   surface: string;
@@ -31,7 +32,7 @@ const EditTripMembersBtn: React.FC<EditTripMembersBtnProps> = ({
         <Text style={[styles.label, { color: text }]}>{t("editTrip.manageMembers")}</Text>
         <Text style={[styles.desc, { color: textLight }]}>{t("editTrip.manageMembersSubtitle")}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={16} color={border} />
+      <Ionicons name="chevron-forward" size={16} color={border} {...DECORATIVE_ELEMENT_PROPS} />
     </TouchableOpacity>
   );
 };

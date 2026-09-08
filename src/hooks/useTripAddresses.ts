@@ -13,6 +13,11 @@ interface UseTripAddressesParams {
   t: (key: string) => string;
 }
 
+/**
+ * Contrat de la gestion des adresses d'un voyage. Exporté parce qu'il entre
+ * dans le type de retour de l'écran de modification, qui aplatit cet état avec
+ * le sien.
+ */
 export interface UseTripAddressesReturn {
   addresses: Address[];
   setAddresses: React.Dispatch<React.SetStateAction<Address[]>>;
@@ -25,6 +30,24 @@ export interface UseTripAddressesReturn {
   closeAddressForm: () => void;
 }
 
+/**
+ * Pendant de la gestion des réservations pour le carnet d'adresses d'un
+ * voyage : liste des lieux et état du formulaire qui les saisit.
+ *
+ * @param params.tripId Voyage auquel rattacher les adresses créées.
+ * @param params.createAddress Opération distante de création, injectée pour
+ * découpler ce hook de la couche d'accès aux données.
+ * @param params.updateAddress Opération distante de modification.
+ * @param params.deleteAddress Opération distante de suppression.
+ * @param params.t Fonction de traduction des messages de confirmation.
+ * @returns La liste et son accesseur, l'état d'ouverture du formulaire,
+ * `editingAddress` déjà résolue pour préremplir la saisie, et les gestionnaires
+ * d'ajout, d'édition, de suppression, d'enregistrement et de fermeture.
+ *
+ * @remarks Contrairement aux réservations, c'est l'adresse résolue qui est
+ * exposée et non son index : le formulaire d'adresse est préremplissable et n'a
+ * pas besoin de connaître la position de l'élément dans la liste.
+ */
 const useTripAddresses = ({
   tripId,
   createAddress,

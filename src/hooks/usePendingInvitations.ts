@@ -4,6 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useTrips } from "../contexts/TripsContext";
 import ApiService from "../services/ApiService";
 
+/**
+ * Expose les invitations nominatives d'un voyage restées sans réponse, pour que
+ * l'organisateur sache qui a déjà été convié et puisse revenir sur un envoi.
+ *
+ * @param tripId Voyage dont on liste les invitations en attente.
+ * @param userId Émetteur des invitations, c'est-à-dire l'utilisateur connecté.
+ * @returns La liste des invitations, son accesseur en écriture pour une mise à
+ * jour immédiate après action, `loadPendingInvitations` pour la rafraîchir,
+ * `handleCancelInvitation` et l'indicateur `actionLoading`.
+ *
+ * @remarks Le serveur renvoie toutes les invitations émises par l'utilisateur ;
+ * le filtrage local isole celles de ce voyage et écarte les invitations par
+ * lien, qui ne visent personne en particulier et ne peuvent donc pas être
+ * annulées individuellement. Un échec de chargement est journalisé sans être
+ * remonté : cette liste complète l'écran d'invitation sans le conditionner.
+ */
 export function usePendingInvitations(tripId: string, userId: string | undefined) {
   const { t } = useTranslation();
   const { getSentInvitations } = useTrips();

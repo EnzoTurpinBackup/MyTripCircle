@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FriendSuggestion } from "../../types";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 import { F } from "../../theme/fonts";
 
 interface Props {
@@ -26,7 +27,8 @@ const SuggestionCard: React.FC<Props> = ({ item, sending, onSend, onViewProfile 
       >
         <View style={[styles.suggAvatar, { backgroundColor: getAvatarColor(item.name), overflow: "hidden" }]}>
           {item.avatar ? (
-            <Image source={{ uri: item.avatar }} style={{ width: 44, height: 44, borderRadius: 22 }} />
+            /* Décorative : le nom de la suggestion est lu juste à côté. */
+            <Image source={{ uri: item.avatar }} style={{ width: 44, height: 44, borderRadius: 22 }} {...DECORATIVE_ELEMENT_PROPS} />
           ) : (
             <Text style={styles.suggAvatarText}>{getInitials(item.name)}</Text>
           )}

@@ -12,6 +12,7 @@ import { F } from "../../theme/fonts";
 import { COLORS as C } from "../../theme/colors";
 import { SHADOW } from "../../theme";
 import { TripVisibility } from "../../hooks/useCreateTrip";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const VISIBILITY_CYCLE: TripVisibility[] = ["private", "friends", "public"];
 
@@ -84,7 +85,7 @@ const TripVisibilityPicker: React.FC<TripVisibilityPickerProps> = ({
                   {VISIBILITY_LABELS[option]}
                 </Text>
                 {isSelected && (
-                  <Ionicons name="checkmark" size={18} color={C.terra} />
+                  <Ionicons name="checkmark" size={18} color={C.terra} {...DECORATIVE_ELEMENT_PROPS} />
                 )}
               </TouchableOpacity>
             );

@@ -3,6 +3,12 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import TripCalendar from "../TripCalendar";
 
+// Les libellés d'accessibilité sont assertés sur leur clé : la suite fournit
+// déjà ses intitulés de mois et de jours en props, sans catalogue i18n.
+jest.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 // La police d'icônes charge ses glyphes de façon asynchrone, ce qui déclenche
 // des mises à jour hors act() : on la remplace par un texte porteur du nom.
 jest.mock("@expo/vector-icons", () => {
@@ -245,5 +251,36 @@ describe("TripCalendar", () => {
 
     // Assert
     expect(screen.root.props.onStartShouldSetResponder()).toBe(true);
+  });
+});
+
+describe("TripCalendar — accessibilité", () => {
+  it("should name the previous month button, whose chevron is its only content", () => {
+    // Arrange / Act
+    renderCalendar();
+
+    // Assert
+    expect(screen.getByLabelText("common.a11y.previousMonth").props.accessibilityRole)
+      .toBe("button");
+  });
+
+  it("should name the next month button, whose chevron is its only content", () => {
+    // Arrange / Act
+    renderCalendar();
+
+    // Assert
+    expect(screen.getByLabelText("common.a11y.nextMonth").props.accessibilityRole)
+      .toBe("button");
+  });
+
+  it("should still move to the previous month when its labelled button is pressed", () => {
+    // Arrange
+    const { onPrevMonth } = renderCalendar();
+
+    // Act
+    fireEvent.press(screen.getByLabelText("common.a11y.previousMonth"));
+
+    // Assert
+    expect(onPrevMonth).toHaveBeenCalledTimes(1);
   });
 });

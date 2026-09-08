@@ -19,6 +19,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -152,6 +153,8 @@ const ItineraryPreview: React.FC<ItineraryPreviewProps> = ({
           style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => onDaysChange(String(Math.max(1, daysCount - 1)))}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.decreaseDays")}
         >
           <Ionicons name="remove" size={16} color={colors.terra} />
         </TouchableOpacity>
@@ -162,6 +165,8 @@ const ItineraryPreview: React.FC<ItineraryPreviewProps> = ({
           style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => onDaysChange(String(Math.min(30, daysCount + 1)))}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.increaseDays")}
         >
           <Ionicons name="add" size={16} color={colors.terra} />
         </TouchableOpacity>
@@ -235,7 +240,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
 
       {/* Bouton retour */}
       <TouchableOpacity style={styles.backBtn} onPress={onBackFromCreate} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={20} color={colors.textMid} />
+        <Ionicons name="chevron-back" size={20} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.backBtnText, { color: colors.textMid }]}>{t("ideas.itinerary.back")}</Text>
       </TouchableOpacity>
 
@@ -244,7 +249,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
         <Text style={[styles.summaryCity, { color: colors.text }]}>📍 {itinerary.city}</Text>
         <View style={styles.summaryPillRow}>
           <View style={styles.summaryPill}>
-            <Ionicons name="time-outline" size={13} color={colors.terra} />
+            <Ionicons name="time-outline" size={13} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.summaryPillText, { color: colors.terra }]}>{daysInput} {t("ideas.addModal.days")}</Text>
           </View>
         </View>
@@ -262,7 +267,7 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
             <View style={{ flex: 1 }}>
               <Text style={[styles.summaryDateValue, { color: colors.text }]}>{formatDate(startDate)}</Text>
             </View>
-            <Ionicons name="arrow-forward" size={16} color={colors.border} />
+            <Ionicons name="arrow-forward" size={16} color={colors.border} {...DECORATIVE_ELEMENT_PROPS} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.summaryDateValue, { color: colors.text, textAlign: "right" }]}>{formatDate(endDate)}</Text>
             </View>
@@ -277,9 +282,9 @@ const CreateTripStep: React.FC<CreateTripStepProps> = ({
         onPress={openPicker}
         activeOpacity={0.7}
       >
-        <Ionicons name="calendar-outline" size={20} color={colors.terra} />
+        <Ionicons name="calendar-outline" size={20} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.dateFieldText, { color: colors.text }]}>{formatDate(startDate)}</Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+        <Ionicons name="chevron-forward" size={18} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
       </TouchableOpacity>
 
       {/* iOS : modale avec confirm/annuler */}
@@ -390,7 +395,12 @@ const ItineraryModal: React.FC<Props> = ({
         <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t("ideas.itinerary.title")}</Text>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={onClose}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.close")}
+            >
               <Ionicons name="close" size={24} color={colors.textLight} />
             </TouchableOpacity>
           </View>
