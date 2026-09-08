@@ -11,6 +11,20 @@ export { parseApiError, getBookingStatusTranslation } from "./errorHandlers";
 
 const LANGUAGE_KEY = "@mytripcircle_language";
 
+/**
+ * Change la langue de l'interface, la persiste, et en informe le serveur.
+ *
+ * Les trois opérations sont volontairement découplées et ordonnées du plus visible au plus
+ * accessoire. Le changement en mémoire est immédiat et inconditionnel : c'est le seul effet
+ * que l'utilisateur constate. La persistance puis la synchronisation serveur échouent en
+ * silence — perdre la préférence au redémarrage ou continuer à recevoir ses e-mails dans
+ * l'ancienne langue est une gêne, ne pas changer de langue du tout serait une panne.
+ *
+ * La synchronisation n'a lieu que si un jeton existe : la langue peut être choisie avant
+ * toute connexion, et l'appel serait alors rejeté.
+ *
+ * @param language Langue cible, parmi celles pour lesquelles un catalogue existe.
+ */
 export const changeLanguage = async (language: "en" | "fr") => {
   i18n.changeLanguage(language);
   try {
@@ -31,8 +45,27 @@ export const changeLanguage = async (language: "en" | "fr") => {
   }
 };
 
+/**
+ * Retourne le code de langue actif.
+ *
+ * @returns Le code tel que la bibliothèque le tient, qui peut être une étiquette régionale
+ * (`"fr-CA"`) et non le seul code court : les appelants qui comparent doivent tester le
+ * préfixe, non l'égalité.
+ */
 export const getCurrentLanguage = () => i18n.language;
 
+/**
+ * Applique la langue persistée au démarrage de l'application.
+ *
+ * À appeler une fois au lancement. Ne fait rien si aucune préférence n'a été enregistrée :
+ * la langue reste celle de l'appareil, déterminée à l'initialisation ci-dessous. Une valeur
+ * stockée hors des langues connues est ignorée de la même façon, ce qui protège d'un
+ * catalogue retiré entre deux versions.
+ *
+ * La synchronisation serveur est ici opportuniste et non attendue : elle rattrape les
+ * comptes créés avant que la langue ne soit remontée au serveur, mais retarder le démarrage
+ * pour cela serait hors de proportion.
+ */
 // Initialize language from persisted preference (call on app startup)
 export const initLanguage = async () => {
   try {
@@ -53,6 +86,9 @@ export const initLanguage = async () => {
   }
 };
 
+// La langue de l'appareil est lue avec prudence : l'API de localisation peut être absente
+// selon la plateforme, et son résultat vide sur un appareil mal configuré. Le code court est
+// préféré à l'étiquette régionale, les catalogues n'étant pas déclinés par région.
 // Determine device language, fallback to 'en'
 const deviceLocales = Localization.getLocales?.();
 const deviceLanguage = (() => {
@@ -68,6 +104,11 @@ const deviceLanguage = (() => {
   return "en";
 })();
 
+// Initialisation au chargement du module, avant tout rendu : un composant monté sans
+// catalogue afficherait ses clés brutes le temps d'une frame. La langue de l'appareil sert
+// d'amorce, `initLanguage` la corrigeant ensuite si une préférence a été enregistrée.
+// Le repli sur l'anglais couvre les clés absentes d'un catalogue, pas seulement les langues
+// non prises en charge : une traduction oubliée s'affiche en anglais plutôt qu'en clé.
 i18n.use(initReactI18next).init({
   resources,
   lng: deviceLanguage,

@@ -10,6 +10,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import ApiService from "../../services/ApiService";
 import { parseApiError } from "../../utils/i18n";
+import type { RootStackParamList } from "../../types";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -54,6 +55,13 @@ const goBack = jest.fn();
 const loginWithToken = jest.fn();
 
 const RESET_CODE = "code-de-reinitialisation";
+/**
+ * Verrou de compilation : le paramètre lu par l'écran est celui que
+ * `RootStackParamList` déclare et que le `parse` du navigateur extrait du lien
+ * `mytripcircle://reset-password?code=…`. Renommer le paramètre d'un seul côté
+ * de la chaîne fait échouer la vérification de types de cette déclaration.
+ */
+const ROUTE_PARAMS: RootStackParamList["ForgotPassword"] = { code: RESET_CODE };
 const EMAIL = "voyageur@exemple.test";
 /** Mot de passe conforme : 8+, majuscule, minuscule, chiffre, spécial. */
 const STRONG = "Nouveau1!";
@@ -66,7 +74,7 @@ const renderRequestMode = () => {
 
 /** Monte l'écran en mode « choisir un nouveau mot de passe » et attend la vérification du code. */
 const renderResetMode = async () => {
-  (useRoute as jest.Mock).mockReturnValue({ params: { token: RESET_CODE } });
+  (useRoute as jest.Mock).mockReturnValue({ params: ROUTE_PARAMS });
   render(<ForgotPasswordScreen />);
   await act(async () => {});
 };
@@ -233,13 +241,28 @@ describe("ForgotPasswordScreen", () => {
       // Assert
       expect(goBack).toHaveBeenCalledTimes(1);
     });
+
+    // Le lien du courriel a longtemps été lu sous le nom `token`, qui n'était
+    // jamais transmis : l'utilisateur retombait alors sur le formulaire de
+    // demande. Ce nom ne doit plus rien déclencher.
+    it("should show the request form when the route carries a parameter named token", () => {
+      // Arrange
+      (useRoute as jest.Mock).mockReturnValue({ params: { token: RESET_CODE } });
+
+      // Act
+      render(<ForgotPasswordScreen />);
+
+      // Assert
+      expect(screen.getByText("forgotPassword.sendResetLink")).toBeTruthy();
+      expect(api.verifyResetToken).not.toHaveBeenCalled();
+    });
   });
 
   describe("vérification du code reçu par courriel", () => {
     it("should show a verifying placeholder while the reset code is being checked", () => {
       // Arrange
       api.verifyResetToken.mockReturnValue(new Promise(() => {}));
-      (useRoute as jest.Mock).mockReturnValue({ params: { token: RESET_CODE } });
+      (useRoute as jest.Mock).mockReturnValue({ params: ROUTE_PARAMS });
 
       // Act
       render(<ForgotPasswordScreen />);

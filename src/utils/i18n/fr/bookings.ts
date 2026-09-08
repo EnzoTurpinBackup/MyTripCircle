@@ -32,6 +32,9 @@ const bookings = {
     scanFileOptionDesc: "Image enregistrée sur l'appareil",
     scanHint: "Pointez la caméra vers le QR code ou code-barre",
     scanAnalysing: "Analyse de l'image...",
+    a11y: {
+      ticketPreview: "Aperçu du billet sélectionné",
+    },
     scanNoCodeFound: "Aucun QR code ou code-barre détecté dans cette image.",
     scanTryOther: "Essayer une autre option",
     scanFoundTitle: "Code détecté !",

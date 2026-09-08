@@ -8,6 +8,7 @@ import { MapView, Marker, mapsAvailable, Region } from "../../hooks/useAddresses
 import { getTypeIcon, getMarkerColor } from "./addressHelpers";
 import { styles } from "./addressStyles";
 import { useTheme } from "../../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const DARK_MAP_STYLE = [
   { elementType: "geometry", stylers: [{ color: "#1A1714" }] },
@@ -41,7 +42,7 @@ const MarkerPin: React.FC<{ type: Address["type"]; size: "sm" | "md" }> = ({ typ
         { backgroundColor: getMarkerColor(type) },
       ]}
     >
-      <Ionicons name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap} size={s} color="white" />
+      <Ionicons name={getTypeIcon(type) as keyof typeof Ionicons.glyphMap} size={s} color="white" {...DECORATIVE_ELEMENT_PROPS} />
     </View>
   );
 };
@@ -89,7 +90,7 @@ const AddressMapWidget: React.FC<AddressMapWidgetProps> = ({
         </MapView>
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.mapPlaceholder]}>
-          <Ionicons name="map-outline" size={28} color="rgba(255,255,255,0.7)" />
+          <Ionicons name="map-outline" size={28} color="rgba(255,255,255,0.7)" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.mapPlaceholderText}>Rebuild requis</Text>
         </View>
       )}
@@ -108,7 +109,7 @@ const AddressMapWidget: React.FC<AddressMapWidgetProps> = ({
 
       {mapsAvailable && Object.keys(mapCoords).length > 0 && (
         <View style={styles.mapCountBadge}>
-          <Ionicons name="location" size={11} color="#5A4A3A" />
+          <Ionicons name="location" size={11} color="#5A4A3A" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.mapCountText}>{Object.keys(mapCoords).length}</Text>
         </View>
       )}

@@ -8,6 +8,24 @@ import { parseApiError } from "../utils/i18n";
 import { getInitials, getAvatarColor } from "../utils/avatarUtils";
 import { moderationApi, ReportReason } from "../services/api/moderationApi";
 
+/**
+ * Rassemble tout ce que l'écran de profil d'un autre utilisateur permet de
+ * faire : consulter la fiche, nouer ou rompre le lien d'amitié, signaler ou
+ * bloquer, et rebondir vers ses voyages ou une invitation.
+ *
+ * @returns Le profil chargé et les indicateurs d'attente, les éléments
+ * d'affichage dérivés du nom (initiales, couleur d'avatar), le drapeau
+ * `isFriend` qui détermine les actions proposées, les gestionnaires d'actions
+ * et les raccourcis de navigation.
+ *
+ * @remarks Les paramètres proviennent de la route plutôt que d'arguments :
+ * l'écran est atteint depuis plusieurs endroits, et le nom transmis à la
+ * navigation permet d'afficher un en-tête avant même que la fiche soit chargée.
+ * Le blocage et le retrait ramènent à l'écran précédent, la fiche n'ayant plus
+ * de raison d'être consultée. Une demande d'amitié peut être acceptée
+ * d'emblée lorsqu'elle croise une demande déjà reçue, d'où le rechargement du
+ * profil dans ce cas.
+ */
 export function useFriendProfileActions() {
   const navigation = useNavigation<any>();
   const route      = useRoute<any>();

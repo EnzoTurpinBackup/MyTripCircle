@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { F } from "../theme/fonts";
 import { SHADOW } from "../theme/colors";
 import { useTheme } from "../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
   state,
@@ -136,6 +137,7 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
               name={iconName}
               size={28}
               color={isFocused ? colors.terra : colors.textLight}
+              {...DECORATIVE_ELEMENT_PROPS}
             />
 
             <Text

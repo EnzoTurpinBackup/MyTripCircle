@@ -1,3 +1,32 @@
+/**
+ * Écran de l'onglet « Réservations », qui rassemble en une seule liste les
+ * transports, hébergements, tables et activités déjà retenus, tous voyages
+ * confondus.
+ *
+ * Besoin couvert : disposer d'un inventaire unique de ce qui est réservé sans
+ * avoir à ouvrir chaque voyage, et pouvoir le restreindre à une catégorie
+ * lorsqu'on cherche un billet précis.
+ *
+ * Position dans le parcours : deuxième onglet de MainTabs, atteint par la barre
+ * d'onglets ou par balayage depuis « Mes voyages » et « Idées ». L'écran ne mène
+ * à aucun autre : modification et suppression se font sur place, dans le
+ * formulaire modal et la feuille d'actions ; la fiche BookingDetails n'est
+ * atteinte que depuis un voyage.
+ *
+ * Données : la collection de réservations et les opérations d'écriture viennent
+ * de TripsContext, mémoire partagée avec les autres onglets, alimentée par
+ * bookingsApi selon une stratégie « périmé puis revalidé ». La saisie relève de
+ * BookingForm et d'useBookingForm, qui agrège les pièces jointes
+ * d'useAttachmentManager (photothèque, sélecteur de documents) et la lecture de
+ * code-barres d'useTicketScanner (appareil photo) ; un refus de permission y est
+ * signalé par un message et interrompt le seul ajout concerné.
+ *
+ * États pris en charge : chargement (squelette plein écran), liste vide avec un
+ * message distinct selon qu'aucune réservation n'existe ou que le filtre courant
+ * n'en retient aucune, et hors-ligne (commandes d'ajout grisées et neutralisées).
+ * Les échecs d'écriture donnent lieu à une alerte ; un échec de chargement est
+ * absorbé par le contexte, l'écran conservant la dernière collection connue.
+ */
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -24,21 +53,42 @@ import { SwipeToNavigate } from "../hooks/useSwipeToNavigate";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Catégories de filtrage. « all » n'est pas un type de réservation mais une
+ * sentinelle désignant l'absence de filtre, ce qui évite un état parallèle.
+ */
 type FilterType = "all" | "flight" | "train" | "hotel" | "restaurant" | "activity";
 
+/**
+ * Compose l'inventaire des réservations.
+ *
+ * Monté par le navigateur d'onglets, l'écran ne reçoit aucune prop de route :
+ * son état provient de TripsContext et du filtre conservé localement. Effets de
+ * bord notables — il redemande les collections du contexte à chaque prise de
+ * focus, écrit sur le réseau à la création, à la modification et à la
+ * suppression, et le formulaire qu'il ouvre sollicite les permissions
+ * photothèque, fichiers et appareil photo.
+ */
 const BookingsScreen: React.FC = () => {
   const { bookings, loading, createBooking, updateBooking, deleteBooking, refreshData } = useTrips();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { disabled: offlineDisabled, style: offlineStyle } = useOfflineDisabled();
   const insets = useSafeAreaInsets();
+  // La barre d'onglets flotte au-dessus de la liste : sans cette réserve, la
+  // dernière carte resterait inatteignable. Le plancher couvre les appareils
+  // dépourvus de zone de sécurité basse, où l'inset vaut zéro.
   const listPaddingBottom = 100 + Math.max(insets.bottom, 12);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [actionBooking, setActionBooking] = useState<Booking | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
 
+  // Rafraîchir à la prise de focus et non au seul montage : une réservation peut
+  // avoir été ajoutée ou supprimée depuis un voyage ou depuis une idée convertie,
+  // et l'inventaire doit en rendre compte sans geste de l'utilisateur.
   useFocusEffect(useCallback(() => { refreshData(); }, [refreshData]));
 
   if (loading) return <BookingsScreenSkeleton />;
@@ -49,7 +99,13 @@ const BookingsScreen: React.FC = () => {
 
   const handleSaveBooking = async (booking: Omit<Booking, "id" | "createdAt" | "updatedAt">) => {
     try {
+      // Le formulaire est ouvert sans voyage présélectionné depuis cet onglet :
+      // la réservation est donc créée détachée. Le serveur admet ce cas et
+      // rattache l'élément au compte plutôt qu'à un voyage, ce qui permet de
+      // noter un billet avant même d'avoir composé le séjour.
       await createBooking({ ...booking, tripId: booking.tripId || "" });
+      // Resynchroniser plutôt que se fier à la mise à jour locale : le serveur
+      // normalise certains champs et attribue l'identifiant définitif.
       await refreshData();
       setShowBookingForm(false);
     } catch (error) {
@@ -74,6 +130,10 @@ const BookingsScreen: React.FC = () => {
 
   const handleDeletePress = () => {
     if (!actionBooking) return;
+    // L'identifiant est capturé avant de refermer la feuille d'actions, dont la
+    // fermeture efface la réservation sélectionnée. Fermer d'abord évite aussi
+    // de superposer la confirmation à une modale déjà ouverte, empilement
+    // qu'iOS ne rend pas de façon fiable.
     const id = actionBooking.id;
     setActionBooking(null);
     Alert.alert(
@@ -129,6 +189,9 @@ const BookingsScreen: React.FC = () => {
               onPress={() => setShowBookingForm(true)}
               disabled={offlineDisabled}
               activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={t("bookings.addBooking")}
+              accessibilityState={{ disabled: offlineDisabled }}
             >
               <Ionicons name="add" size={24} color="#FFFFFF" />
             </TouchableOpacity>
@@ -148,7 +211,7 @@ const BookingsScreen: React.FC = () => {
           {filteredBookings.length === 0 ? (
             <View style={styles.emptyContainer}>
               <View style={[styles.emptyIconCircle, { backgroundColor: colors.terraLight }]}>
-                <Ionicons name="calendar-outline" size={44} color={colors.terra} />
+                <Ionicons name="calendar-outline" size={44} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("bookings.emptyTitle")}</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textMid }]}>
@@ -157,7 +220,7 @@ const BookingsScreen: React.FC = () => {
                   : t("bookings.emptyFiltered", { type: t(`bookings.filters.${selectedFilter}`) })}
               </Text>
               <TouchableOpacity style={[styles.emptyAddButton, { backgroundColor: colors.terra }, offlineStyle]} onPress={() => setShowBookingForm(true)} disabled={offlineDisabled} activeOpacity={0.8}>
-                <Ionicons name="add-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+                <Ionicons name="add-circle-outline" size={18} color="white" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
                 <Text style={styles.emptyAddButtonText}>{t("bookings.addBooking")}</Text>
               </TouchableOpacity>
             </View>
@@ -171,6 +234,9 @@ const BookingsScreen: React.FC = () => {
                     onPress={() => setActionBooking(item)}
                   />
                 )}
+                // Repli sur la position : une réservation restituée du cache
+                // peut avoir perdu son identifiant, et une clé vide ferait
+                // s'effondrer le recyclage des lignes.
                 keyExtractor={(item, index) => item.id || `booking-${index}`}
                 contentContainerStyle={[styles.bookingsList, { paddingBottom: listPaddingBottom }]}
                 showsVerticalScrollIndicator={false}
@@ -178,6 +244,9 @@ const BookingsScreen: React.FC = () => {
             </View>
           )}
 
+          {/* Deux instances distinctes plutôt qu'une seule : le formulaire se
+              réinitialise au passage de sa propriété d'ouverture, et la partager
+              ferait resurgir la réservation éditée lors d'une création. */}
           <BookingForm
             visible={showBookingForm}
             onClose={() => setShowBookingForm(false)}
@@ -191,6 +260,9 @@ const BookingsScreen: React.FC = () => {
             initialBooking={actionBooking ?? undefined}
           />
 
+          {/* actionBooking tient à la fois la sélection et l'ouverture de la
+              feuille : la condition la masque pendant l'édition sans perdre la
+              réservation visée, que handleSaveEdit doit encore identifier. */}
           <ItemActionSheet
             visible={!!actionBooking && !showEditForm}
             title={actionBooking?.title ?? ""}

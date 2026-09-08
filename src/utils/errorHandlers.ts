@@ -1,5 +1,20 @@
 import i18n from "i18next";
 
+/**
+ * Traduction des messages d'erreur venus du serveur.
+ *
+ * Le serveur répond en texte libre, dans une langue qui n'est pas nécessairement celle de
+ * l'interface. La table ci-dessous ramène les messages connus à des clés de traduction ; les
+ * autres passent par une heuristique de langue. Le repli est asymétrique et assumé : un
+ * message dont la langue ne correspond pas à l'interface est remplacé par un libellé
+ * générique, alors qu'un message dans la bonne langue est affiché tel quel. Mieux vaut une
+ * phrase vague et cohérente qu'une phrase précise dans la mauvaise langue.
+ *
+ * La table conserve les formulations françaises historiques à côté des formulations
+ * anglaises actuelles : le serveur a changé de langue de référence, et les deux peuvent
+ * encore arriver selon la version déployée.
+ */
+
 /** Raw API / backend messages → i18n keys (FR legacy + EN canonical). */
 const API_ERROR_KEY_BY_MESSAGE: Record<string, string> = {
   "Token manquant": "apiErrors.tokenMissing",
@@ -75,7 +90,19 @@ const API_ERROR_KEY_BY_MESSAGE: Record<string, string> = {
   "Invitation already processed": "apiErrors.invitationAlreadyProcessed",
 };
 
-/** Message probablement en français (API ou legacy) alors que l'UI est en anglais. */
+/**
+ * Détecte un message rédigé en français.
+ *
+ * Deux indices, du plus fiable au plus faible : la présence d'un caractère accentué, puis
+ * celle d'un mot fonctionnel courant. Le second est nécessaire — bien des messages français
+ * n'ont aucun accent — mais l'ancrage sur des mots entiers évite les faux positifs sur des
+ * fragments anglais.
+ *
+ * @param s Message brut.
+ * @returns `true` si le message est vraisemblablement français. Une heuristique, non une
+ * détection : elle n'est utilisée que pour choisir entre le message et un repli générique,
+ * jamais pour altérer le message lui-même.
+ */
 function messageLooksFrench(s: string): boolean {
   if (/[àâäéèêëïîôùûüçœÀÂÉÈÊËÎÏÔÙÛÜÇ]/.test(s)) return true;
   return /\b(veuillez|impossible|introuvable|utilisateur|brouillon|voyage|erreur|déjà|n'est |cette |vos |vous |êtes|s'il vous plaît)\b/i.test(s);
@@ -89,7 +116,18 @@ const ENGLISH_ERROR_PREFIXES = [
   "something went ", "failed to", "network request",
 ];
 
-/** Réponse d'erreur typique en anglais (backend) alors que l'UI est en français. */
+/**
+ * Détecte un message d'erreur technique rédigé en anglais.
+ *
+ * Trois filtres avant l'analyse lexicale. La chaîne vide n'est pas un message. Un texte long
+ * n'est pas une erreur d'API mais probablement une page HTML ou une trace, qu'il ne faut pas
+ * réécrire. Un accent exclut d'emblée l'anglais.
+ *
+ * @param s Message brut.
+ * @returns `true` si le message ressemble à une erreur d'API anglaise. La reconnaissance
+ * porte sur des préfixes et des mots-clés récurrents, non sur la langue en général : un
+ * message anglais qui n'en relève pas sera affiché tel quel.
+ */
 function messageLooksLikeEnglishApiError(s: string): boolean {
   const trimmed = s.trim();
   if (!trimmed || trimmed.length > 220) return false;
@@ -101,6 +139,18 @@ function messageLooksLikeEnglishApiError(s: string): boolean {
   );
 }
 
+/**
+ * Décide, pour un message non répertorié, entre l'afficher tel quel et lui substituer un
+ * repli générique.
+ *
+ * Le remplacement n'a lieu que si la langue détectée s'oppose à celle de l'interface. Un
+ * message dont la langue n'est pas identifiée passe donc sans modification : l'heuristique
+ * est faillible, et le doute profite au message original, qui porte l'information utile.
+ *
+ * @param raw Message déjà extrait et débarrassé de ses espaces de bordure.
+ * @returns Le message, le repli générique, ou — sur une chaîne vide — le message d'erreur
+ * inattendue, qui est le seul cas où l'appelant n'a strictement rien à afficher.
+ */
 function resolveLocalizedMessage(raw: string): string {
   const lang = i18n.language || "en";
   if (raw && messageLooksFrench(raw) && lang.startsWith("en")) {
@@ -112,6 +162,20 @@ function resolveLocalizedMessage(raw: string): string {
   return raw || i18n.t("common.unexpectedError");
 }
 
+/**
+ * Convertit un rejet quelconque en message affichable dans la langue de l'interface.
+ *
+ * Point de passage unique des erreurs d'API vers l'écran. La résolution procède du plus sûr
+ * au plus incertain : corps JSON analysé, message répertorié dans la table, puis reconnaissance
+ * par motif du seul cas où le serveur formule une même erreur de plusieurs façons — le numéro
+ * de téléphone déjà pris — et enfin arbitrage heuristique sur la langue.
+ *
+ * @param error Rejet intercepté, de type inconnu : `Error`, chaîne, ou toute autre valeur.
+ * @returns Un message non vide, toujours. Trois cas limites y mènent : un corps qui n'est pas
+ * du JSON est repris comme message brut plutôt que masqué ; un rejet qui n'est pas une `Error`
+ * est converti en chaîne ; et une défaillance de la résolution elle-même est rattrapée par un
+ * second niveau qui retombe sur le message brut, ou sur le libellé d'erreur inattendue.
+ */
 export const parseApiError = (error: unknown): string => {
   try {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -145,6 +209,18 @@ export const parseApiError = (error: unknown): string => {
   }
 };
 
+/**
+ * Traduit le statut d'une réservation, en tolérant les statuts non traduits.
+ *
+ * La bibliothèque de traduction rend la clé demandée quand elle ne la connaît pas ; c'est
+ * cette égalité qui sert de détection d'absence, faute d'une interrogation directe du
+ * catalogue.
+ *
+ * @param status Statut brut renvoyé par l'API.
+ * @returns Le libellé traduit, ou le statut brut lorsqu'aucune traduction n'existe. Afficher
+ * la valeur technique reste préférable à une case vide : l'utilisateur voit au moins que le
+ * statut est renseigné, et la chaîne est repérable en support.
+ */
 export const getBookingStatusTranslation = (status: string): string => {
   const statusKey = `bookings.status.${status}`;
   const translation = i18n.t(statusKey);

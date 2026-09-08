@@ -1,3 +1,28 @@
+/**
+ * Fiche détaillée d'une adresse du carnet.
+ *
+ * Besoin couvert : consulter ce qui a été retenu d'un lieu — catégorie, note,
+ * adresse, téléphone, site, notes — puis agir : appeler, ouvrir le site, s'y
+ * faire guider.
+ *
+ * Position dans le parcours : atteint depuis la carte plein écran FullMap, en
+ * touchant le marqueur d'un lieu puis sa bulle. En sortie, AddressForm pour la
+ * modification, ou un retour après suppression. Les actions de contact quittent
+ * l'application : composeur, navigateur, ou cartographie du système.
+ *
+ * Données : l'adresse n'est pas rechargée mais retrouvée dans la collection
+ * déjà présente dans TripsContext, à partir de l'identifiant reçu en paramètre
+ * de route ; la suppression passe par le même contexte. AuthContext fournit le
+ * compte courant, qui détermine si les actions de modification sont proposées.
+ * Les coordonnées de la vignette viennent du géocodeur du projet, cache mémoire
+ * d'abord. ThemeContext livre la palette et la préférence de vue satellite,
+ * useOfflineDisabled l'état du réseau.
+ *
+ * États pris en charge : chargement (squelette dédié), adresse introuvable
+ * (message centré), cartographie native indisponible (vignette repliée sur un
+ * dégradé, reste de la fiche intact), hors-ligne (modification et suppression
+ * neutralisées), adresse d'un autre membre (actions masquées).
+ */
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -26,8 +51,18 @@ import { getAddressHeroGradient, getAddressTypeBadge } from "../utils/addressHel
 import AddressDetailsSkeleton from "../components/addressDetails/AddressDetailsSkeleton";
 import AddressHeroCover from "../components/addressDetails/AddressHeroCover";
 import { useOfflineDisabled } from "../hooks/useOfflineDisabled";
+import logger from "../utils/logger";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 // Chargement conditionnel : react-native-maps nécessite un rebuild du dev client
+//
+// Deux indisponibilités distinctes sont absorbées ici. Le `require` peut
+// échouer quand le module natif n'est pas dans le binaire — Expo Go, ou client
+// de développement construit avant l'ajout de la dépendance : le `catch` prend
+// le relais. Il peut aussi réussir sans exposer de composant de carte, ce que
+// produit l'alias du bundle web ; c'est `mapsAvailable = !!MapView` qui
+// l'attrape, sans quoi le rendu monterait un composant nul. Un import statique
+// interromprait, lui, le chargement de tout l'écran.
 let MapView: any = null;
 let Marker: any  = null;
 let mapsAvailable = false;
@@ -37,12 +72,22 @@ try {
   Marker        = RNMaps.Marker;
   mapsAvailable = !!MapView;
 } catch (e) {
+  // Signalé en développement seulement : en production l'absence de carte est
+  // une dégradation prévue et non une anomalie à porter dans les journaux.
   if (__DEV__) console.warn("[AddressDetailsScreen] react-native-maps non disponible:", e);
 }
 
 type AddressDetailsScreenRouteProp      = RouteProp<RootStackParamList, "AddressDetails">;
 type AddressDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, "AddressDetails">;
 
+/**
+ * Compose la fiche d'une adresse.
+ *
+ * Les props viennent de la route et non du parent : `route.params` porte
+ * `addressId`, seul paramètre attendu. Effets de bord notables — géocodage au
+ * montage, ouverture d'applications externes par les actions de contact, alerte
+ * système de confirmation avant suppression puis retour à l'écran précédent.
+ */
 const AddressDetailsScreen: React.FC = () => {
   const route      = useRoute<AddressDetailsScreenRouteProp>();
   const navigation = useNavigation<AddressDetailsScreenNavigationProp>();
@@ -58,6 +103,9 @@ const AddressDetailsScreen: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [coords, setCoords]   = useState<GeoCoords | null>(null);
 
+  // L'adresse est extraite de la collection déjà chargée plutôt que demandée au
+  // serveur. `isReady` distingue « pas encore cherché » de « cherché sans
+  // succès » : sinon le message d'adresse introuvable clignoterait au montage.
   useEffect(() => {
     if (!loading) {
       const found = addresses.find((a) => a.id === addressId) || null;
@@ -72,6 +120,9 @@ const AddressDetailsScreen: React.FC = () => {
     let cancelled = false;
 
     const run = async () => {
+      // `undefined` signifie jamais tenté, `null` tenté sans résultat. Le
+      // second cas court-circuite lui aussi la requête, sans quoi une adresse
+      // introuvable serait resoumise à chaque ouverture de sa fiche.
       const cached = getCached(address.address, address.city, address.country);
       if (cached !== undefined) {
         if (!cancelled) setCoords(cached);
@@ -81,7 +132,12 @@ const AddressDetailsScreen: React.FC = () => {
       if (!cancelled) setCoords(result);
     };
 
-    run().catch(() => {});
+    // Un échec laisse `coords` à null et la vignette se replie sur son
+    // dégradé : la position n'est pas indispensable à la consultation, et le
+    // bouton d'itinéraire fonctionne sans elle.
+    run().catch((err) => logger.warn("[AddressDetailsScreen] geocoding error", err));
+    // Neutralise la réponse tardive d'une requête portant sur une adresse qui
+    // n'est plus affichée.
     return () => { cancelled = true; };
   }, [address]);
 
@@ -111,6 +167,10 @@ const AddressDetailsScreen: React.FC = () => {
 
   const handleCall    = () => { if (address?.phone)   Linking.openURL(`tel:${address.phone}`); };
   const handleWebsite = () => { if (address?.website) Linking.openURL(address.website); };
+  // L'itinéraire est délégué à l'application de cartographie du système : elle
+  // connaît la position de l'appareil et le mode de déplacement préféré, et ce
+  // chemin reste ouvert quand le module de carte natif manque. La destination
+  // est passée en texte, le géocodage ayant pu ne rien donner.
   const handleMaps    = () => {
     if (!address) return;
     const q = encodeURIComponent(`${address.address}, ${address.city}, ${address.country}`);
@@ -131,6 +191,9 @@ const AddressDetailsScreen: React.FC = () => {
 
   const gradient = getAddressHeroGradient(address.type);
   const badge    = getAddressTypeBadge(address.type, t);
+  // Une adresse rattachée à un voyage partagé est visible par tous ses membres
+  // mais ne se modifie que par celui qui l'a ajoutée : la comparaison porte donc
+  // sur l'auteur de la fiche, pas sur l'appartenance au voyage.
   const isOwner  = address.userId === user?.id;
 
   return (
@@ -154,6 +217,9 @@ const AddressDetailsScreen: React.FC = () => {
         {/* ── Rating + adresse courte ──────────────────────────────────────── */}
         <View style={styles.ratingRow}>
           <View style={styles.starsRow}>
+            {/* La note vient du service de lieux et reste facultative : sans
+                elle, cinq étoiles éteintes plutôt qu'une rangée masquée, pour
+                que la hauteur de l'en-tête ne varie pas d'une fiche à l'autre. */}
             {[1, 2, 3, 4, 5].map((star) => {
               const filled = address.rating == null ? false : star <= Math.round(address.rating);
               return (
@@ -192,6 +258,10 @@ const AddressDetailsScreen: React.FC = () => {
 
         {/* ── Vignette carte ──────────────────────────────────────────────── */}
         <View style={styles.mapThumb}>
+          {/* Le module de carte doit être présent et la position connue. Le
+              dégradé de repli n'est pas une erreur mais un état normal — bundle
+              web, client sans module natif, géocodage infructueux — et le
+              bouton d'itinéraire lui reste superposé. */}
           {mapsAvailable && coords ? (
             <MapView
               style={StyleSheet.absoluteFill}
@@ -202,6 +272,8 @@ const AddressDetailsScreen: React.FC = () => {
                 longitudeDelta: 0.005,
               }}
               mapType={satelliteMap ? "hybrid" : "standard"}
+              // Gestes coupés : la vignette est un visuel dans un contenu
+              // défilant, et une carte manipulable capterait le défilement.
               scrollEnabled={false}
               zoomEnabled={false}
               pitchEnabled={false}
@@ -209,8 +281,11 @@ const AddressDetailsScreen: React.FC = () => {
               showsCompass={false}
               toolbarEnabled={false}
             >
+              {/* Marqueur statique : surveiller ses redessins coûterait cher
+                  pour rien sur Android. L'ancrage en bas fait pointer la pointe
+                  de l'icône sur la coordonnée exacte. */}
               <Marker coordinate={coords} anchor={{ x: 0.5, y: 1 }} tracksViewChanges={false}>
-                <Ionicons name="location" size={28} color={colors.terra} />
+                <Ionicons name="location" size={28} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
               </Marker>
             </MapView>
           ) : (

@@ -201,7 +201,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
               />
             </View>
             <View style={styles.termsRow}>
-              <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} activeOpacity={0.8}>
+              <TouchableOpacity
+                onPress={() => setTermsAccepted(!termsAccepted)}
+                activeOpacity={0.8}
+                accessibilityRole="checkbox"
+                accessibilityLabel={t("common.a11y.acceptTerms")}
+                accessibilityState={{ checked: termsAccepted }}
+              >
                 <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: colors.surface }, termsAccepted && [styles.checkboxChecked, { backgroundColor: colors.terra, borderColor: colors.terra }]]}>
                   {termsAccepted && <Ionicons name="checkmark" size={9} color={colors.white} />}
                 </View>

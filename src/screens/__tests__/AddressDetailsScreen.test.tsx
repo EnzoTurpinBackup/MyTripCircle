@@ -41,6 +41,7 @@ import { Alert, Linking } from "react-native";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
 import AddressDetailsScreen from "../AddressDetailsScreen";
+import logger from "../../utils/logger";
 import { lightColors } from "../../contexts/ThemeContext";
 import { OFFLINE_OPACITY } from "../../hooks/useOfflineDisabled";
 
@@ -74,6 +75,9 @@ const renderScreen = async () => {
 describe("AddressDetailsScreen", () => {
   let alert: jest.SpyInstance;
   let openURL: jest.SpyInstance;
+  // Le journal est muselé pour tous les scénarios : l'échec de géocodage est un
+  // cas nominal de la suite, sa trace n'a pas à polluer la sortie des tests.
+  let warn: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -83,6 +87,7 @@ describe("AddressDetailsScreen", () => {
     mockDeleteAddress.mockResolvedValue(undefined);
     alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+    warn = jest.spyOn(logger, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -265,6 +270,19 @@ describe("AddressDetailsScreen", () => {
       // Assert
       expect(screen.queryByTestId("map-view")).toBeNull();
       expect(screen.getByTestId(MAP_PLACEHOLDER_TEST_ID)).toBeTruthy();
+    });
+
+    it("should log the failure when the geocoding service rejects", async () => {
+      // Arrange
+      mockGetCached.mockReturnValue(undefined);
+      const failure = new Error("service indisponible");
+      mockGeocodeAddress.mockRejectedValue(failure);
+
+      // Act
+      await renderScreen();
+
+      // Assert
+      expect(warn).toHaveBeenCalledWith("[AddressDetailsScreen] geocoding error", failure);
     });
 
     it("should use the standard map type by default", async () => {

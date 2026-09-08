@@ -6,6 +6,7 @@ import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
 import i18n from "../../utils/i18n";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const timeAgo = (date: Date | string): string => {
   const diff = Date.now() - new Date(date).getTime();
@@ -49,11 +50,11 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
       </View>
       <View style={styles.receivedActions}>
         <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: colors.terra }]} onPress={() => onRespond(item.id, "accept")} activeOpacity={0.8}>
-          <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+          <Ionicons name="checkmark" size={16} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.acceptBtnText}>{t("friends.accept")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.declineBtn, { backgroundColor: colors.bgMid }]} onPress={() => onRespond(item.id, "decline")} activeOpacity={0.7}>
-          <Ionicons name="close" size={16} color={colors.textMid} />
+          <Ionicons name="close" size={16} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[styles.declineBtnText, { color: colors.textMid }]}>{t("friends.decline")}</Text>
         </TouchableOpacity>
       </View>
@@ -74,7 +75,13 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
         <View style={[styles.pendingPill, { backgroundColor: colors.bgMid }]}>
           <Text style={[styles.pendingPillText, { color: colors.textMid }]}>{t("friends.requestPending")}</Text>
         </View>
-        <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: colors.dangerLight }]} onPress={() => onCancel(item)} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={[styles.cancelBtn, { backgroundColor: colors.dangerLight }]}
+          onPress={() => onCancel(item)}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("friends.cancelRequest")}
+        >
           <Ionicons name="close" size={14} color={colors.danger} />
         </TouchableOpacity>
       </View>

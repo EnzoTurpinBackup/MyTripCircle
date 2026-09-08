@@ -11,6 +11,30 @@ import { RootStackParamList } from "../types";
 
 type InvitationScreenRouteProp = RouteProp<RootStackParamList, "Invitation">;
 
+/**
+ * Porte l'écran des invitations dans ses deux usages : la consultation de
+ * toutes les invitations reçues et émises, et l'ouverture d'une invitation
+ * précise atteinte par un lien externe. Les deux partagent les mêmes actions
+ * d'acceptation et de refus, d'où leur réunion ici.
+ *
+ * @returns L'invitation ciblée par le lien et l'état de la réponse en cours,
+ * les listes reçue et émise avec l'onglet actif et la liste `displayed` qui en
+ * découle, l'état de la fenêtre de refus, l'identifiant de l'invitation en
+ * cours d'acceptation, la notification de réussite, et l'ensemble des
+ * gestionnaires.
+ *
+ * @remarks Le mode est déterminé par la présence d'un jeton dans la route, et
+ * ce jeton est resynchronisé à chaque changement de paramètres : un second lien
+ * peut être ouvert alors que l'écran est déjà affiché. Une invitation dont le
+ * voyage est identifiable renvoie vers l'aperçu public de ce voyage plutôt que
+ * de s'afficher seule : la décision d'accepter suppose de savoir à quoi l'on
+ * est convié. Les invitations reçues sont triées par statut avant date, les
+ * décisions en attente devant apparaître en premier. Les consulter vaut prise
+ * de connaissance et solde les notifications correspondantes. Accepter depuis
+ * un lien sans être connecté propose l'authentification plutôt que d'échouer.
+ * L'identifiant de l'invitation en cours d'acceptation est conservé pour ne
+ * signaler l'attente que sur la ligne concernée.
+ */
 export function useInvitationManagement() {
   const route      = useRoute<InvitationScreenRouteProp>();
   const navigation = useNavigation<any>();

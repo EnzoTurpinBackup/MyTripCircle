@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface Props {
   input: string;
@@ -40,7 +41,7 @@ const SearchBarWithHistory: React.FC<Props> = ({
       ]}
     >
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color={input.trim() ? colors.terra : colors.textLight} />
+        <Ionicons name="search" size={20} color={input.trim() ? colors.terra : colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
         <TextInput
           style={[styles.searchInput, { color: colors.text }]}
           placeholder={t("addFriend.searchPlaceholder")}
@@ -54,7 +55,11 @@ const SearchBarWithHistory: React.FC<Props> = ({
           autoCorrect={false}
         />
         {input.length > 0 ? (
-          <TouchableOpacity onPress={() => onInputChange("")}>
+          <TouchableOpacity
+            onPress={() => onInputChange("")}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.a11y.clearSearch")}
+          >
             <View style={[styles.clearBtn, { backgroundColor: colors.bgMid }]}>
               <Ionicons name="close" size={16} color={colors.textLight} />
             </View>
@@ -76,13 +81,15 @@ const SearchBarWithHistory: React.FC<Props> = ({
               onPress={() => onHistorySelect(item)}
               activeOpacity={0.7}
             >
-              <Ionicons name="time-outline" size={15} color={colors.textLight} />
+              <Ionicons name="time-outline" size={15} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[styles.historyItem, { color: colors.text }]} numberOfLines={1}>
                 {item}
               </Text>
               <TouchableOpacity
                 onPress={() => onHistoryRemove(item)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.a11y.removeSearchHistoryItem", { query: item })}
               >
                 <Ionicons name="close" size={13} color={colors.textLight} />
               </TouchableOpacity>

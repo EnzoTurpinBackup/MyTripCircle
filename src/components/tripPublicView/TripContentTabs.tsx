@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { formatDate } from "../../utils/i18n";
 import { getBookingTypeIcon, getBookingTypeColors } from "../../utils/bookingHelpers";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const fmtDateShort = (d: string | Date) =>
   formatDate(d, { day: "numeric", month: "short" });
@@ -48,6 +49,7 @@ const TripContentTabs: React.FC<Props> = ({
               name={tab === "bookings" ? "receipt-outline" : "location-outline"}
               size={15}
               color={activeTab === tab ? colors.terra : colors.textLight}
+              {...DECORATIVE_ELEMENT_PROPS}
             />
             <Text
               style={[
@@ -79,6 +81,7 @@ const TripContentTabs: React.FC<Props> = ({
                     name={getBookingTypeIcon(b.type) as keyof typeof Ionicons.glyphMap}
                     size={18}
                     color={getBookingTypeColors(b.type, isDark)?.stripe ?? colors.terra}
+                    {...DECORATIVE_ELEMENT_PROPS}
                   />
                 </View>
                 <View style={styles.itemInfo}>
@@ -96,12 +99,12 @@ const TripContentTabs: React.FC<Props> = ({
                     {b.price}{b.currency ? ` ${b.currency}` : t("tripPublicView.currencyFallback")}
                   </Text>
                 )}
-                <Ionicons name="chevron-forward" size={14} color={colors.border} style={{ marginLeft: 4 }} />
+                <Ionicons name="chevron-forward" size={14} color={colors.border} style={{ marginLeft: 4 }} {...DECORATIVE_ELEMENT_PROPS} />
               </TouchableOpacity>
             ))
           ) : (
             <View style={styles.emptyBox}>
-              <Ionicons name="receipt-outline" size={28} color={colors.textLight} />
+              <Ionicons name="receipt-outline" size={28} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noBookings")}</Text>
             </View>
           )}
@@ -133,7 +136,7 @@ const TripContentTabs: React.FC<Props> = ({
             ))
           ) : (
             <View style={styles.emptyBox}>
-              <Ionicons name="location-outline" size={28} color={colors.textLight} />
+              <Ionicons name="location-outline" size={28} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[styles.emptyText, { color: colors.textLight }]}>{t("tripPublicView.noAddresses")}</Text>
             </View>
           )}

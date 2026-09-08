@@ -7,6 +7,7 @@ import { Booking } from "../../types";
 import { formatDate, getBookingStatusTranslation } from "../../utils/i18n";
 import { getBookingTypeIcon, getBookingTypeColors, getBookingStatusColors } from "../../utils/bookingHelpers";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const MOSS = "#6B8C5A";
 
@@ -37,7 +38,7 @@ const BookingCard: React.FC<Props> = ({ booking: item, onPress }) => {
       <View style={styles.cardBody}>
         <View style={styles.cardTopRow}>
           <View style={[styles.typeIconCircle, { backgroundColor: typeBg }]}>
-            <Ionicons name={getBookingTypeIcon(item.type) as keyof typeof Ionicons.glyphMap} size={24} color={stripeColor} />
+            <Ionicons name={getBookingTypeIcon(item.type) as keyof typeof Ionicons.glyphMap} size={24} color={stripeColor} {...DECORATIVE_ELEMENT_PROPS} />
           </View>
 
           <View style={styles.cardInfo}>
@@ -65,7 +66,7 @@ const BookingCard: React.FC<Props> = ({ booking: item, onPress }) => {
 
         {item.address ? (
           <View style={styles.cardAddressRow}>
-            <Ionicons name="location-outline" size={16} color={colors.textLight} />
+            <Ionicons name="location-outline" size={16} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.cardAddressText, { color: colors.textLight }]} numberOfLines={1}>
               {item.address}
             </Text>
@@ -74,7 +75,7 @@ const BookingCard: React.FC<Props> = ({ booking: item, onPress }) => {
 
         {item.confirmationNumber ? (
           <View style={styles.cardConfRow}>
-            <Ionicons name="checkmark-circle-outline" size={16} color={MOSS} />
+            <Ionicons name="checkmark-circle-outline" size={16} color={MOSS} {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={[styles.cardConfText, { color: colors.textMid }]}>{item.confirmationNumber}</Text>
           </View>
         ) : null}

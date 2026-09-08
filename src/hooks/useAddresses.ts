@@ -20,10 +20,22 @@ try {
   if (__DEV__) console.warn("[useAddresses] react-native-maps non disponible:", e);
 }
 
+/**
+ * Composants de cartographie réexportés depuis le module natif, ou `null` quand
+ * celui-ci est absent. Les écrans les consomment par ce point unique afin que
+ * l'indisponibilité de la carte soit traitée à un seul endroit.
+ */
 export const MapView: any = _MapView;
 export const Marker: any = _Marker;
+
+/**
+ * Indique si la cartographie native est utilisable. Le module manque sur le web
+ * et dans les environnements d'exécution sans code natif : l'écran doit alors
+ * se replier sur la seule liste d'adresses au lieu de laisser une carte vide.
+ */
 export const mapsAvailable: boolean = _mapsAvailable;
 
+/** Cadrage d'une carte : centre et amplitude affichée, en degrés. */
 export type Region = {
   latitude: number;
   longitude: number;
@@ -31,6 +43,7 @@ export type Region = {
   longitudeDelta: number;
 };
 
+/** Filtre du carnet d'adresses, aligné sur les catégories de lieux. */
 export type FilterType = "all" | "hotel" | "restaurant" | "activity" | "transport" | "other";
 
 const DEFAULT_REGION: Region = {
@@ -42,6 +55,26 @@ const DEFAULT_REGION: Region = {
 
 type AddressesNavigationProp = StackNavigationProp<RootStackParamList, "Main">;
 
+/**
+ * Alimente l'écran du carnet d'adresses : liste filtrée, positionnement des
+ * lieux sur la carte d'aperçu et actions de création, de modification et de
+ * suppression.
+ *
+ * @returns Les adresses brutes et filtrées, celles dont la position est connue
+ * et qui peuvent donc être affichées sur la carte, le filtre courant et son
+ * accesseur, le cadrage `widgetRegion`, les indicateurs de chargement et de
+ * géocodage, l'adresse dont la feuille d'actions est ouverte, et les
+ * gestionnaires d'interaction.
+ *
+ * @remarks Les données sont rechargées à chaque prise de focus, une adresse
+ * pouvant avoir été ajoutée depuis un autre écran. Le géocodage est mené en
+ * série avec une pause d'un peu plus d'une seconde entre deux requêtes, pour
+ * respecter la limite d'usage de Nominatim, et chaque adresse n'est soumise
+ * qu'une fois. Le cadrage privilégie la position de l'appareil ; à défaut il
+ * englobe les lieux connus, et se replie enfin sur une vue large lorsque aucune
+ * position n'est disponible. Les marqueurs sont tirés des seules adresses
+ * géocodées, la liste restant complète.
+ */
 export function useAddresses() {
   const navigation = useNavigation<AddressesNavigationProp>();
   const { addresses, loading, deleteAddress, refreshData } = useTrips();

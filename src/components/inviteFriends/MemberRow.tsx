@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 import { CollabInfo } from "../../hooks/useInviteFriends";
 import { F } from "../../theme/fonts";
 
@@ -29,9 +30,11 @@ export const AvatarBubble: React.FC<{
       ]}
     >
       {avatar ? (
+        /* Décorative : le nom du membre est lu juste à côté de sa bulle. */
         <Image
           source={{ uri: avatar }}
           style={{ width: size, height: size, borderRadius: size / 2 }}
+          {...DECORATIVE_ELEMENT_PROPS}
         />
       ) : (
         <Text style={[s.avatarTxt, { fontSize: size * 0.35 }]}>{getInitials(name)}</Text>

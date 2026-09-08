@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, ViewStyle, DimensionValue } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 interface SkeletonBoxProps {
   width?: DimensionValue;
@@ -37,6 +38,9 @@ const SkeletonBox: React.FC<SkeletonBoxProps> = ({
     return () => loop.stop();
   }, [anim]);
 
+  // Le squelette n'est qu'une silhouette d'attente : le contenu qu'il préfigure
+  // le remplace dès son arrivée. L'annoncer ferait lire au lecteur d'écran une
+  // suite de blocs vides à la place de l'information attendue.
   return (
     <Animated.View
       style={[
@@ -49,6 +53,7 @@ const SkeletonBox: React.FC<SkeletonBoxProps> = ({
         },
         style,
       ]}
+      {...DECORATIVE_ELEMENT_PROPS}
     />
   );
 };

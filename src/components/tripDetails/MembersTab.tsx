@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Trip, Collaborator } from "../../types";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 import { F } from "../../theme/fonts";
 
 interface CurrentUser {
@@ -46,14 +47,15 @@ const MembersTab: React.FC<Props> = ({
     <View style={s.tabContent}>
       {isOwner && onInvite && (
         <TouchableOpacity style={[s.inviteBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onInvite} activeOpacity={0.8}>
-          <Ionicons name="person-add-outline" size={18} color={colors.textMid} />
+          <Ionicons name="person-add-outline" size={18} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[s.inviteBtnText, { color: colors.textMid }]}>{t("tripDetails.inviteFriends")}</Text>
         </TouchableOpacity>
       )}
       <View style={[s.memberRow, { borderBottomColor: colors.bgMid }]}>
         <View style={[s.memberAvatar, { backgroundColor: isOwner ? colors.terra : colors.textLight }]}>
           {user?.avatar
-            ? <Image source={{ uri: user.avatar }} style={s.memberAvatarPhoto} />
+            /* Décorative : le nom et le rôle du membre sont lus juste à côté. */
+            ? <Image source={{ uri: user.avatar }} style={s.memberAvatarPhoto} {...DECORATIVE_ELEMENT_PROPS} />
             : <Text style={s.memberAvatarText}>{(user?.name || "V")[0].toUpperCase()}</Text>
           }
         </View>
@@ -88,7 +90,8 @@ const MembersTab: React.FC<Props> = ({
             >
               <View style={[s.memberAvatar, { backgroundColor: avatarBg }]}>
                 {collaboratorUser?.avatar
-                  ? <Image source={{ uri: collaboratorUser.avatar }} style={s.memberAvatarPhoto} />
+                  /* Décorative : le nom et le rôle du collaborateur sont lus juste à côté. */
+                  ? <Image source={{ uri: collaboratorUser.avatar }} style={s.memberAvatarPhoto} {...DECORATIVE_ELEMENT_PROPS} />
                   : <Text style={s.memberAvatarText}>{displayName[0]?.toUpperCase() || "?"}</Text>
                 }
               </View>

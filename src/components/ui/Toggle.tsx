@@ -29,7 +29,7 @@ const Toggle: React.FC<ToggleProps> = ({
     accessibilityLabel={accessibilityLabel}
     style={[
       styles.track,
-      { backgroundColor: value ? (trackColor ?? colors.terra) : colors.border },
+      { backgroundColor: value ? (trackColor ?? colors.terra) : colors.toggleTrackOff },
     ]}
   >
     <View style={[styles.knob, { transform: [{ translateX: value ? 22 : 0 }] }]} />

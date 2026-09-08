@@ -259,12 +259,18 @@ describe("EditProfileScreen", () => {
       expect(error).toHaveBeenCalledWith("updateAvatar error:", expect.any(Error));
     });
 
+    // L'icône est décorative : elle porte `DECORATIVE_ELEMENT_PROPS` et sort donc
+    // du parcours des technologies d'assistance, que les requêtes ignorent par
+    // défaut. C'est bien son rendu visuel que ce cas observe — d'où la levée
+    // explicite du filtre, plutôt qu'un retrait du masquage côté composant.
+    const cameraIcon = () => screen.queryByText("icon:camera", { includeHiddenElements: true });
+
     it("should show a progress indicator while the photo is being uploaded", async () => {
       // Arrange
       let release: () => void = () => {};
       updateAvatar.mockReturnValue(new Promise<void>((r) => { release = r; }));
       render(<EditProfileScreen />);
-      expect(screen.getByText("icon:camera")).toBeTruthy();
+      expect(cameraIcon()).toBeTruthy();
 
       // Act
       await act(async () => {
@@ -272,9 +278,9 @@ describe("EditProfileScreen", () => {
       });
 
       // Assert
-      expect(screen.queryByText("icon:camera")).toBeNull();
+      expect(cameraIcon()).toBeNull();
       await act(async () => { release(); });
-      expect(screen.getByText("icon:camera")).toBeTruthy();
+      expect(cameraIcon()).toBeTruthy();
     });
 
     it("should ignore a second request while an upload is already running", async () => {

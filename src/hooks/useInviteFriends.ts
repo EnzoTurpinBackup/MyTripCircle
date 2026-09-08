@@ -19,6 +19,29 @@ import type { CollabInfo } from "./useTripMembers";
 
 type ScreenNavProp = StackNavigationProp<RootStackParamList, "InviteFriends">;
 
+/**
+ * Point d'entrée unique de l'écran d'invitation à un voyage. Assemble la
+ * composition actuelle du groupe, les invitations en attente, le lien
+ * partageable et l'envoi de nouvelles invitations, et en déduit qui reste
+ * effectivement invitable.
+ *
+ * @param tripId Voyage auquel on convie des participants.
+ * @returns L'état complet de l'écran : voyage, propriétaire et membres actifs,
+ * invitations en attente, amis répartis entre `friendsToInvite` et
+ * `alreadyMembers`, lien d'invitation, indicateurs de chargement, valeurs
+ * animées des deux feuilles et l'ensemble des gestionnaires d'action.
+ *
+ * @remarks L'accès est contrôlé dès le chargement : un collaborateur sans droit
+ * d'inviter est averti puis renvoyé à l'écran précédent, plutôt que de laisser
+ * l'écran se dessiner pour rien. Les amis déjà membres ou déjà destinataires
+ * d'une invitation en attente sont écartés de la liste à inviter, ce
+ * dédoublonnage se faisant sur l'identifiant pour les uns et sur l'adresse
+ * pour les autres, les invités n'ayant pas nécessairement de compte. Les noms
+ * et avatars proviennent de la liste d'amis locale plutôt que d'un appel
+ * dédié ; un membre inconnu de cette liste reçoit donc un libellé générique.
+ * Les valeurs animées sont réexposées à plat pour rester compatibles avec
+ * l'écran existant.
+ */
 export function useInviteFriends(tripId: string) {
   const navigation = useNavigation<ScreenNavProp>();
   const { t } = useTranslation();

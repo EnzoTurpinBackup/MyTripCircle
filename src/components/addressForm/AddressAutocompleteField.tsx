@@ -13,6 +13,7 @@ import { AddressSuggestion } from "../../services/PlacesService";
 import { useTheme } from "../../contexts/ThemeContext";
 import { RADIUS, SHADOW } from "../../theme";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 type Props = {
   value: string;
@@ -46,6 +47,7 @@ const AddressAutocompleteField: React.FC<Props> = ({
           size={20}
           color={colors.textLight}
           style={[styles.inputIcon, styles.inputIconTop]}
+          {...DECORATIVE_ELEMENT_PROPS}
         />
         <TextInput
           style={[styles.inputText, styles.inputTextArea, { color: colors.text }]}
@@ -82,6 +84,7 @@ const AddressAutocompleteField: React.FC<Props> = ({
                 size={18}
                 color={colors.terra}
                 style={{ marginRight: 10 }}
+                {...DECORATIVE_ELEMENT_PROPS}
               />
               <Text style={[styles.suggestionText, { color: colors.text }]}>{s.description}</Text>
             </TouchableOpacity>

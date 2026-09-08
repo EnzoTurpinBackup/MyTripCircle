@@ -9,6 +9,10 @@ import ApiService from "../services/ApiService";
 import { parseApiError } from "../utils/i18n";
 import { useBottomSheet } from "./useBottomSheet";
 
+/**
+ * Membre tel que le manipule la feuille d'actions : l'indicateur `isOwner`
+ * suffit à décider des actions permises, sans avoir à recharger les droits.
+ */
 export interface CollabInfo {
   userId: string;
   name: string;
@@ -23,6 +27,19 @@ type ScreenNavProp = StackNavigationProp<RootStackParamList, "InviteFriends">;
  * Gère la sélection d'un membre via le bottom sheet et les actions associées
  * (retrait, transfert de propriété, voir le profil).
  * Les états owner/activeMembers restent dans le hook orchestrateur.
+ *
+ * @param tripId Voyage sur lequel portent les actions.
+ * @param onRefresh Rechargement de la liste des membres, appelé après toute
+ * action ayant modifié la composition du groupe.
+ * @returns Le membre sélectionné, l'indicateur `actionLoading`, les valeurs
+ * animées de la feuille, ses commandes d'ouverture et de fermeture, et les
+ * trois actions proposées.
+ *
+ * @remarks La feuille est refermée avant d'ouvrir la confirmation : deux
+ * couches modales superposées se recouvrent mal sur iOS. Après une action, le
+ * rafraîchissement local est complété par celui du contexte voyages, le retrait
+ * d'un membre ou un changement de propriétaire modifiant aussi les listes des
+ * autres écrans.
  */
 export function useTripMembers(tripId: string, onRefresh: () => Promise<void>) {
   const navigation = useNavigation<ScreenNavProp>();

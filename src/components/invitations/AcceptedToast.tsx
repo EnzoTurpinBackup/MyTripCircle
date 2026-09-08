@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface AcceptedToastProps {
   toastTrip: { name: string; id: string } | null;
@@ -36,7 +37,7 @@ const AcceptedToast: React.FC<AcceptedToastProps> = ({ toastTrip, toastAnim, onV
       pointerEvents="box-none"
     >
       <View style={styles.toastIcon}>
-        <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+        <Ionicons name="checkmark" size={20} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
       </View>
       <View style={styles.toastBody}>
         <Text style={styles.toastTitle} numberOfLines={1}>

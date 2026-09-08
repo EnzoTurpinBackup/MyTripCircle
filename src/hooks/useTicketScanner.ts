@@ -7,6 +7,11 @@ import BarcodeScanner from "@react-native-ml-kit/barcode-scanning";
 import { useTranslation } from "react-i18next";
 import { Booking } from "../types";
 
+/**
+ * Champs de réservation reconstitués depuis un code-barres. Tous sont
+ * facultatifs : un billet ne livre pas toujours la même quantité
+ * d'informations, et l'utilisateur complète le reste à la main.
+ */
 export interface ScannedBookingData {
   type?: Booking["type"];
   title?: string;
@@ -17,6 +22,11 @@ export interface ScannedBookingData {
   confirmationNumber?: string;
 }
 
+/**
+ * Étape du parcours de numérisation : choix de la source, visée à la caméra ou
+ * analyse d'une image déjà enregistrée, un billet étant aussi souvent reçu par
+ * courriel que présenté sur papier.
+ */
 export type ScanMode = "choose" | "camera" | "gallery";
 
 function julianToDate(julian: number): Date {
@@ -97,6 +107,31 @@ function parseBarcode(raw: string): ScannedBookingData {
   return parseBCBP(raw) ?? parseGeneric(raw);
 }
 
+/**
+ * Conduit la lecture du code-barres d'un titre de transport pour préremplir le
+ * formulaire de réservation, la saisie manuelle d'un numéro de dossier et d'un
+ * horaire étant longue et sujette aux fautes.
+ *
+ * @param visible Ouverture du lecteur.
+ * @param onFill Reçoit les champs reconnus lorsque l'utilisateur les accepte ;
+ * c'est le formulaire appelant qui décide de leur usage.
+ * @param onClose Ferme le lecteur une fois les données transmises.
+ * @returns L'étape courante et son accesseur, la permission caméra et sa
+ * demande, le résultat analysé ainsi que la donnée brute, les indicateurs
+ * d'analyse et d'erreur, l'aperçu de l'image, la valeur animée du panneau de
+ * résultat, et les gestionnaires de lecture, d'acceptation et de reprise.
+ *
+ * @remarks Deux analyses sont tentées dans l'ordre : d'abord le format
+ * normalisé des cartes d'embarquement aériennes, dont les champs sont à
+ * position fixe, puis une extraction par motifs qui couvre les billets de train
+ * et les confirmations diverses. Cette seconde voie est faillible par nature,
+ * d'où la présentation du résultat pour validation avant tout remplissage. Le
+ * quantième figurant sur une carte d'embarquement ne porte pas l'année : elle
+ * est déduite en supposant que le vol est proche, un quantième nettement passé
+ * étant rapporté à l'année suivante. La donnée brute est conservée pour que
+ * l'utilisateur puisse vérifier ce qui a été lu quand l'interprétation
+ * surprend.
+ */
 export function useTicketScanner(
   visible: boolean,
   onFill: (data: ScannedBookingData) => void,

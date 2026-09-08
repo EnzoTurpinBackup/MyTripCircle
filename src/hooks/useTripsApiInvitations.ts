@@ -8,6 +8,24 @@ interface InvitationsSetters {
   refreshData: () => Promise<void>;
 }
 
+/**
+ * Volet « invitations » de la façade d'accès distant : émission, consultation
+ * dans les deux sens, réponse et annulation, ainsi que le lien de partage.
+ *
+ * @param setters.setInvitations Mise à jour de la liste d'invitations du
+ * contexte.
+ * @param setters.refreshData Rechargement complet des données, déclenché quand
+ * une invitation acceptée fait entrer un nouveau voyage dans le périmètre de
+ * l'utilisateur.
+ * @returns Les sept opérations liées aux invitations.
+ *
+ * @remarks Seule l'émission alimente la liste du contexte ; les consultations
+ * renvoient leur résultat sans le stocker, les écrans concernés étant
+ * ponctuels. L'acceptation est le seul cas déclenchant un rechargement global :
+ * un refus ne modifie que le statut de l'invitation. La consultation par jeton
+ * conserve les données jointes du voyage et de l'invitant, l'écran d'accueil
+ * d'une invitation devant les afficher avant toute authentification.
+ */
 export function useTripsApiInvitations({ setInvitations, refreshData }: InvitationsSetters) {
   const createInvitation = useCallback(
     async (invitation: {

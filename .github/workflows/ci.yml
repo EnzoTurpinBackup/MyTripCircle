@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, tests & audit
+    name: Types, tests & audit
     runs-on: ubuntu-latest
     env:
       # Booléen dérivé du secret : permet de conditionner l'étape SonarCloud
