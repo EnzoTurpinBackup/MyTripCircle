@@ -48,10 +48,13 @@ const setIap = (overrides: Record<string, unknown> = {}) => {
   });
 };
 
+const refreshSubscription = jest.fn();
+
 const setSubscription = (overrides: Record<string, unknown> = {}) => {
   (useSubscription as jest.Mock).mockReturnValue({
     isPremium: () => false,
     subscription: null,
+    refreshSubscription,
     ...overrides,
   });
 };
@@ -63,6 +66,16 @@ describe("SubscriptionScreen", () => {
     (useTheme as jest.Mock).mockReturnValue({ colors: lightColors });
     setIap();
     setSubscription();
+  });
+
+  describe("rafraîchissement après achat", () => {
+    it("should hand the subscription refresh to the purchase hook", () => {
+      // Arrange & Act
+      render(<SubscriptionScreen />);
+
+      // Assert
+      expect(useSubscriptionIap).toHaveBeenCalledWith({ onPurchaseSuccess: refreshSubscription });
+    });
   });
 
   describe("catalogue des offres", () => {
