@@ -169,6 +169,9 @@ const trips = {
     screenTitle: "Edit Trip",
     saveButton: "Save",
     changeCoverPhoto: "Change cover photo",
+    a11y: {
+      currentCover: "Current trip cover photo",
+    },
     tripNameLabel: "Trip name",
     tripNamePlaceholder: "My amazing trip...",
     mainDestination: "Main destination",

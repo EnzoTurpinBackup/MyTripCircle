@@ -122,6 +122,9 @@ const profile = {
     changePhoto: "Change",
     photoPermissionDenied: "Permission denied. Please allow access to your photo library in settings.",
     photoUploadError: "Failed to update profile photo.",
+    a11y: {
+      currentAvatar: "Current profile photo",
+    },
   },
   changePassword: {
     title: "Change Password",
