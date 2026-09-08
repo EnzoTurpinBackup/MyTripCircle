@@ -1,3 +1,28 @@
+/**
+ * Écran de recherche nominative d'un futur ami, à partir d'une adresse
+ * électronique ou d'un numéro de téléphone.
+ *
+ * Besoin couvert : retrouver le compte d'une personne connue hors de
+ * l'application, vérifier qu'il s'agit bien d'elle, et lui adresser une demande
+ * d'amitié. À défaut de recherche en cours, l'écran propose les suggestions du
+ * serveur.
+ *
+ * Position dans le parcours : atteint par le bouton d'ajout de FriendsScreen.
+ * En sortie, FriendProfile pour examiner une fiche avant de se décider, et
+ * FriendRequestConfirmation une fois la demande partie.
+ *
+ * Données : la recherche interroge directement ApiService, sans passer par un
+ * contexte, le résultat n'ayant pas vocation à être conservé ; l'envoi de la
+ * demande et la liste de suggestions viennent de FriendsContext, qui met à jour
+ * les listes de FriendsScreen. L'historique des recherches est tenu par
+ * useSearchHistory, qui le persiste dans le stockage local.
+ *
+ * États pris en charge : recherche en cours, compte introuvable ou saisie
+ * correspondant à son propre compte (message explicite), résultat trouvé (carte
+ * avec envoi et accès à la fiche), aucune suggestion disponible, envoi en cours
+ * (les cartes désactivent leur bouton). Une saisie qui n'a la forme ni d'une
+ * adresse ni d'un numéro n'entraîne aucun appel et laisse l'écran en l'état.
+ */
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -25,14 +50,34 @@ import SuggestionCard from "../components/addFriend/SuggestionCard";
 import SearchBarWithHistory from "../components/addFriend/SearchBarWithHistory";
 import useSearchHistory from "../hooks/useSearchHistory";
 import BackButton from "../components/ui/BackButton";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Reconnaît la nature de la saisie pour choisir le critère de recherche. Le
+ * champ est unique à dessein — l'utilisateur n'a pas à déclarer au préalable
+ * s'il tape une adresse ou un numéro — et un retour `null` signifie que la
+ * saisie est encore incomplète : aucune requête n'est alors lancée.
+ */
 const detectContactType = (input: string): "email" | "phone" | null => {
   const t = input.trim();
   if (/^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(t)) return "email";
+  // Les séparateurs sont retirés avant la comparaison : un numéro est copié
+  // depuis un carnet d'adresses ou dicté avec des espaces, des points ou des
+  // parenthèses, mises en forme qui ne changent rien au numéro lui-même.
   if (/^\+?\d{1,4}[-\s.]?\d{1,4}[-\s.]?\d{6,15}$/.test(t.replaceAll(/[\s\-()]/g, ""))) return "phone"; // NOSONAR
   return null;
 };
 
+/**
+ * Compose l'écran de recherche et d'envoi d'une demande d'amitié.
+ *
+ * L'écran est poussé sans paramètre de route ; la saisie, le résultat de
+ * recherche et les indicateurs d'attente sont locaux, les suggestions et
+ * l'envoi venant de FriendsContext. Effets de bord notables — il demande les
+ * suggestions au montage, interroge le serveur après une pause de saisie,
+ * écrit chaque recherche aboutie dans le stockage local, et remplace l'écran
+ * courant par la confirmation une fois la demande partie.
+ */
 const AddFriendScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
@@ -59,6 +104,8 @@ const AddFriendScreen: React.FC = () => {
     if (!trimmed) return;
     const type = detectContactType(trimmed);
     if (!type) return;
+    // Six cents millisecondes après la dernière frappe : assez pour qu'une
+    // adresse tapée d'un trait ne produise qu'un seul appel.
     searchTimeout.current = setTimeout(async () => {
       setSearching(true);
       try {
@@ -66,9 +113,16 @@ const AddFriendScreen: React.FC = () => {
           type === "email" ? { email: trimmed } : { phone: trimmed }
         );
         setSearchResult(result);
+        // Seules les recherches abouties entrent dans l'historique : reproposer
+        // une saisie qui n'a rien donné n'aiderait pas l'utilisateur.
         saveToHistory(trimmed);
       } catch (e: any) {
+        // Le message d'erreur arrive encapsulé en JSON ou en texte brut selon
+        // la couche qui l'a produit ; le repli lit le message tel quel.
         const msg = (() => { try { return JSON.parse(e.message)?.error; } catch { return e.message; } })();
+        // Deux cas seulement sont explicités : compte inconnu et recherche de
+        // son propre compte. Toute autre défaillance laisse searchError nul et
+        // l'écran sans message.
         if (msg?.includes("not found") || msg?.includes("404")) setSearchError(t("addFriend.errorNotFound"));
         else if (msg?.includes("yourself")) setSearchError(t("addFriend.errorYourself"));
         setSearchResult(null);
@@ -83,6 +137,8 @@ const AddFriendScreen: React.FC = () => {
     const type = detectContactType(trimmed);
     try {
       setSending(true);
+      // L'adresse transmise par l'appelant prime sur la saisie : une carte de
+      // suggestion désigne un compte précis, indépendamment du champ.
       let requestPayload: { recipientEmail?: string; recipientPhone?: string };
       if (recipientEmail) {
         requestPayload = { recipientEmail };
@@ -94,6 +150,8 @@ const AddFriendScreen: React.FC = () => {
       const res = await sendFriendRequest(requestPayload);
       const name = overrideName ?? searchResult?.name ?? trimmed;
       const email = recipientEmail ?? searchResult?.email ?? (type === "email" ? trimmed : undefined);
+      // replace et non navigate : revenir en arrière depuis la confirmation
+      // doit ramener à la liste d'amis, non à une recherche déjà consommée.
       navigation.replace("FriendRequestConfirmation", {
         recipientName: name,
         recipientEmail: email,
@@ -143,7 +201,7 @@ const AddFriendScreen: React.FC = () => {
 
           {searchError && !searching && (
             <View style={styles.notFoundBox}>
-              <Ionicons name="person-outline" size={30} color={colors.textLight} />
+              <Ionicons name="person-outline" size={30} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[styles.notFoundText, { color: colors.textLight }]}>{searchError}</Text>
             </View>
           )}
@@ -159,6 +217,8 @@ const AddFriendScreen: React.FC = () => {
             />
           )}
 
+          {/* Les suggestions ne s'affichent qu'à champ vide : elles feraient
+              sinon concurrence au résultat que l'utilisateur attend. */}
           {!input.trim() && (
             <>
               <Text style={[styles.sectionLabel, { color: colors.textLight }]}>
@@ -166,7 +226,7 @@ const AddFriendScreen: React.FC = () => {
               </Text>
               {suggestions.length === 0 ? (
                 <View style={styles.notFoundBox}>
-                  <Ionicons name="people-outline" size={30} color={colors.textLight} />
+                  <Ionicons name="people-outline" size={30} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={[styles.notFoundText, { color: colors.textLight }]}>
                     {t("addFriend.noSuggestions")}
                   </Text>
@@ -185,6 +245,8 @@ const AddFriendScreen: React.FC = () => {
                     />
                   )}
                   keyExtractor={(item) => item.id}
+                  // Défilement délégué au ScrollView parent : deux zones
+                  // défilantes imbriquées rendraient le geste imprévisible.
                   scrollEnabled={false}
                 />
               )}

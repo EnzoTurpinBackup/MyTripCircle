@@ -1,3 +1,25 @@
+/**
+ * Écran d'accusé de réception après l'envoi d'une demande d'amitié.
+ *
+ * Besoin couvert : confirmer sans ambiguïté à qui la demande est partie, et
+ * distinguer les deux issues possibles — une demande en attente de réponse, ou
+ * une amitié déjà nouée lorsque le destinataire avait lui-même sollicité le
+ * lien. L'écran enchaîne ensuite sur un nouvel ajout ou le retour à la liste.
+ *
+ * Position dans le parcours : atteint depuis AddFriendScreen, qui s'y substitue
+ * après l'envoi, et depuis FriendsScreen après une demande adressée à une
+ * suggestion. En sortie, AddFriend pour recommencer, ou le retour à l'écran
+ * précédent.
+ *
+ * Données : uniquement les paramètres de route. Aucune requête n'est émise ici,
+ * l'envoi ayant déjà eu lieu chez l'appelant ; l'issue est portée par le seul
+ * indicateur `autoAccepted`.
+ *
+ * États pris en charge : aucun chargement ni erreur, l'écran n'étant affiché
+ * qu'après une opération réussie. L'adresse du destinataire est facultative :
+ * une demande adressée à un numéro de téléphone n'en fournit pas, la ligne est
+ * alors omise plutôt que laissée vide.
+ */
 import React from "react";
 import {
   View,
@@ -12,10 +34,19 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { F } from "../theme/fonts";
 import { useTheme } from "../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
+/**
+ * Teintes d'avatar de repli. Le destinataire n'a pas encore de photo connue de
+ * l'application au moment de la confirmation : la carte affiche ses initiales
+ * sur l'une de ces couleurs, choisie d'après son nom pour rester la même d'un
+ * affichage à l'autre.
+ */
 const AVATAR_COLORS = ["#C4714A", "#5A8FAA", "#8B70C0", "#6B8C5A", "#C0A040"];
 
 const getInitials = (name: string) => {
+  // Le premier et le dernier fragment plutôt que les deux premiers : un nom
+  // composé ou un second prénom ne doit pas évincer l'initiale du patronyme.
   const parts = name.trim().split(" ");
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + (parts.at(-1)?.charAt(0) ?? "")).toUpperCase();
@@ -24,6 +55,21 @@ const getInitials = (name: string) => {
 const getAvatarColor = (name: string) =>
   AVATAR_COLORS[(name.codePointAt(0) ?? 0) % AVATAR_COLORS.length];
 
+/**
+ * Compose l'accusé de réception d'une demande d'amitié.
+ *
+ * @param route.params.recipientName Nom affiché du destinataire, seul
+ * paramètre obligatoire ; il alimente le titre, la carte, les initiales et la
+ * couleur d'avatar.
+ * @param route.params.recipientEmail Adresse du destinataire, omise lorsque la
+ * demande visait un numéro de téléphone.
+ * @param route.params.autoAccepted Vrai lorsque le destinataire avait déjà une
+ * demande en attente vers le compte courant : l'amitié est alors établie, et
+ * l'écran l'annonce au lieu d'une attente.
+ *
+ * L'écran est purement déclaratif : aucun appel réseau, aucun état local, aucun
+ * effet de bord hormis la navigation déclenchée par les deux boutons.
+ */
 const FriendRequestConfirmationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
@@ -39,6 +85,9 @@ const FriendRequestConfirmationScreen: React.FC = () => {
   const avatarColor = getAvatarColor(recipientName);
 
   const handleAddAnother = () => {
+    // replace : la confirmation cède sa place à la recherche plutôt que de
+    // s'empiler avec elle. Enchaîner plusieurs ajouts laisserait sinon autant
+    // de confirmations obsolètes à retraverser au retour.
     navigation.replace("AddFriend");
   };
 
@@ -53,7 +102,7 @@ const FriendRequestConfirmationScreen: React.FC = () => {
       <View style={styles.container}>
         {/* Icône centrale */}
         <View style={[styles.iconCircle, { backgroundColor: colors.terraLight, borderColor: colors.terra, shadowColor: colors.terra }]}>
-          <Ionicons name="people" size={52} color={colors.terra} />
+          <Ionicons name="people" size={52} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
         </View>
 
         {/* Titre */}
@@ -80,19 +129,21 @@ const FriendRequestConfirmationScreen: React.FC = () => {
               <View style={[styles.statusBadge, autoAccepted ? styles.statusBadgeAccepted : { backgroundColor: colors.terraLight }]}>
                 {autoAccepted ? (
                   <>
-                    <Ionicons name="checkmark-circle" size={13} color="#6B8C5A" />
+                    <Ionicons name="checkmark-circle" size={13} color="#6B8C5A" {...DECORATIVE_ELEMENT_PROPS} />
                     <Text style={[styles.statusText, { color: "#6B8C5A" }]}>
                       {t("friendRequestConfirmation.statusFriend")}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Ionicons name="hourglass-outline" size={13} color={colors.terra} />
+                    <Ionicons name="hourglass-outline" size={13} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
                     <Text style={[styles.statusText, { color: colors.terra }]}>{t("friendRequestConfirmation.statusPending")}</Text>
                   </>
                 )}
               </View>
             </View>
+            {/* Une demande adressée à un numéro n'a pas d'adresse à montrer :
+                la ligne disparaît au lieu d'occuper la carte à vide. */}
             {recipientEmail ? (
               <Text style={[styles.profileEmail, { color: colors.textLight }]}>{recipientEmail}</Text>
             ) : null}
@@ -106,7 +157,7 @@ const FriendRequestConfirmationScreen: React.FC = () => {
             onPress={handleAddAnother}
             activeOpacity={0.85}
           >
-            <Ionicons name="person-add" size={22} color="#FFFFFF" />
+            <Ionicons name="person-add" size={22} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
             <Text style={styles.btnPrimaryText}>{t("friendRequestConfirmation.addAnother")}</Text>
           </TouchableOpacity>
 
