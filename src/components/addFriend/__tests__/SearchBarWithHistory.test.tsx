@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
+import { Ionicons } from "@expo/vector-icons";
 import SearchBarWithHistory from "../SearchBarWithHistory";
 import i18n from "../../../utils/i18n";
 
@@ -145,9 +146,60 @@ describe("SearchBarWithHistory", () => {
     expect(onHistoryClear).toHaveBeenCalledTimes(1);
   });
 
-  // NB : la croix d'effacement du champ et la croix de suppression d'une entrée
-  // d'historique sont des icônes seules, sans `accessibilityLabel` ni `testID` :
-  // aucune requête accessible ne permet de les presser. Les rappels
-  // `onInputChange("")` et `onHistoryRemove` restent donc non couverts — c'est
-  // un manquement WCAG 2.1 AA signalé plutôt que contourné.
+  describe("accessibility", () => {
+    it("should expose the field clearing cross as a labelled button", () => {
+      // Arrange / Act
+      renderBar({ input: "manon" });
+
+      // Assert
+      expect(screen.getByLabelText("Clear search").props.accessibilityRole).toBe("button");
+    });
+
+    it("should clear the query when the labelled cross is pressed", () => {
+      // Arrange
+      const { onInputChange } = renderBar({ input: "manon" });
+
+      // Act
+      fireEvent.press(screen.getByLabelText("Clear search"));
+
+      // Assert
+      expect(onInputChange).toHaveBeenCalledWith("");
+    });
+
+    it("should name the history removal cross after the entry it drops", () => {
+      // Arrange / Act
+      renderBar({ focused: true, history: ["alice"] });
+
+      // Assert
+      expect(screen.getByLabelText('Remove "alice" from search history').props.accessibilityRole)
+        .toBe("button");
+    });
+
+    it("should drop the history entry when its labelled cross is pressed", () => {
+      // Arrange
+      const { onHistoryRemove } = renderBar({ focused: true, history: ["alice"] });
+
+      // Act
+      fireEvent.press(screen.getByLabelText('Remove "alice" from search history'));
+
+      // Assert
+      expect(onHistoryRemove).toHaveBeenCalledWith("alice");
+    });
+
+    it("should keep the magnifier out of the accessibility tree", () => {
+      // Arrange / Act
+      renderBar();
+
+      // Assert — le champ porte déjà son intitulé, l'icône ne fait que l'illustrer
+      const magnifier = screen
+        .UNSAFE_queryAllByType(Ionicons)
+        .filter((icon) => icon.props.name === "search");
+      expect(magnifier).toHaveLength(1);
+      expect(magnifier[0].props).toMatchObject({
+        accessible: false,
+        accessibilityElementsHidden: true,
+        importantForAccessibility: "no",
+      });
+    });
+  });
 });

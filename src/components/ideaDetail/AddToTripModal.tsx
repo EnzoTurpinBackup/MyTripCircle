@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface ThemeColors {
   bg: string;
@@ -133,13 +134,13 @@ const AddToTripModal: React.FC<Props> = ({
                   onPress={onOpenDatePicker}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="calendar-outline" size={18} color={colors.terra} />
+                  <Ionicons name="calendar-outline" size={18} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={[s.dateText, { color: colors.text }]}>{formatDate(startDate)}</Text>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textLight} />
+                  <Ionicons name="chevron-forward" size={16} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
                 </TouchableOpacity>
 
                 <View style={[s.dateRowReadonly, { backgroundColor: colors.bgMid }]}>
-                  <Ionicons name="flag-outline" size={16} color={colors.textLight} />
+                  <Ionicons name="flag-outline" size={16} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
                   <Text style={[s.dateTextReadonly, { color: colors.textLight }]}>
                     {t("ideas.addModal.endDate")} : {formatDate(endDate)}
                   </Text>
@@ -177,7 +178,7 @@ const AddToTripModal: React.FC<Props> = ({
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
                       <>
-                        <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
+                        <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
                         <Text style={s.createBtnText}>{t("ideas.addModal.create")}</Text>
                       </>
                     )}

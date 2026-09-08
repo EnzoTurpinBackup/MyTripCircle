@@ -5,6 +5,7 @@ import { FriendSuggestion } from "../../types";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface SuggestionsTabProps {
   suggestions: FriendSuggestion[];
@@ -32,7 +33,8 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({
       >
         <View style={[styles.avatar, { backgroundColor: getAvatarColor(item.name), overflow: "hidden" }]}>
           {item.avatar
-            ? <Image source={{ uri: item.avatar }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+            /* Décorative : le nom de la suggestion est lu juste à côté. */
+            ? <Image source={{ uri: item.avatar }} style={{ width: 48, height: 48, borderRadius: 24 }} {...DECORATIVE_ELEMENT_PROPS} />
             : <Text style={styles.avatarText}>{getInitials(item.name)}</Text>
           }
         </View>
@@ -58,7 +60,7 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({
     return (
       <View style={styles.emptyState}>
         <View style={[styles.emptyIconWrap, { backgroundColor: colors.terraLight }]}>
-          <Ionicons name="person-add-outline" size={40} color={colors.terra} />
+          <Ionicons name="person-add-outline" size={40} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
         </View>
         <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("friends.noSuggestions")}</Text>
         <Text style={[styles.emptyText, { color: colors.textMid }]}>{t("friends.noSuggestionsDesc")}</Text>

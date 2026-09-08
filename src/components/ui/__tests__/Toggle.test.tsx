@@ -92,11 +92,14 @@ describe("Toggle", () => {
     );
   });
 
-  it("should use the border colour as track colour when disabled by value", () => {
+  it("should use the dedicated off-track colour when the value is false", () => {
+    // Le jeton est distinct de `border` : ce dernier ne contraste qu'à 1,4:1 avec
+    // le fond, en deçà des 3:1 exigés par WCAG 1.4.11 pour un élément non textuel
+    // (voir src/theme/__tests__/contrast.test.ts).
     render(<Toggle value={false} onToggle={jest.fn()} trackColor="#123456" />);
 
     expect(flatten(screen.getByRole("switch").props.style).backgroundColor).toBe(
-      lightColors.border,
+      lightColors.toggleTrackOff,
     );
   });
 });

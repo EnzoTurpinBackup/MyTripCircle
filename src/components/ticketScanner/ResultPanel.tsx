@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScannedBookingData } from "../../hooks/useTicketScanner";
 import FieldRow from "./FieldRow";
 import { styles } from "./ticketScannerStyles";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface ResultPanelProps {
   parsedData: ScannedBookingData;
@@ -21,7 +22,7 @@ const ResultPanel: React.FC<ResultPanelProps> = ({ parsedData, rawData, colors, 
 
     <View style={styles.resultHeader}>
       <View style={[styles.resultIconCircle, { backgroundColor: "#E2EDD9" }]}>
-        <Ionicons name="checkmark-circle" size={28} color="#6B8C5A" />
+        <Ionicons name="checkmark-circle" size={28} color="#6B8C5A" {...DECORATIVE_ELEMENT_PROPS} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.resultTitle, { color: colors.text }]}>{t("bookings.scanFoundTitle")}</Text>
@@ -42,7 +43,7 @@ const ResultPanel: React.FC<ResultPanelProps> = ({ parsedData, rawData, colors, 
     </View>
 
     <TouchableOpacity style={[styles.fillButton, { backgroundColor: colors.terra }]} onPress={onFill} activeOpacity={0.85}>
-      <Ionicons name="create-outline" size={18} color="white" style={{ marginRight: 8 }} />
+      <Ionicons name="create-outline" size={18} color="white" style={{ marginRight: 8 }} {...DECORATIVE_ELEMENT_PROPS} />
       <Text style={styles.fillButtonText}>{t("bookings.scanFillButton")}</Text>
     </TouchableOpacity>
 

@@ -4,12 +4,14 @@ import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../ui/BackButton";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RootStackParamList, Trip } from "../../types";
 import { formatDate } from "../../utils/i18n";
 import { F } from "../../theme/fonts";
 import { getCachedDestinationPhoto, getSyncCachedPhoto } from "../../utils/destinationPhoto";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const FALLBACK_PHOTOS = [
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&fit=crop",
@@ -44,6 +46,7 @@ const TripHero: React.FC<Props> = ({
   bookingsCount,
   addressesCount,
 }) => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const { top: insetTop } = useSafeAreaInsets();
   const gradientColors = heroColors(trip.status);
@@ -65,10 +68,12 @@ const TripHero: React.FC<Props> = ({
   return (
     <View style={s.hero}>
       {coverUri ? (
+        /* Décorative : le titre, la destination et les dates du voyage sont lus en dessous. */
         <Image
           source={{ uri: coverUri }}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
+          {...DECORATIVE_ELEMENT_PROPS}
         />
       ) : (
         <LinearGradient
@@ -103,6 +108,8 @@ const TripHero: React.FC<Props> = ({
             })
           }
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.a11y.editItem", { item: trip.title })}
         >
           <Ionicons name="pencil" size={16} color="#FFFFFF" />
         </TouchableOpacity>

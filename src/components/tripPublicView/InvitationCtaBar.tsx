@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface Props {
   responding: boolean;
@@ -19,7 +20,7 @@ const InvitationCtaBar: React.FC<Props> = ({ responding, onAccept, onDecline, in
   return (
     <View style={[styles.inviteCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insetBottom + 12 }]}>
       <View style={[styles.inviteCtaHint, { backgroundColor: colors.terraLight }]}>
-        <Ionicons name="mail-outline" size={16} color={colors.terra} />
+        <Ionicons name="mail-outline" size={16} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.inviteCtaHintText, { color: colors.terra }]} numberOfLines={1}>
           {t("tripPublicView.inviteHint")}
         </Text>
@@ -31,7 +32,7 @@ const InvitationCtaBar: React.FC<Props> = ({ responding, onAccept, onDecline, in
           disabled={responding}
           activeOpacity={0.85}
         >
-          <Ionicons name="close" size={20} color={colors.textMid} />
+          <Ionicons name="close" size={20} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[styles.inviteCtaDeclineText, { color: colors.textMid }]}>
             {t("tripPublicView.decline")}
           </Text>
@@ -46,7 +47,7 @@ const InvitationCtaBar: React.FC<Props> = ({ responding, onAccept, onDecline, in
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
-              <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+              <Ionicons name="checkmark" size={20} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={styles.inviteCtaAcceptText}>{t("tripPublicView.accept")}</Text>
             </>
           )}

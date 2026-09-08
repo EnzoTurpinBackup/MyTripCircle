@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ReportReason } from "../../services/api/moderationApi";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface Props {
   visible: boolean;
@@ -79,12 +80,12 @@ const ReportSheet: React.FC<Props> = ({ visible, targetType, onClose, onSubmit }
               onPress={() => onSubmit(key)}
             >
               <View style={[styles.reasonIcon, { backgroundColor: colors.bgMid }]}>
-                <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={colors.terra} />
+                <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <Text style={[styles.reasonLabel, { color: colors.text }]}>
                 {t(`moderation.reasons.${key}`)}
               </Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textLight} />
+              <Ionicons name="chevron-forward" size={16} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             </TouchableOpacity>
           ))}
         </View>

@@ -18,6 +18,7 @@ import ResultPanel from "./ticketScanner/ResultPanel";
 import { styles } from "./ticketScanner/ticketScannerStyles";
 import BackButton from "./ui/BackButton";
 import { useTheme } from "../contexts/ThemeContext";
+import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
 
 export type { ScannedBookingData } from "../hooks/useTicketScanner";
 
@@ -65,7 +66,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
     return (
       <Modal visible={visible} animationType="slide">
         <SafeAreaView style={[styles.permissionContainer, { backgroundColor: colors.bg }]}>
-          <Ionicons name="camera-outline" size={56} color={colors.textMid} />
+          <Ionicons name="camera-outline" size={56} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[styles.permissionTitle, { color: colors.text }]}>
             {t("bookings.scanCameraPermissionTitle")}
           </Text>
@@ -90,7 +91,12 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
       <Modal visible={visible} animationType="slide">
         <SafeAreaView style={[styles.chooseContainer, { backgroundColor: colors.bg }]} edges={["bottom", "left", "right"]}>
           <View style={[styles.chooseHeader, { paddingTop: insets.top + 6, backgroundColor: colors.bg, borderBottomColor: colors.bgMid }]}>
-            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.bgMid }]}>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[styles.closeBtn, { backgroundColor: colors.bgMid }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.a11y.close")}
+            >
               <Ionicons name="close" size={20} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.chooseTitle, { color: colors.text }]}>{t("bookings.scanTitle")}</Text>
@@ -108,13 +114,13 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
               activeOpacity={0.8}
             >
               <View style={[styles.chooseOptionIcon, { backgroundColor: "#DCF0F5" }]}>
-                <Ionicons name="camera" size={28} color="#5A8FAA" />
+                <Ionicons name="camera" size={28} color="#5A8FAA" {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <View style={styles.chooseOptionText}>
                 <Text style={[styles.chooseOptionTitle, { color: colors.text }]}>{t("bookings.scanCameraOption")}</Text>
                 <Text style={[styles.chooseOptionDesc, { color: colors.textMid }]}>{t("bookings.scanCameraOptionDesc")}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+              <Ionicons name="chevron-forward" size={20} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -123,13 +129,13 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
               activeOpacity={0.8}
             >
               <View style={[styles.chooseOptionIcon, { backgroundColor: "#E2EDD9" }]}>
-                <Ionicons name="images" size={28} color="#6B8C5A" />
+                <Ionicons name="images" size={28} color="#6B8C5A" {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <View style={styles.chooseOptionText}>
                 <Text style={[styles.chooseOptionTitle, { color: colors.text }]}>{t("bookings.scanGalleryOption")}</Text>
                 <Text style={[styles.chooseOptionDesc, { color: colors.textMid }]}>{t("bookings.scanGalleryOptionDesc")}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+              <Ionicons name="chevron-forward" size={20} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -138,13 +144,13 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
               activeOpacity={0.8}
             >
               <View style={[styles.chooseOptionIcon, { backgroundColor: "#EDE8F5" }]}>
-                <Ionicons name="document" size={28} color="#8B70C0" />
+                <Ionicons name="document" size={28} color="#8B70C0" {...DECORATIVE_ELEMENT_PROPS} />
               </View>
               <View style={styles.chooseOptionText}>
                 <Text style={[styles.chooseOptionTitle, { color: colors.text }]}>{t("bookings.scanFileOption")}</Text>
                 <Text style={[styles.chooseOptionDesc, { color: colors.textMid }]}>{t("bookings.scanFileOptionDesc")}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+              <Ionicons name="chevron-forward" size={20} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -163,7 +169,8 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
           </View>
 
           {previewUri && (
-            <Image source={{ uri: previewUri }} style={styles.previewImage} resizeMode="contain" />
+            /* Informative : c'est le document scanné, aucun texte de l'écran n'en rend compte. */
+            <Image source={{ uri: previewUri }} style={styles.previewImage} resizeMode="contain" accessibilityLabel={t("bookings.a11y.ticketPreview")} />
           )}
 
           {scanning && (
@@ -175,7 +182,7 @@ const TicketScannerModal: React.FC<TicketScannerModalProps> = ({ visible, onClos
 
           {!scanning && scanError && (
             <View style={[styles.galleryStatus, { backgroundColor: "#FDEAEA" }]}>
-              <Ionicons name="alert-circle-outline" size={20} color="#C04040" />
+              <Ionicons name="alert-circle-outline" size={20} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={[styles.galleryStatusText, { color: "#C04040" }]}>{scanError}</Text>
             </View>
           )}

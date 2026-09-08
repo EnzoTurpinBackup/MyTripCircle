@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 interface EditTripDangerZoneProps {
   dangerLight: string;
@@ -30,7 +31,7 @@ const EditTripDangerZone: React.FC<EditTripDangerZoneProps> = ({ dangerLight, se
           <Text style={styles.dangerLabel}>{t("editTrip.deleteTrip")}</Text>
           <Text style={styles.dangerDesc}>{t("editTrip.deleteTripSubtitle")}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#C04040" />
+        <Ionicons name="chevron-forward" size={20} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
       </TouchableOpacity>
     </>
   );

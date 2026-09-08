@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
 import { TabKey } from "../../utils/invitationUtils";
 import { F } from "../../theme/fonts";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 
 const EMPTY_ICONS: Record<TabKey, string> = {
   all:     "mail-unread-outline",
@@ -38,7 +39,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ tab }) => {
   return (
     <View style={styles.emptyWrap}>
       <View style={[styles.emptyCircle, { backgroundColor: colors.bgMid }]}>
-        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={46} color={colors.textLight} />
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={46} color={colors.textLight} {...DECORATIVE_ELEMENT_PROPS} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.emptySub, { color: colors.textMid }]}>{sub}</Text>

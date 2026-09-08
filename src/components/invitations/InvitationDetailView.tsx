@@ -23,6 +23,7 @@ import {
   formatDateRange,
   tripDuration,
 } from "../../utils/invitationUtils";
+import { DECORATIVE_ELEMENT_PROPS } from "../../utils/accessibility";
 import { getInitials, getAvatarColor } from "../../utils/avatarUtils";
 import { F } from "../../theme/fonts";
 import { RADIUS } from "../../theme";
@@ -62,7 +63,7 @@ const ErrorView: React.FC<ErrorViewProps> = ({ colors, onNavigateBack }) => {
   const { t } = useTranslation();
   return (
     <View style={[styles.errorContainer, { backgroundColor: colors.bg }]}>
-      <Ionicons name="alert-circle" size={64} color="#C04040" />
+      <Ionicons name="alert-circle" size={64} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
       <Text style={[styles.errorTitle, { color: colors.text }]}>{t("invitation.notFound")}</Text>
       <Text style={[styles.errorMessage, { color: colors.textMid }]}>{t("invitation.notFoundMessage")}</Text>
       <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.terra }]} onPress={onNavigateBack}>
@@ -82,7 +83,7 @@ const StatusBanner: React.FC<StatusBannerProps> = ({ isExpired, status }) => {
   if (isExpired) {
     return (
       <View style={[styles.detailStatusBanner, { backgroundColor: "#FDEAEA", borderColor: "rgba(192,64,64,0.2)" }]}>
-        <Ionicons name="hourglass-outline" size={20} color="#C04040" />
+        <Ionicons name="hourglass-outline" size={20} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.detailStatusText, { color: "#C04040" }]}>{t("invitation.expired")}</Text>
       </View>
     );
@@ -90,7 +91,7 @@ const StatusBanner: React.FC<StatusBannerProps> = ({ isExpired, status }) => {
   if (status === "accepted") {
     return (
       <View style={[styles.detailStatusBanner, { backgroundColor: "#E2EDD9", borderColor: "rgba(107,140,90,0.25)" }]}>
-        <Ionicons name="checkmark-circle" size={20} color="#6B8C5A" />
+        <Ionicons name="checkmark-circle" size={20} color="#6B8C5A" {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.detailStatusText, { color: "#6B8C5A" }]}>{t("invitation.statusAccepted")}</Text>
       </View>
     );
@@ -98,7 +99,7 @@ const StatusBanner: React.FC<StatusBannerProps> = ({ isExpired, status }) => {
   if (status === "declined") {
     return (
       <View style={[styles.detailStatusBanner, { backgroundColor: "#FDEAEA", borderColor: "rgba(192,64,64,0.2)" }]}>
-        <Ionicons name="close-circle" size={20} color="#C04040" />
+        <Ionicons name="close-circle" size={20} color="#C04040" {...DECORATIVE_ELEMENT_PROPS} />
         <Text style={[styles.detailStatusText, { color: "#C04040" }]}>{t("invitation.statusDeclined")}</Text>
       </View>
     );
@@ -123,7 +124,8 @@ const InvitationBanner: React.FC<InvitationBannerProps> = ({
   return (
   <View style={styles.detailBanner}>
     {hasImage
-      ? <Image source={{ uri: coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      /* Décorative : le nom du voyage, sa destination et ses dates sont lus par-dessus. */
+      ? <Image source={{ uri: coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" {...DECORATIVE_ELEMENT_PROPS} />
       : <LinearGradient colors={bannerGrad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
     }
     <LinearGradient
@@ -136,7 +138,7 @@ const InvitationBanner: React.FC<InvitationBannerProps> = ({
     <View style={styles.detailBannerContent}>
       {!!destination && (
         <View style={styles.detailDestRow} testID="invitation-destination-row">
-          <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.80)" />
+          <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.80)" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={styles.detailDestText}>{destination}</Text>
         </View>
       )}
@@ -162,7 +164,7 @@ const DetailChips: React.FC<DetailChipsProps> = ({ duration, destination, invita
     <View style={styles.detailChips}>
       {duration && (
         <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="time-outline" size={18} color={colors.terra} />
+          <Ionicons name="time-outline" size={18} color={colors.terra} {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[styles.detailChipValue, { color: colors.text }]}>{duration}</Text>
           <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>{t("invitation.days")}</Text>
         </View>
@@ -172,13 +174,13 @@ const DetailChips: React.FC<DetailChipsProps> = ({ duration, destination, invita
           style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
           testID="invitation-destination-chip"
         >
-          <Ionicons name="airplane-outline" size={18} color="#5A8FAA" />
+          <Ionicons name="airplane-outline" size={18} color="#5A8FAA" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[styles.detailChipValue, { fontSize: 13, color: colors.text }]} numberOfLines={1}>{destination}</Text>
         </View>
       )}
       {invitation.expiresAt && !isExpired && (
         <View style={[styles.detailChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="hourglass-outline" size={18} color="#FF9500" />
+          <Ionicons name="hourglass-outline" size={18} color="#FF9500" {...DECORATIVE_ELEMENT_PROPS} />
           <Text style={[styles.detailChipLabel, { color: colors.textMid }]}>
             {t("invitation.expiresOnDate", { date: formatDate(invitation.expiresAt) })}
           </Text>
@@ -213,7 +215,7 @@ const DetailCta: React.FC<DetailCtaProps> = ({ canRespond, isLinkType, respondin
         >
           {responding
             ? <ActivityIndicator size="small" color={colors.textMid} />
-            : <><Ionicons name="close" size={20} color={colors.textMid} /><Text style={[styles.detailCtaDeclineText, { color: colors.textMid }]}>{t("invitation.decline")}</Text></>
+            : <><Ionicons name="close" size={20} color={colors.textMid} {...DECORATIVE_ELEMENT_PROPS} /><Text style={[styles.detailCtaDeclineText, { color: colors.textMid }]}>{t("invitation.decline")}</Text></>
           }
         </TouchableOpacity>
       )}
@@ -225,7 +227,7 @@ const DetailCta: React.FC<DetailCtaProps> = ({ canRespond, isLinkType, respondin
       >
         {responding
           ? <ActivityIndicator size="small" color="#FFFFFF" />
-          : <><Ionicons name={acceptIcon} size={20} color="#FFFFFF" /><Text style={styles.detailCtaAcceptText}>{acceptText}</Text></>
+          : <><Ionicons name={acceptIcon} size={20} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} /><Text style={styles.detailCtaAcceptText}>{acceptText}</Text></>
         }
       </TouchableOpacity>
     </View>
@@ -318,7 +320,7 @@ const InvitationDetailView: React.FC<InvitationDetailViewProps> = ({
 
           {invitation.status === "accepted" && tripId && (
             <TouchableOpacity style={styles.detailViewTripBtn} onPress={() => onNavigateToTrip(tripId)} activeOpacity={0.85}>
-              <Ionicons name="airplane" size={18} color="#FFFFFF" />
+              <Ionicons name="airplane" size={18} color="#FFFFFF" {...DECORATIVE_ELEMENT_PROPS} />
               <Text style={styles.detailViewTripText}>{t("invitation.viewTrip")}</Text>
             </TouchableOpacity>
           )}
