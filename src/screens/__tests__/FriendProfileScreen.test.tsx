@@ -134,6 +134,15 @@ const renderScreen = (overrides: Record<string, unknown> = {}) => {
 const sectionTrips = (title: string) =>
   screen.getByTestId(`trip-section:${title}:trips`).props.children;
 
+/**
+ * L'icône du badge double le texte qui l'accompagne : elle porte
+ * `DECORATIVE_ELEMENT_PROPS` et sort du parcours des technologies d'assistance,
+ * que les requêtes ignorent par défaut. Le badge lui-même reste vérifié par son
+ * texte ; cette requête n'observe que la présence visuelle de l'icône.
+ */
+const decorativeIcon = (name: string) =>
+  screen.queryByText(name, { includeHiddenElements: true });
+
 describe("FriendProfileScreen", () => {
   beforeEach(() => {
     freezeClockAt(NOW);
@@ -164,7 +173,7 @@ describe("FriendProfileScreen", () => {
 
       // Assert
       expect(screen.getByText("friendProfile.badgeFriend")).toBeTruthy();
-      expect(screen.getByText("icon:checkmark")).toBeTruthy();
+      expect(decorativeIcon("icon:checkmark")).toBeTruthy();
     });
 
     it("should badge the profile as public when there is no friendship", () => {
@@ -173,7 +182,7 @@ describe("FriendProfileScreen", () => {
 
       // Assert
       expect(screen.getByText("friendProfile.badgePublic")).toBeTruthy();
-      expect(screen.getByText("icon:earth-outline")).toBeTruthy();
+      expect(decorativeIcon("icon:earth-outline")).toBeTruthy();
     });
 
     it("should show the initials when the profile has no picture", () => {
