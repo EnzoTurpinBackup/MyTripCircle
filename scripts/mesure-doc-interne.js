@@ -20,15 +20,15 @@
  * chaîne ou une URL n'est jamais compté comme un commentaire.
  *
  * Usage :
- *   node scripts/mesure-doc-interne.js              # tableau lisible
- *   node scripts/mesure-doc-interne.js --json       # sortie JSON
- *   node scripts/mesure-doc-interne.js --sans-donnees   # hors jeux de données statiques
- *   node scripts/mesure-doc-interne.js --profondeur=2   # regroupement moins fin
- *   node scripts/mesure-doc-interne.js --depot=/chemin  # mesurer un autre état du dépôt
+ *   node scripts/doc-mesure.js              # tableau lisible
+ *   node scripts/doc-mesure.js --json       # sortie JSON
+ *   node scripts/doc-mesure.js --sans-donnees   # hors jeux de données statiques
+ *   node scripts/doc-mesure.js --profondeur=2   # regroupement moins fin
+ *   node scripts/doc-mesure.js --depot=/chemin  # mesurer un autre état du dépôt
  *
  * Reproduire la mesure sur un commit donné, sans toucher au répertoire de travail :
  *   mkdir /tmp/etat && git archive <commit> src server | tar -x -C /tmp/etat
- *   node scripts/mesure-doc-interne.js --depot=/tmp/etat
+ *   node scripts/doc-mesure.js --depot=/tmp/etat
  */
 
 'use strict';
@@ -448,14 +448,6 @@ function principal() {
     return;
   }
   afficher(resultat);
-}
-
-// Lancé directement (npm run doc:mesure) plutôt qu'importé par les tests : la
-// comparaison porte sur le chemin du module, forme équivalente à
-// `require.main === module` que l'analyse statique ne prend pas pour une égalité
-// toujours fausse (faux positif Sonar S3403).
-if (require.main?.filename === module.filename) {
-  principal();
 }
 
 module.exports = { analyserSource, calculerTaux, mesurer, lireOptions, principal };
