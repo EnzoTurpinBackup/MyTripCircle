@@ -320,9 +320,10 @@ function mesurer(racineDepot, options) {
   const parRepertoire = new Map();
   const global = { fichiers: 0, code: 0, commentaire: 0, mixte: 0, vides: 0, ignores: 0 };
 
-  // Tri explicite par chaîne : l'ordre de parcours n'influe pas sur les totaux,
-  // mais il rend la sortie stable d'une machine à l'autre (règle Sonar S2871).
-  for (const cheminRelatif of fichiers.sort((a, b) => a.localeCompare(b))) {
+  // Tri explicite par chaîne, sur une copie : l'ordre de parcours n'influe pas
+  // sur les totaux, mais il rend la sortie stable d'une machine à l'autre
+  // (règles Sonar S2871 et S4043).
+  for (const cheminRelatif of fichiers.toSorted((a, b) => a.localeCompare(b))) {
     if (options.sansDonnees && REPERTOIRES_DONNEES.some((d) => cheminRelatif.startsWith(`${d}/`))) {
       global.ignores += 1;
       continue;
