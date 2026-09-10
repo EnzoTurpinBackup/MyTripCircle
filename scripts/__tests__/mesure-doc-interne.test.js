@@ -546,3 +546,36 @@ describe("principal", () => {
     expect(sorties.join("\n")).not.toContain("il manque environ");
   });
 });
+
+describe("point d'entrée en ligne de commande", () => {
+  const argvInitial = process.argv;
+
+  afterEach(() => {
+    process.argv = argvInitial;
+    jest.restoreAllMocks();
+  });
+
+  it("should run the measurement when the command-line entry point is loaded", () => {
+    // Arrange
+    const depot = creerDepot({ "src/module.ts": TEMOIN });
+    const journal = jest.spyOn(console, "log").mockImplementation(() => {});
+    process.argv = ["node", "doc-mesure.js", "--json", `--depot=${depot}`];
+
+    // Act
+    jest.isolateModules(() => require("../doc-mesure"));
+
+    // Assert
+    expect(JSON.parse(journal.mock.calls[0][0]).total).toMatchObject({ fichiers: 1, taux: 50 });
+  });
+
+  it("should not run anything when the measurement module is merely imported", () => {
+    // Arrange
+    const journal = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    // Act
+    jest.isolateModules(() => require("../mesure-doc-interne"));
+
+    // Assert
+    expect(journal).not.toHaveBeenCalled();
+  });
+});
