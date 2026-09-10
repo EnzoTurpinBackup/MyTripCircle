@@ -105,15 +105,30 @@ describe("CalendarExportScreen", () => {
       expect(screen.queryByText("calendar.copyBtn")).toBeNull();
     });
 
-    it("should offer the generate button when the token request fails", async () => {
-      // Arrange
+    it("should not offer the generate button when the token request fails", async () => {
+      // Arrange — défaut D-03 : générer révoquerait le jeton déjà collé dans les agendas
       getToken.mockRejectedValue(new Error("réseau indisponible"));
 
       // Act
       await renderScreen();
 
       // Assert
-      expect(screen.getByText("calendar.generateBtn")).toBeTruthy();
+      expect(screen.getByText("calendar.errorLoad")).toBeTruthy();
+      expect(screen.queryByText("calendar.generateBtn")).toBeNull();
+    });
+
+    it("should fetch the token again when the user retries after a failure", async () => {
+      // Arrange
+      getToken.mockRejectedValueOnce(new Error("réseau indisponible"));
+      await renderScreen();
+
+      // Act
+      fireEvent.press(screen.getByText("calendar.retryBtn"));
+      await act(async () => {});
+
+      // Assert
+      expect(getToken).toHaveBeenCalledTimes(2);
+      expect(screen.getByText(`${API_BASE_URL}/calendar/jeton-abc`)).toBeTruthy();
     });
   });
 

@@ -21,10 +21,9 @@
  * est refusé si l'abonnement n'est plus actif.
  *
  * États pris en charge : lecture du jeton en cours, absence de jeton (proposition
- * d'en créer un), jeton établi (adresse copiable et renouvellement possible), et
- * émission en cours (commandes neutralisées). Un échec d'émission est rapporté
- * par une alerte ; un échec de lecture est indistinct de l'absence de jeton et
- * conduit à proposer une création.
+ * d'en créer un), jeton établi (adresse copiable et renouvellement possible),
+ * émission en cours (commandes neutralisées) et échec de lecture (message et
+ * nouvelle tentative). Un échec d'émission est rapporté par une alerte.
  */
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -46,6 +45,7 @@ import { calendarApi } from "../services/api/calendarApi";
 import { API_BASE_URL } from "../config/api";
 import { F } from "../theme/fonts";
 import { DECORATIVE_ELEMENT_PROPS } from "../utils/accessibility";
+import logger from "../lib/logger";
 
 /**
  * Compose l'écran de partage du flux calendrier.
@@ -63,6 +63,7 @@ const CalendarExportScreen: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // Le jeton porte à lui seul l'authentification du flux : l'adresse est publique
   // et l'agenda qui s'y abonne ne présente aucun identifiant de session. C'est
@@ -70,14 +71,19 @@ const CalendarExportScreen: React.FC = () => {
   // main sur une adresse partagée par mégarde.
   const calendarUrl = token ? `${API_BASE_URL}/calendar/${token}` : null;
 
+  // L'absence de jeton est une réponse nominale du serveur (`token: null`), pas
+  // une erreur. Un échec de lecture ne doit donc jamais être pris pour elle :
+  // proposer alors une création inviterait à émettre un nouveau jeton, ce qui
+  // révoquerait l'adresse déjà collée dans les agendas (défaut D-03).
   const fetchToken = useCallback(async () => {
+    setLoading(true);
+    setLoadFailed(false);
     try {
       const res = await calendarApi.getToken();
       setToken(res.token);
-    } catch {
-      // Un compte qui n'a jamais ouvert d'abonnement n'a pas de jeton : l'échec
-      // est traité comme une absence et l'écran propose une création, plutôt que
-      // d'afficher une erreur pour un cas nominal.
+    } catch (error) {
+      logger.warn("[CalendarExportScreen] lecture du jeton impossible", error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -107,6 +113,28 @@ const CalendarExportScreen: React.FC = () => {
         <Text style={[styles.placeholder, { color: colors.textLight }]}>
           {t("common.loading")}
         </Text>
+      );
+    }
+    if (loadFailed) {
+      return (
+        <>
+          <Text
+            style={[styles.placeholder, { color: colors.danger }]}
+            accessibilityLiveRegion="polite"
+          >
+            {t("calendar.errorLoad")}
+          </Text>
+          <TouchableOpacity
+            style={[styles.btnSecondary, { borderColor: colors.border }]}
+            onPress={fetchToken}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="refresh-outline" size={16} color={colors.text} {...DECORATIVE_ELEMENT_PROPS} />
+            <Text style={[styles.btnSecondaryText, { color: colors.text }]}>
+              {t("calendar.retryBtn")}
+            </Text>
+          </TouchableOpacity>
+        </>
       );
     }
     if (calendarUrl) {
