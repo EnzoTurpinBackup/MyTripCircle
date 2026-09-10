@@ -244,6 +244,32 @@ describe("BookingDetailsScreen", () => {
       );
     });
 
+    it("should keep the latest booking when an older request resolves last", async () => {
+      // Arrange — défaut D-11 : deux chargements résolus dans le désordre
+      let resolveOlder: (value: unknown) => void = () => {};
+      let resolveNewer: (value: unknown) => void = () => {};
+      mockGetBookingById
+        .mockReturnValueOnce(new Promise((resolve) => { resolveOlder = resolve; }))
+        .mockReturnValueOnce(new Promise((resolve) => { resolveNewer = resolve; }));
+      setupScreenMocks({ bookings: [] });
+      const { rerender } = render(<BookingDetailsScreen />);
+      // Une nouvelle collection (même vide) relance le chargement.
+      setupScreenMocks({ bookings: [] });
+      rerender(<BookingDetailsScreen />);
+
+      // Act
+      await act(async () => {
+        resolveNewer({ _id: "book-1", type: "hotel", title: "Version à jour", date: "2026-06-01" });
+      });
+      await act(async () => {
+        resolveOlder({ _id: "book-1", type: "hotel", title: "Version périmée", date: "2026-06-01" });
+      });
+
+      // Assert
+      expect(screen.getByText("Version à jour")).toBeTruthy();
+      expect(screen.queryByText("Version périmée")).toBeNull();
+    });
+
     it("should show the skeleton while the booking is being fetched", () => {
       // Arrange
       setupScreenMocks({ bookings: [] });

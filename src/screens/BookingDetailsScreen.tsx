@@ -23,7 +23,7 @@
  * mêmes actions sont grisées et neutralisées). L'ouverture d'une pièce jointe
  * qui n'est plus accessible donne lieu à une alerte.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -82,9 +82,20 @@ const BookingDetailsScreen: React.FC = () => {
   // Réagir aussi aux évolutions de la collection du contexte : une modification
   // faite ailleurs, ou l'arrivée tardive du chargement initial, doit rafraîchir
   // la fiche sans que l'utilisateur ait à ressortir puis revenir.
-  useEffect(() => { loadBooking(); }, [bookingId, bookings]);
+  // Numéro du dernier chargement lancé. Deux chargements peuvent se chevaucher
+  // (remplacement de la collection pendant une requête à l'unité) : seul le plus
+  // récent a le droit d'écrire l'état, faute de quoi une réponse tardive
+  // réinstallerait une version périmée de la fiche (défaut D-11). Le démontage
+  // invalide lui aussi toute réponse encore attendue.
+  const latestLoad = useRef(0);
+
+  useEffect(() => {
+    loadBooking();
+    return () => { latestLoad.current += 1; };
+  }, [bookingId, bookings]);
 
   const loadBooking = async () => {
+    const load = ++latestLoad.current;
     setLoading(true);
     // Deux identifiants sont comparés : les réservations issues du serveur
     // portent `_id`, celles déjà normalisées par le contexte portent `id`, et
@@ -96,6 +107,7 @@ const BookingDetailsScreen: React.FC = () => {
     if (found) { setBooking(found); setLoading(false); return; }
     try {
       const data = await ApiService.getBookingById(bookingId);
+      if (load !== latestLoad.current) return;
       setBooking({
         id: data._id ?? data.id, _id: data._id, tripId: data.tripId,
         type: data.type, title: data.title, description: data.description,
@@ -104,6 +116,7 @@ const BookingDetailsScreen: React.FC = () => {
         status: data.status, attachments: data.attachments,
       } as any);
     } catch (error) {
+      if (load !== latestLoad.current) return;
       console.error("[BookingDetailsScreen] Erreur lors du chargement de la réservation:", error);
       setBooking(null);
     }
