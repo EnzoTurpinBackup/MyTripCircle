@@ -47,6 +47,8 @@ import Toggle from "../components/ui/Toggle";
 import { userApi, ConsentPayload } from "../services/api/userApi";
 import { CONSENT_KEY, ConsentPreferences } from "./ConsentScreen";
 import BackButton from "../components/ui/BackButton";
+import { requestPermissionAndRegisterToken } from "../hooks/usePushNotifications";
+import logger from "../lib/logger";
 
 /**
  * Compose l'écran de gestion des consentements.
@@ -72,17 +74,25 @@ const ConsentManagementScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.getItem(CONSENT_KEY).then((raw) => {
-      // L'entrée est en principe toujours présente, AppNavigator refusant de monter
-      // cette pile sans elle ; son absence est néanmoins tolérée et laisse les deux
-      // usages facultatifs à l'arrêt, qui est l'état le moins engageant.
-      if (raw) {
-        const prefs: ConsentPreferences = JSON.parse(raw);
-        setLocationEnabled(prefs.location);
-        setNotificationsEnabled(prefs.notifications);
-      }
-      setLoading(false);
-    });
+    AsyncStorage.getItem(CONSENT_KEY)
+      .then((raw) => {
+        // L'entrée est en principe toujours présente, AppNavigator refusant de monter
+        // cette pile sans elle ; son absence est néanmoins tolérée et laisse les deux
+        // usages facultatifs à l'arrêt, qui est l'état le moins engageant.
+        if (raw) {
+          const prefs: ConsentPreferences = JSON.parse(raw);
+          setLocationEnabled(prefs.location);
+          setNotificationsEnabled(prefs.notifications);
+        }
+      })
+      // Une lecture en échec ou une entrée corrompue laisse les deux usages à l'arrêt
+      // plutôt que de figer l'écran en chargement : le bouton d'enregistrement étant
+      // conditionné au chargement, l'utilisateur perdrait tout moyen de modifier ses
+      // consentements (défaut D-04).
+      .catch((error) => {
+        logger.warn("[ConsentManagementScreen] lecture des consentements impossible", error);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
@@ -131,6 +141,14 @@ const ConsentManagementScreen: React.FC = () => {
         notifications: notificationsEnabled,
       };
       await userApi.updateConsent(payload);
+
+      // Consentir aux notifications depuis les réglages doit produire le même effet
+      // qu'à l'accueil : demander la permission système et enregistrer le jeton push.
+      // Sans cela, un utilisateur ayant refusé à l'accueil n'obtenait rien en changeant
+      // d'avis ici (défaut D-06). L'appel est sans effet si le jeton est déjà connu.
+      if (notificationsEnabled) {
+        await requestPermissionAndRegisterToken();
+      }
 
       // Le retour n'a lieu qu'après acquittement : un changement de consentement mérite
       // une confirmation lue, et non un écran qui se referme de lui-même.

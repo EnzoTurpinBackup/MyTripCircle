@@ -16,6 +16,8 @@ const profile = {
     copiedMessage: "Collez-le dans l'app Calendrier de votre téléphone.",
     errorTitle: "Erreur",
     errorGenerate: "Impossible de générer le lien. Réessayez plus tard.",
+    errorLoad: "Impossible de récupérer votre lien. Vérifiez votre connexion.",
+    retryBtn: "Réessayer",
     iosTitle: "iPhone / iPad (Calendrier Apple)",
     iosSteps: [
       "Copiez le lien ci-dessus",

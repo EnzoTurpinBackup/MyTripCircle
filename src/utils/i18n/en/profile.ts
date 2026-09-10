@@ -16,6 +16,8 @@ const profile = {
     copiedMessage: "Paste it into your phone's Calendar app.",
     errorTitle: "Error",
     errorGenerate: "Could not generate the link. Please try again later.",
+    errorLoad: "Could not retrieve your link. Check your connection.",
+    retryBtn: "Try again",
     iosTitle: "iPhone / iPad (Apple Calendar)",
     iosSteps: [
       "Copy the link above",
