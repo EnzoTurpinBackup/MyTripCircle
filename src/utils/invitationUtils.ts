@@ -36,15 +36,16 @@ export function getBannerGradient(seed: string): readonly [string, string] {
  * borné, un « il y a 14 mois » est donc possible.
  *
  * @param raw Date de création, objet ou chaîne analysable.
- * @returns Le libellé traduit du palier atteint.
+ * @returns Le libellé traduit du palier atteint, ou le repli traduit de date invalide.
  *
- * @remarks Deux cas limites ne sont pas rattrapés et doivent être écartés par l'appelant.
- * Une date future donne un écart négatif, qui passe sous le premier palier et rend « à
- * l'instant ». Une date non analysable donne un écart `NaN`, qui échoue toutes les
- * comparaisons et atteint le dernier palier, affichant un décompte `NaN`.
+ * @remarks Les deux cas limites sont rattrapés ici plutôt que laissés à l'appelant (défaut
+ * D-12). Une date non analysable rend le repli `common.invalidDate` au lieu d'un décompte
+ * `NaN` ; une date future, écart négatif, est bornée à zéro et rend « à l'instant ».
  */
 export function formatRelative(raw: string | Date): string {
-  const diff = Date.now() - new Date(raw).getTime();
+  const time = new Date(raw).getTime();
+  if (Number.isNaN(time)) return i18n.t("common.invalidDate");
+  const diff = Math.max(0, Date.now() - time);
   const m = Math.floor(diff / 60000);
   if (m < 1) return i18n.t("invitation.timeAgoJustNow");
   const h = Math.floor(m / 60);
@@ -64,16 +65,17 @@ export function formatRelative(raw: string | Date): string {
  *
  * @param start Date de début.
  * @param end Date de fin.
- * @returns La période, séparée par un tiret demi-cadratin.
+ * @returns La période, séparée par un tiret demi-cadratin, ou le repli traduit de date
+ * invalide si l'une des deux bornes n'est pas analysable.
  *
- * @remarks Aucune validation : une date non analysable est rendue telle que la plateforme la
- * met en forme, soit « Invalid Date » inséré dans la ligne. Pas de repli traduit ici,
- * contrairement à `formatDate`.
+ * @remarks Même repli que `formatDate` : sans lui, la plateforme insérait littéralement
+ * « Invalid Date » dans la ligne (défaut D-14).
  */
 export function formatDateRange(start: string | Date, end: string | Date): string {
   const locale = i18n.language === "fr" ? "fr-FR" : "en-US";
   const s = new Date(start);
   const e = new Date(end);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return i18n.t("common.invalidDate");
   const sFmt = s.toLocaleDateString(locale, { day: "numeric", month: "short" });
   const eFmt = e.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
   return `${sFmt} – ${eFmt}`;
@@ -90,8 +92,9 @@ export function formatDateRange(start: string | Date, end: string | Date): strin
  * @param end Date de fin.
  * @returns Le nombre de jours, au minimum 1.
  *
- * @remarks Une date non analysable rend `NaN`, que le plancher n'intercepte pas — `NaN`
- * n'étant supérieur à rien. L'affichage devient alors « NaN jours ».
+ * @remarks Une date non analysable rend le plancher. Le contrôle est explicite : `NaN`
+ * n'étant supérieur à rien, `Math.max` ne l'interceptait pas et l'affichage devenait
+ * « NaN jours » (défaut D-13).
  *
  * @example
  * tripDuration("2026-05-01", "2026-05-01"); // 1 — plancher, et non 0
@@ -99,5 +102,6 @@ export function formatDateRange(start: string | Date, end: string | Date): strin
  */
 export function tripDuration(start: string | Date, end: string | Date): number {
   const diff = new Date(end).getTime() - new Date(start).getTime();
+  if (Number.isNaN(diff)) return 1;
   return Math.max(1, Math.round(diff / 86_400_000));
 }

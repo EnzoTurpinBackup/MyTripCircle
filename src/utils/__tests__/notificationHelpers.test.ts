@@ -77,6 +77,14 @@ describe('titleForInvitation', () => {
 });
 
 describe('timeAgo', () => {
+  it('should return the translated invalid-date fallback instead of a NaN count (défaut D-12)', () => {
+    expect(timeAgo('pas une date')).toBe('common.invalidDate');
+  });
+
+  it('should treat a future date as just now', () => {
+    expect(timeAgo(new Date(Date.now() + 3_600_000).toISOString())).toBe('notifications.timeAgo.justNow');
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2024-06-15T12:00:00Z'));

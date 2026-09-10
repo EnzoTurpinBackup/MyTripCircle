@@ -8,15 +8,17 @@ import i18n from "./i18n";
  * 12 minutes » est plus informatif qu'un arrondi à l'heure.
  *
  * @param raw Date d'émission, sous forme de chaîne analysable.
- * @returns Le libellé traduit du palier atteint.
+ * @returns Le libellé traduit du palier atteint, ou le repli traduit de date invalide.
  *
- * @remarks Mêmes angles morts que le format relatif des invitations : une date future rend
- * « à l'instant », une date non analysable atteint le dernier palier avec un décompte `NaN`.
- * Ce palier n'est pas plafonné — une notification ancienne affiche son nombre de jours, sans
- * bascule vers les semaines ou les mois.
+ * @remarks Mêmes garde-fous que le format relatif des invitations (défaut D-12) : une date
+ * non analysable rend `common.invalidDate`, une date future est bornée à « à l'instant ».
+ * Le dernier palier n'est pas plafonné — une notification ancienne affiche son nombre de
+ * jours, sans bascule vers les semaines ou les mois.
  */
 export const timeAgo = (raw: string): string => {
-  const diff = Date.now() - new Date(raw).getTime();
+  const time = new Date(raw).getTime();
+  if (Number.isNaN(time)) return i18n.t("common.invalidDate");
+  const diff = Math.max(0, Date.now() - time);
   const m = Math.floor(diff / 60000);
   if (m < 1)  return i18n.t("notifications.timeAgo.justNow");
   if (m < 60) return i18n.t("notifications.timeAgo.minutes", { count: m });

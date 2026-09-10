@@ -10,6 +10,7 @@ import ConsentManagementScreen from "../ConsentManagementScreen";
 import { CONSENT_KEY } from "../ConsentScreen";
 import { userApi } from "../../services/api/userApi";
 import { useNavigation } from "@react-navigation/native";
+import { requestPermissionAndRegisterToken } from "../../hooks/usePushNotifications";
 import { freezeClockAt, restoreClock } from "../../components/invitations/__tests__/frozenClock";
 
 jest.mock("react-i18next", () => ({
@@ -123,6 +124,32 @@ describe("ConsentManagementScreen", () => {
       expect(switchAt(SWITCH_INDEX.notifications)).not.toBeChecked();
     });
 
+    it("should leave the loader and default to a refusal when the stored entry is corrupted", async () => {
+      // Arrange — défaut D-04 : un JSON illisible figeait l'écran en chargement
+      await AsyncStorage.setItem(CONSENT_KEY, "{pas du json");
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+
+      // Act
+      await renderScreen();
+
+      // Assert
+      expect(screen.queryAllByRole("switch")).toHaveLength(2);
+      expect(switchAt(SWITCH_INDEX.notifications)).not.toBeChecked();
+      expect(screen.getByText("consentManagement.save")).toBeTruthy();
+    });
+
+    it("should leave the loader when the storage read itself fails", async () => {
+      // Arrange
+      jest.spyOn(AsyncStorage, "getItem").mockRejectedValueOnce(new Error("stockage indisponible"));
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+
+      // Act
+      await renderScreen();
+
+      // Assert
+      expect(screen.queryAllByRole("switch")).toHaveLength(2);
+    });
+
     it("should describe the mandatory data processing as non negotiable", async () => {
       // Arrange & Act
       await renderScreen();
@@ -175,6 +202,29 @@ describe("ConsentManagementScreen", () => {
         notifications: true,
       });
       expect(Location.requestForegroundPermissionsAsync).not.toHaveBeenCalled();
+    });
+
+    it("should request the push permission and register the token when notifications are enabled", async () => {
+      // Arrange — défaut D-06 : l'activation depuis les réglages n'enregistrait rien
+      await renderScreen();
+      fireEvent.press(switchAt(SWITCH_INDEX.notifications));
+
+      // Act
+      await save();
+
+      // Assert
+      expect(requestPermissionAndRegisterToken).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not touch the push registration when notifications stay disabled", async () => {
+      // Arrange
+      await renderScreen();
+
+      // Act
+      await save();
+
+      // Assert
+      expect(requestPermissionAndRegisterToken).not.toHaveBeenCalled();
     });
 
     it("should ask for the location permission when that consent is granted", async () => {

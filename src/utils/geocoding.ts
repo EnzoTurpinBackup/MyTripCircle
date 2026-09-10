@@ -35,8 +35,18 @@ export const getCached = (
   return _cache.has(key) ? (_cache.get(key) ?? null) : undefined;
 };
 
+/**
+ * Issue d'une requête Nominatim. L'échec transitoire (réseau coupé, statut HTTP en erreur,
+ * limite de débit) est distingué de l'absence de résultat : seule la seconde est une
+ * réponse définitive sur l'adresse, la première ne dit rien d'elle.
+ */
+type NominatimOutcome =
+  | { kind: "found"; coords: GeoCoords }
+  | { kind: "empty" }
+  | { kind: "error" };
+
 // Requête brute vers Nominatim (sans cache)
-const _fetchNominatim = async (query: string): Promise<GeoCoords | null> => {
+const _fetchNominatim = async (query: string): Promise<NominatimOutcome> => {
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
@@ -47,16 +57,19 @@ const _fetchNominatim = async (query: string): Promise<GeoCoords | null> => {
         },
       }
     );
-    if (!response.ok) return null;
+    if (!response.ok) return { kind: "error" };
     const data = await response.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
+    if (!Array.isArray(data) || data.length === 0) return { kind: "empty" };
     return {
-      latitude: Number.parseFloat(data[0].lat),
-      longitude: Number.parseFloat(data[0].lon),
+      kind: "found",
+      coords: {
+        latitude: Number.parseFloat(data[0].lat),
+        longitude: Number.parseFloat(data[0].lon),
+      },
     };
   } catch (e) {
     if (__DEV__) console.warn("[geocoding] Erreur géocodage:", e);
-    return null;
+    return { kind: "error" };
   }
 };
 
@@ -72,16 +85,17 @@ const _fetchNominatim = async (query: string): Promise<GeoCoords | null> => {
  * seule suffit à centrer la carte, ce qui est le besoin réel. La temporisation d'une seconde
  * entre les deux essais respecte la limite d'usage du service public.
  *
- * L'échec est mémorisé au même titre que le succès : sans cela, une adresse qui n'aboutit
- * pas relancerait deux requêtes à chaque affichage de la carte.
+ * L'absence de résultat est mémorisée au même titre que le succès : sans cela, une adresse
+ * qui n'aboutit pas relancerait deux requêtes à chaque affichage de la carte. Un échec
+ * transitoire, en revanche, n'est jamais mémorisé : une adresse saisie pendant une coupure
+ * réseau restait sinon sans coordonnées jusqu'au redémarrage de l'application (défaut D-15).
  *
  * @param address Ligne d'adresse ; peut être vide, le repli prend alors le relais.
  * @param city Ville — le second essai n'a lieu que si ville et pays sont tous deux fournis.
  * @param country Pays.
- * @returns Les coordonnées, ou `null` si aucun des deux essais n'aboutit. Une erreur réseau
- * est traitée comme une absence de résultat et mémorisée comme telle : une adresse géocodée
- * pendant une coupure restera sans coordonnées jusqu'au redémarrage de l'application, le
- * cache ne vivant que le temps de la session.
+ * @returns Les coordonnées, ou `null` si aucun des deux essais n'aboutit. Seul un `null`
+ * issu de réponses sans résultat est mis en cache ; après un échec transitoire, l'appel
+ * suivant interroge de nouveau le service.
  */
 export const geocodeAddress = async (
   address: string,
@@ -92,14 +106,19 @@ export const geocodeAddress = async (
   if (_cache.has(key)) return _cache.get(key) ?? null;
 
   // Essai 1 : adresse complète
-  let coords = await _fetchNominatim(`${address}, ${city}, ${country}`);
+  const outcomes: NominatimOutcome[] = [await _fetchNominatim(`${address}, ${city}, ${country}`)];
 
   // Essai 2 : ville + pays seulement (plus tolérant avec Nominatim)
-  if (!coords && city && country) {
+  if (outcomes[0].kind !== "found" && city && country) {
     await new Promise<void>((r) => setTimeout(r, 1100));
-    coords = await _fetchNominatim(`${city}, ${country}`);
+    outcomes.push(await _fetchNominatim(`${city}, ${country}`));
   }
 
-  _cache.set(key, coords);
-  return coords;
+  const found = outcomes.find((o) => o.kind === "found");
+  if (found?.kind === "found") {
+    _cache.set(key, found.coords);
+    return found.coords;
+  }
+  if (outcomes.every((o) => o.kind === "empty")) _cache.set(key, null);
+  return null;
 };

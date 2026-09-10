@@ -228,4 +228,44 @@ describe('geocodeAddress', () => {
     (globalThis as { __DEV__?: boolean }).__DEV__ = originalDev;
     warnSpy.mockRestore();
   });
+  it('should not cache a network failure so that the next call queries Nominatim again (défaut D-15)', async () => {
+    // Arrange
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockFetch.mockRejectedValueOnce(new Error('réseau injoignable'));
+    await geocodeAddress('adresse coupure', '', '');
+
+    // Act
+    mockFetch.mockResolvedValueOnce(okResponse([{ lat: '43.6', lon: '1.44' }]));
+    const result = await geocodeAddress('adresse coupure', '', '');
+
+    // Assert
+    expect(getCached('adresse coupure', '', '')).toEqual({ latitude: 43.6, longitude: 1.44 });
+    expect(result).toEqual({ latitude: 43.6, longitude: 1.44 });
+  });
+
+  it('should not cache a non-ok status, which says nothing about the address', async () => {
+    // Arrange
+    mockFetch.mockResolvedValueOnce({ ok: false, json: () => Promise.resolve([]) });
+
+    // Act
+    await geocodeAddress('adresse 429', '', '');
+
+    // Assert
+    expect(getCached('adresse 429', '', '')).toBeUndefined();
+  });
+
+  it('should not cache null when the fallback fails transiently after an empty first answer', async () => {
+    // Arrange
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockFetch
+      .mockResolvedValueOnce(okResponse([]))
+      .mockRejectedValueOnce(new Error('réseau injoignable'));
+
+    // Act
+    const result = await geocodeAddress('adresse mixte', 'Lyon', 'France');
+
+    // Assert
+    expect(result).toBeNull();
+    expect(getCached('adresse mixte', 'Lyon', 'France')).toBeUndefined();
+  });
 });

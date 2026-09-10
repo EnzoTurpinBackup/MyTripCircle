@@ -39,6 +39,10 @@ describe('getBannerGradient', () => {
 });
 
 describe('tripDuration', () => {
+  it('should fall back to the one-day floor when a date cannot be parsed (défaut D-13)', () => {
+    expect(tripDuration('pas une date', '2026-05-10')).toBe(1);
+  });
+
   it('should return the number of days between start and end', () => {
     expect(tripDuration('2024-06-01T00:00:00Z', '2024-06-15T00:00:00Z')).toBe(14);
   });
@@ -55,6 +59,14 @@ describe('tripDuration', () => {
 });
 
 describe('formatRelative', () => {
+  it('should return the translated invalid-date fallback instead of a NaN count (défaut D-12)', () => {
+    expect(formatRelative('pas une date')).toBe('common.invalidDate');
+  });
+
+  it('should treat a future date as just now', () => {
+    expect(formatRelative(new Date(Date.now() + 3_600_000))).toBe('invitation.timeAgoJustNow');
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2024-06-15T12:00:00Z'));
@@ -95,6 +107,10 @@ describe('formatRelative', () => {
 });
 
 describe('formatDateRange', () => {
+  it('should return the translated invalid-date fallback when a bound cannot be parsed (défaut D-14)', () => {
+    expect(formatDateRange('2026-05-01', 'pas une date')).toBe('common.invalidDate');
+  });
+
   it('should return a string combining start and end dates', () => {
     const result = formatDateRange('2024-06-01', '2024-06-15');
     expect(typeof result).toBe('string');
