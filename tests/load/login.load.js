@@ -13,6 +13,8 @@ import { Counter } from "k6/metrics";
 // Identifiants : fournis au runtime via -e EMAIL=... -e PASSWORD=...
 // AUCUN identifiant n'est écrit en dur (cf. CLAUDE.md — pas de secret hardcodé).
 //   k6 run -e EMAIL=test@exemple.com -e PASSWORD=motdepasse tests/load/login.load.js
+// Le compte doit être vérifié : le créer avec `npm run test-user` dans le dépôt
+// MyTripCircle-API, qui porte le chiffrement et l'accès à la base.
 //
 // ⚠️ Effets de bord & limites à connaître :
 //   • Chaque login réussi écrit un refresh token en base (createRefreshToken).
