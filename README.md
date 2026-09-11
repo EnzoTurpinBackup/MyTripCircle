@@ -1,6 +1,6 @@
 # MyTripCircle
 
-Application mobile collaborative de planification de voyages entre amis, construite avec React Native (Expo) et un backend Express.js / MongoDB.
+Application mobile collaborative de planification de voyages entre amis, construite avec React Native (Expo). Elle consomme l'API REST [MyTripCircle-API](https://github.com/MyTripCircle/MyTripCircle-API), dépôt séparé et source unique des données, partagée avec le client [MyTripCircle-Web](https://github.com/MyTripCircle/MyTripCircle-Web).
 
 ## Fonctionnalités
 
@@ -66,16 +66,12 @@ Application mobile collaborative de planification de voyages entre amis, constru
 | i18next | Internationalisation |
 | AsyncStorage | Persistance locale |
 
-### Backend
+### API
 
-| Technologie | Usage |
-|---|---|
-| Express.js 5 | Framework web |
-| MongoDB (driver natif) | Base de données |
-| JWT + Bcrypt | Authentification et hachage |
-| Nodemailer | Envoi d'emails |
-| Helmet + Rate Limit | Sécurité |
-| Groq API | Génération d'itinéraires IA |
+Le serveur — Express 5, MongoDB, JWT, chiffrement des données personnelles,
+génération d'itinéraires par Groq — vit dans le dépôt
+[MyTripCircle-API](https://github.com/MyTripCircle/MyTripCircle-API). Ce dépôt
+ne contient que le client.
 
 ## Structure du projet
 
@@ -83,7 +79,7 @@ Application mobile collaborative de planification de voyages entre amis, constru
 MyTripCircle/
 ├── src/
 │   ├── components/        # Composants réutilisables (auth, trips, bookings, friends…)
-│   ├── screens/           # ~36 écrans (auth, voyages, réservations, idées, profil…)
+│   ├── screens/           # 41 écrans (auth, voyages, réservations, idées, profil…)
 │   ├── contexts/          # État global (Auth, Trips, Friends, Theme, Notifications)
 │   ├── hooks/             # Hooks métier (useTripsApi, useBookingForm, useIdeas…)
 │   ├── navigation/        # AppNavigator — Stack + Tab navigation
@@ -106,7 +102,6 @@ MyTripCircle/
 - Node.js ≥ 22
 - npm
 - Expo CLI (`npx expo`)
-- Instance MongoDB (locale ou Atlas)
 - Simulateur iOS / émulateur Android (optionnel)
 
 ### Configuration
@@ -114,8 +109,8 @@ MyTripCircle/
 1. Cloner le dépôt
 
    ```bash
-   git clone https://github.com/EnzoTurpin/MyTripCircle.git
-   cd MyTripCircle
+   git clone https://github.com/MyTripCircle/MyTripCircle-Mobile.git
+   cd MyTripCircle-Mobile
    ```
 
 2. Installer les dépendances
@@ -126,23 +121,10 @@ MyTripCircle/
 
 3. Configurer les variables d'environnement
 
-   Créer un fichier `.env` à la racine :
-
-   ```env
-   # Base de données
-   MONGODB_URI=mongodb+srv://...
-   DB_NAME=mytripcircle
-
-   # Authentification
-   JWT_SECRET=votre_secret_jwt
-   REFRESH_SECRET=votre_secret_refresh
-
-   # Google Places (autocomplétion adresses)
-   EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=votre_clé_google
-
-   # Apple Sign-In (optionnel)
-   APPLE_APP_ID=com.votre.bundle.id
-   ```
+   Copier `.env.example` en `.env`. Le client n'y lit que les identifiants
+   OAuth Google, préfixés `EXPO_PUBLIC_` et donc embarqués dans l'application :
+   aucun secret n'y a sa place. Les secrets — base, jetons, chiffrement, clé
+   Google Places — appartiennent à l'API.
 
 4. Lancer l'API
 
